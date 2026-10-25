@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "Dunaharaszti Szimulátor",
-  "short_name": "Dunaharaszti",
+  "name": "DH Szimulátor",
+  "short_name": "DH Szimulátor",
   "description": "Kószálj szellemként Dunaharaszti felsőnél: HÉV-ek menetrend szerint, valós napszak, sok fura beavatkozás.",
   "lang": "hu",
   "start_url": "./",

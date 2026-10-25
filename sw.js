@@ -1,8 +1,8 @@
-// Dunaharaszti Szimulátor – service worker.
+// DH Szimulátor – service worker.
 // After the first visit the game also starts without a connection. index.html always comes fresh from the
 // network when there is one, so a new version only has to be uploaded: the installed app picks it up on its
 // next start. Change VERSION only when the icons or the manifest change.
-const VERSION = 'v1';
+const VERSION = 'v3';
 const APP = 'dhsim-app-' + VERSION, FONTS = 'dhsim-fonts';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png', 'icons/apple-touch-icon.png'];
 
