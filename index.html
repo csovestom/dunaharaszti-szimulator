@@ -2,7 +2,7 @@
 <html lang="hu"><head><meta charset="utf-8">
 
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Dunaharaszti felső szimulátor</title>
+<title>DH Szimulátor</title>
 <meta name="description" content="Kószálj szellemként Dunaharaszti felsőnél: HÉV-ek menetrend szerint, valós napszak, sok fura beavatkozás.">
 <meta name="claude:viewport-fit-sides" content="cover">
 <!-- installable web app (PWA): manifest, icons, full screen on the home screen -->
@@ -10,7 +10,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Dunaharaszti">
+<meta name="apple-mobile-web-app-title" content="DH Szimulátor">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -672,7 +672,7 @@ body {
 'use strict';
 
 /* =====================================================================
-   Dunaharaszti felső – HÉV-megálló szimulátor (alpha)
+   DH Szimulátor (alpha)
    Minden méret méterben van. A kamera a peron mögötti utcán áll,
    és perspektivikusan néz át a vágányokon (mint a Street View képek).
    ===================================================================== */
@@ -1008,6 +1008,20 @@ function fillRR(x, y, w, h, r, fill) { rrect(x, y, w, h, r); ctx.fillStyle = fil
 function fillR(x, y, w, h, fill) { ctx.fillStyle = fill; ctx.fillRect(x, y, w, h); }
 function circle(x, y, r, fill) { ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fillStyle = fill; ctx.fill(); }
 function polyL(pts, fill) { ctx.beginPath(); ctx.moveTo(pts[0], pts[1]); for (let i = 2; i < pts.length; i += 2) ctx.lineTo(pts[i], pts[i + 1]); ctx.closePath(); ctx.fillStyle = fill; ctx.fill(); }
+// the pedestrian figure of the blue "zebra" sign (KRESZ E-sign), over the white triangle whose base centre is (cx, b)
+// and height H: head, torso, arms, striding legs and the zebra bars, flat style (shapes from the real sign)
+function pedPict(cx, b, H, hw = H * 0.51, ink = '#1A1A1A') {
+  const s = H / 510, P = a => a.map((v, i) => i % 2 ? b + (v - 610) * s : cx + (v - 362) * s);
+  ctx.save(); polyL([cx, b - H, cx + hw, b, cx - hw, b], 'rgba(0,0,0,0)'); ctx.clip();
+  for (const u of [-215, -105, 0, 105, 215]) polyL(P([u + 331, 498, u + 393, 498, u + 393, 592, u + 331, 592]), ink);
+  ctx.restore();
+  const legs = [[340, 412, 302, 480, 262, 548], [372, 412, 420, 480, 462, 545]];
+  for (const l of legs) strokeL(P(l), '#FFFFFF', 64 * s);
+  for (const l of legs) strokeL(P(l), ink, 44 * s);
+  polyL(P([318, 262, 388, 262, 398, 300, 392, 416, 318, 416, 306, 300]), ink);
+  strokeL(P([312, 278, 286, 352, 262, 404]), ink, 30 * s); strokeL(P([392, 278, 424, 330, 446, 404]), ink, 30 * s);
+  circle(cx + (352 - 362) * s, b + (222 - 610) * s, 32 * s, ink);
+}
 function strokeL(pts, stroke, w, cap = 'round') { ctx.beginPath(); ctx.moveTo(pts[0], pts[1]); for (let i = 2; i < pts.length; i += 2) ctx.lineTo(pts[i], pts[i + 1]); ctx.strokeStyle = stroke; ctx.lineWidth = w; ctx.lineCap = cap; ctx.lineJoin = 'round'; ctx.stroke(); }
 // projected circle on a plane perpendicular to x (a train front face), as polygon
 function circleX(x, d, h, r, fill, seg = 12) {
@@ -1444,8 +1458,7 @@ for (const [x, d] of [[123.9, D.road0 - 0.45], [118.5, D.road1 + 0.5]]) {
     fillR(-0.04, -2.75, 0.08, 2.75, '#8A8F93');
     fillRR(-0.33, -3.05, 0.66, 0.66, 0.05, '#FFFFFF'); fillRR(-0.3, -3.02, 0.6, 0.6, 0.04, C.blue);
     polyL([-0.24, -2.48, 0.24, -2.48, 0, -2.95], '#FFFFFF');
-    circle(0.0, -2.77, 0.045, '#1A1A1A'); strokeL([0, -2.72, -0.02, -2.6, -0.08, -2.52], '#1A1A1A', 0.03); strokeL([-0.02, -2.6, 0.06, -2.52], '#1A1A1A', 0.03);
-    for (let u = -0.18; u < 0.2; u += 0.08) fillR(u, -2.53, 0.04, 0.03, '#1A1A1A');
+    pedPict(0, -2.48, 0.47);
   });
 }
 // pedestrian crossings over the tracks (rubber panels) and the concrete paths to the platforms
@@ -2157,7 +2170,7 @@ add(D.verge1 - 3.5, 122, 125, () => {
   at(123.6, D.verge1 - 3.5);
   fillR(-0.04, -2.7, 0.08, 2.7, '#8A8F93'); fillRR(-0.33, -3.05, 0.66, 0.66, 0.05, C.blue);
   polyL([-0.24, -2.48, 0.24, -2.48, 0, -2.95], '#FFFFFF');
-  circle(0.02, -2.78, 0.045, '#222'); strokeL([0.0, -2.73, -0.04, -2.6, -0.1, -2.53, 0.0, -2.6, 0.08, -2.53], '#222', 0.035);
+  pedPict(0, -2.48, 0.47);
 });
 // second billboard + white house with red roof
 add(D.walk1 + 0.5, 138, 147, () => {
@@ -6100,7 +6113,7 @@ const BD = { walk0: 0.3, curbN: 2.3, road0: 2.5, mid: 5.55, road1: 8.6, walk1: 1
     box(x - 0.04, x + 0.04, d, d + 0.08, 0.12, 3.0, { f: '#9EA3A6', s: '#7F8487' });
     at(x, d);
     fillR(-0.36, -3.25, 0.72, 0.72, '#1F5FA8'); polyL([0, -3.15, 0.27, -2.63, -0.27, -2.63], '#FFFFFF');
-    strokeL([-0.05, -2.75, 0.03, -2.95, 0.1, -2.7], '#1E1E1E', 0.04); for (let k = 0; k < 3; k++) fillR(-0.2 + k * 0.15, -2.64, 0.09, 0.05, '#1E1E1E');
+    pedPict(0, -2.63, 0.52, 0.27);
     // the pedestrian signal head
     fillRR(0.05, -2.45, 0.32, 0.62, 0.05, '#1E2022');
     // run by the zebra control cabinet next to it: dark when the controller is burnt, swapped when miswired
@@ -6818,7 +6831,7 @@ const BD = { walk0: 0.3, curbN: 2.3, road0: 2.5, mid: 5.55, road1: 8.6, walk1: 1
   for (const [u, d] of [[106.6, BD.road1 + 0.5], [101.2, BD.road0 - 0.4]]) add(d, bx(u) - 1, bx(u) + 1, () => {
     at(bx(u), d); fillR(-0.04, -2.75, 0.08, 2.75, '#8A8F93');
     fillRR(-0.33, -3.05, 0.66, 0.66, 0.05, '#FFFFFF'); fillRR(-0.3, -3.02, 0.6, 0.6, 0.04, C.blue);
-    polyL([-0.24, -2.48, 0.24, -2.48, 0, -2.95], '#FFFFFF'); circle(0, -2.77, 0.045, '#1A1A1A'); strokeL([0, -2.72, -0.02, -2.6, -0.08, -2.52], '#1A1A1A', 0.03);
+    polyL([-0.24, -2.48, 0.24, -2.48, 0, -2.95], '#FFFFFF'); pedPict(0, -2.48, 0.47);
   });
   BACK.items = STATIC.splice(s0);
   BACK.items.push(...ZCAB_ITEMS);
@@ -9336,7 +9349,7 @@ function showWelcome(onGo) {
 .wl-ib:active { background: #E2D8BF; }`;
   document.head.appendChild(st);
   const el = document.createElement('div');
-  el.className = 'wl'; el.dataset.live = '1'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Dunaharaszti Szimulátor');
+  el.className = 'wl'; el.dataset.live = '1'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'DH Szimulátor');
   const ic = (d, t) => `<div class="wl-f"><svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg><span>${t}</span></div>`;
   el.innerHTML = `<div class="wl-card"><button class="wl-x" id="wlX" type="button" aria-label="Bezárás">✕</button>
   <div class="wl-hero">${WELCOME_LOGO}<div class="wl-name">Dunaharaszti<br>Szimulátor</div><div class="wl-sub">H6 · Ráckevei HÉV</div></div>
