@@ -1,7 +1,6 @@
-<!doctype html>
-<html lang="hu">
-<head>
-<meta charset="utf-8">
+<!DOCTYPE html>
+<html lang="hu"><head><meta charset="utf-8">
+
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Dunaharaszti felső szimulátor</title>
 <meta name="description" content="Kószálj szellemként Dunaharaszti felsőnél: HÉV-ek menetrend szerint, valós napszak, sok fura beavatkozás.">
@@ -15,9 +14,9 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700;800&display=swap">
 <style>[hidden]:not([hidden=until-found i]){display:none!important}</style>
 </head>
 <body>
@@ -184,20 +183,11 @@ body {
 .action-wrap > .action-label { white-space: nowrap; flex: none; }
 .dir-up { width: 50px; height: 50px; }
 .vert-row { display: flex; gap: 8px; position: relative; justify-content: center; }
-#btnUp.pill, #btnDown.pill { width: auto; min-width: 50px; height: 46px; border-radius: 23px; padding: 0 14px 0 10px; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
-#btnUp .vcap, #btnDown .vcap { font: 800 14px/1 var(--display); letter-spacing: .03em; }
+#btnUp.pill, #btnDown.pill, #dohiBtn.pill { width: auto; min-width: 50px; height: 46px; border-radius: 23px; padding: 0 14px 0 10px; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+#btnUp .vcap, #btnDown .vcap, #dohiBtn .vcap { font: 800 14px/1 var(--display); letter-spacing: .03em; }
 #btnUp:not(.pill) .vcap, #btnDown:not(.pill) .vcap { display: none; }
-#btnUp svg, #btnDown svg { flex: none; }
-/* the crossing to the other side of the Fő út: only shows on the exact spot (külső: the path to the platform;
-   on the other side: the zebra). A round badge, larger than the other buttons, with a soft pulse. */
-.dohi-btn { position: relative; width: 58px; height: 58px; margin: -4px 0; padding: 0; background: none; box-shadow: 0 4px 0 rgba(0,0,0,.35); animation: dohi-in .4s cubic-bezier(.3, 1.6, .5, 1), dohi-pulse 2.2s ease-in-out .4s infinite; }
-.dohi-btn svg { width: 100%; height: 100%; display: block; border-radius: 50%; }
-.dohi-btn .dohi-cross { display: none; } .dohi-btn.back .dohi-cross { display: block; } .dohi-btn.back .dohi-logo { display: none; }
-.dohi-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.35); }
-.dohi-tip { position: absolute; bottom: calc(100% + 50px); right: -4px; white-space: nowrap; pointer-events: none;
-  background: #1D2226; color: #F2C230; border-radius: 999px; padding: 5px 10px; font: 700 13px/1 var(--display); letter-spacing: .03em; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
-@keyframes dohi-in { from { transform: scale(.4); opacity: 0; } }
-@keyframes dohi-pulse { 0%, 100% { box-shadow: 0 4px 0 rgba(0,0,0,.35), 0 0 0 0 rgba(242,194,48,.55); } 50% { box-shadow: 0 4px 0 rgba(0,0,0,.35), 0 0 0 9px rgba(242,194,48,0); } }
+#btnUp svg, #btnDown svg, #dohiBtn svg { flex: none; }
+/* the crossing to the other side of the Fő út (dohiBtn): a plain pill like the others, only on the exact spot */
 .round[hidden] { display: none; }
 .dir-up svg { width: 24px; height: 24px; }
 .dir:disabled { background: rgba(30, 127, 92, .45); color: rgba(237, 229, 209, .55); box-shadow: 0 4px 0 rgba(20, 94, 67, .3); cursor: default; }
@@ -491,13 +481,13 @@ body {
 </style>
 
 <div id="app">
-  <canvas id="scene" role="img" aria-label="A H6-os HÉV vonala Dunaharasztin oldalnézetből: Dunaharaszti külső és felső megálló, a Fő út átjárója és a kocsiszín"></canvas>
-  <div class="bubble" id="bubble" hidden aria-hidden="true"><svg><use href="#i-eye"></use></svg></div>
+  <canvas id="scene" role="img" aria-label="A H6-os HÉV vonala Dunaharasztin oldalnézetből: Dunaharaszti külső és felső megálló, a Fő út átjárója és a kocsiszín" width="3024" height="1546"></canvas>
+  <div class="bubble" id="bubble" hidden="" aria-hidden="true"><svg><use href="#i-eye"></use></svg></div>
 
   <header class="hud">
-    <div class="station-chip off" id="chip">
+    <div class="station-chip" id="chip">
       <span class="badge-h6" aria-hidden="true">H6</span>
-      <div><strong id="chipName">Dunaharaszti felső</strong><span class="chip-sub">Ráckeve – Közvágóhíd</span></div>
+      <div><strong id="chipName" style="max-width: 1090.27px;">Dunaharaszti felső</strong><span class="chip-sub">Ráckeve – Közvágóhíd</span></div>
     </div>
     <div class="hud-right">
       <button class="icon-btn" id="mapBtn" type="button" aria-pressed="false" aria-controls="mapmon" aria-label="Vágánykép megjelenítése" title="Vágánykép">
@@ -509,47 +499,38 @@ body {
       <button class="icon-btn day-btn" id="dayBtn" type="button" aria-label="Legyen éjjel" title="Legyen éjjel">
         <svg><use href="#i-moon"></use></svg>
       </button>
-      <button class="clock dclock" id="clock" type="button" aria-expanded="false" aria-controls="clockPop" aria-label="Óra és időbeállítás">
-        <span class="dc-row"><span class="dc-time" id="dcTime">12:00</span><span class="dc-sec" id="dcSec">00</span></span>
+      <button class="clock dclock" id="clock" type="button" aria-expanded="false" aria-controls="clockPop" aria-label="Valós idő: 08:17. Koppints az időbeállításhoz." data-init="1">
+        <span class="dc-row"><span class="dc-time" id="dcTime">08:17</span><span class="dc-sec" id="dcSec">12</span></span>
         <span class="dc-mode" id="dcMode"><span class="m-long">valós idő</span><span class="m-short">valós</span></span>
       </button>
     </div>
   </header>
 
   <div class="pid" id="pid" role="status" aria-live="polite"><canvas id="pidCanvas"></canvas></div>
-  <div class="hint-portrait" id="hintPortrait">Fordítsd fekvőbe a telefont, úgy többet látsz.</div>
-  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <div class="hint-portrait" id="hintPortrait" hidden="">Fordítsd fekvőbe a telefont, úgy többet látsz.</div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden=""></div>
 
   <nav class="controls" aria-label="Irányítás">
     <button class="round dir" id="btnLeft" type="button" aria-label="Séta balra, Ráckeve felé">
       <svg><use href="#i-left"></use></svg>
     </button>
     <div class="action-wrap">
-      <div class="action-label is-hint" id="actionLabel">Sétálj egy tárgyhoz</div>
+      <div class="action-label is-hint" id="actionLabel">← → séta · ↑ ↓ fel / le · E: művelet</div>
       <div class="vert-row">
-        <button class="round dir dir-up" id="btnUp" type="button" aria-label="Fel a peronra">
+        <button class="round dir dir-up pill" id="btnUp" type="button" aria-label="Fel a peronra" title="Fel a peronra">
           <svg><use href="#i-arrow-up"></use></svg>
-        </button>
-        <button class="round dir dir-up" id="btnDown" type="button" aria-label="Le" hidden>
+        <span class="vcap">Peron</span></button>
+        <button class="round dir dir-up" id="btnDown" type="button" aria-label="Le" hidden="">
           <svg><use href="#i-arrow-down"></use></svg>
-        </button>
+        <span class="vcap"></span></button>
         <button class="round dir dir-up ctrl-btn" id="ctrlBtn" type="button" aria-expanded="false" aria-controls="cpanel" aria-label="HÉV vezérlőpult (P)" title="HÉV vezérlőpult (P)">
           <svg><use href="#i-panel"></use></svg>
         </button>
-        <button class="round dohi-btn" id="dohiBtn" type="button" hidden aria-label="Átmenet a túloldalra, a Nemzeti Dohányboltba" title="Átmenet a túloldalra">
-          <span class="dohi-tip" id="dohiTip">Átmenet a túloldalra</span>
-          <svg class="dohi-logo" viewBox="0 0 100 100" aria-hidden="true"><defs><path id="dArcT" d="M17 50a33 33 0 0 1 66 0"/><path id="dArcB" d="M12 50a38 38 0 0 0 76 0"/></defs>
-            <circle cx="50" cy="50" r="49" fill="#5A2E1E"/><circle cx="50" cy="50" r="30" fill="#A32A1E"/><circle cx="50" cy="50" r="22" fill="#FFFFFF"/><circle cx="50" cy="50" r="17" fill="#1E5A35"/>
-            <path d="M40.5 41.5h19v6h-6.5v14h-6v-14h-6.5z" fill="#FFFFFF"/>
-            <text font-family="Barlow Condensed, Arial Narrow, sans-serif" font-weight="800" font-size="12.5" fill="#FFFFFF" letter-spacing="1"><textPath href="#dArcT" startOffset="50%" text-anchor="middle">NEMZETI</textPath></text>
-            <text font-family="Barlow Condensed, Arial Narrow, sans-serif" font-weight="800" font-size="11" fill="#FFFFFF" letter-spacing="1"><textPath href="#dArcB" startOffset="50%" text-anchor="middle" dominant-baseline="hanging">DOHÁNYBOLT</textPath></text>
-            <circle cx="9" cy="50" r="1.6" fill="#fff"/><circle cx="91" cy="50" r="1.6" fill="#fff"/></svg>
-          <svg class="dohi-cross" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="49" fill="#F2C230"/>
-            <g fill="#1D2226"><rect x="24" y="26" width="52" height="7" rx="2"/><rect x="24" y="40" width="52" height="7" rx="2"/><rect x="24" y="54" width="52" height="7" rx="2"/><rect x="24" y="68" width="52" height="7" rx="2"/></g>
-            <path d="M50 14 63 27H55v48h-10V27h-8z" fill="#FFFFFF" stroke="#1D2226" stroke-width="2.5" stroke-linejoin="round"/></svg>
-        </button>
+        <button class="round dir dir-up pill" id="dohiBtn" type="button" hidden="" aria-label="Át a Fő úton, a dohánybolt felé" title="Fő út">
+          <svg><use href="#i-uturn"></use></svg>
+        <span class="vcap" id="dohiTip">Fő út</span></button>
       </div>
-      <button class="round action" id="btnAction" type="button" disabled aria-label="Nincs elérhető művelet">
+      <button class="round action" id="btnAction" type="button" disabled="" aria-label="Nincs elérhető művelet">
         <svg id="actionIcon"><use href="#i-hand"></use></svg>
       </button>
     </div>
@@ -558,20 +539,20 @@ body {
     </button>
   </nav>
 
-  <section class="clockpop" id="clockPop" aria-label="Időbeállítás" hidden>
+  <section class="clockpop" id="clockPop" aria-label="Időbeállítás" hidden="">
     <div class="cp-head"><span class="cp-title">Idő</span><span class="cp-target" id="cpopNow">–</span><button class="cp-close" id="cpopClose" type="button" aria-label="Bezárás">×</button></div>
     <div class="seg" id="tmSeg" role="radiogroup" aria-label="Időmód"><i></i><button type="button" role="radio" data-m="real" aria-checked="true">Valós idő</button><button type="button" role="radio" data-m="set" aria-checked="false">Beállított</button></div>
     <div class="tset off" id="tSet">
-      <div class="tcol"><button type="button" data-d="60" aria-label="Egy órával később"><svg class="gl" viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 7 5 2.5 8.5 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="tval" id="tH">12</span><button type="button" data-d="-60" aria-label="Egy órával korábban"><svg class="gl" viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 3 5 7.5 8.5 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+      <div class="tcol"><button type="button" data-d="60" aria-label="Egy órával később"><svg class="gl" viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 7 5 2.5 8.5 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></button><span class="tval" id="tH">12</span><button type="button" data-d="-60" aria-label="Egy órával korábban"><svg class="gl" viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 3 5 7.5 8.5 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></button></div>
       <span class="tcolon">:</span>
-      <div class="tcol"><button type="button" data-d="10" aria-label="Tíz perccel később"><svg class="gl" viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 7 5 2.5 8.5 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="tval" id="tM">00</span><button type="button" data-d="-10" aria-label="Tíz perccel korábban"><svg class="gl" viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 3 5 7.5 8.5 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+      <div class="tcol"><button type="button" data-d="10" aria-label="Tíz perccel később"><svg class="gl" viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 7 5 2.5 8.5 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></button><span class="tval" id="tM">00</span><button type="button" data-d="-10" aria-label="Tíz perccel korábban"><svg class="gl" viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 3 5 7.5 8.5 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></button></div>
     </div>
     <div class="presets" id="tPresets"><button type="button" data-h="7">Reggel<small>7:00</small></button><button type="button" data-h="12">Dél<small>12:00</small></button><button type="button" data-h="19.5">Este<small>19:30</small></button><button type="button" data-h="23">Éjjel<small>23:00</small></button></div>
     <p class="cp-note" id="tNote">Valós idő: a játék a budapesti pontos időt követi.</p>
   </section>
-  <section class="mapmon" id="mapmon" aria-label="Vágánykép: a vonatok helyzete és az átjáró állapota" hidden><canvas id="mapCanvas"></canvas></section>
+  <section class="mapmon" id="mapmon" aria-label="Vágánykép: a vonatok helyzete és az átjáró állapota" hidden=""><canvas id="mapCanvas"></canvas></section>
   <button class="tc-tab" id="tcBtn" type="button" aria-expanded="false" aria-controls="tcpanel">Forgalom</button>
-  <section class="tcpanel" id="tcpanel" aria-label="Forgalomirányítás" hidden>
+  <section class="tcpanel" id="tcpanel" aria-label="Forgalomirányítás" hidden="">
     <div class="cp-head"><span class="cp-title">Forgalomirányítás</span><button class="cp-close" id="tcClose" type="button" aria-label="Bezárás">×</button></div>
     <div class="cp-row"><span class="tc-lbl">Éjszakai üzem</span><button class="tc-switch" id="tcNight" type="button" aria-pressed="false" aria-label="Éjszakai üzem"></button></div>
     <div class="cp-row"><span class="tc-lbl">Minden vonat tiltva<small class="tc-hint">egyik vonat sem kap engedélyt</small></span><button class="tc-switch halt" id="tcHalt" type="button" aria-pressed="false" aria-label="Minden vonat tiltva: egyik vonat sem kap engedélyt"></button></div>
@@ -580,30 +561,30 @@ body {
     </div>
     <div id="tcList"></div>
   </section>
-  <section class="cpanel" id="cpanel" aria-label="HÉV vezérlőpult" hidden>
+  <section class="cpanel" id="cpanel" aria-label="HÉV vezérlőpult" hidden="">
     <div class="cp-head">
       <span class="cp-title">HÉV vezérlés</span>
       <span class="cp-target" id="cpTarget">–</span>
       <button class="cp-close" id="cpClose" type="button" aria-label="Vezérlőpult bezárása">×</button>
     </div>
     <div class="cp-row">
-      <button class="cp-chip" id="cpPower" type="button" aria-pressed="true"><i class="led g" id="ledOk"></i><i class="led r" id="ledOff" hidden></i><span id="cpPowerLbl">Áram</span> <b id="cpPowerState">BE</b></button>
+      <button class="cp-chip" id="cpPower" type="button" aria-pressed="true"><i class="led g" id="ledOk"></i><i class="led r" id="ledOff" hidden=""></i><span id="cpPowerLbl">Áram</span> <b id="cpPowerState">BE</b></button>
       <span class="cp-volt" id="cpVolt">600 V</span><i class="led y" id="ledErr" title="Zavar"></i>
     </div>
     <div class="cp-row cp-dirrow" aria-live="polite">
-      <span class="cp-dir" id="cpDir"><svg class="gl" viewBox="0 0 10 10" aria-hidden="true"><rect x="2" y="2" width="6" height="6" rx="1" fill="currentColor"/></svg> ÁLL</span><span class="cp-speed" id="cpSpeed">0 km/h</span>
+      <span class="cp-dir" id="cpDir"><svg class="gl" viewBox="0 0 10 10" aria-hidden="true"><rect x="2" y="2" width="6" height="6" rx="1" fill="currentColor"></rect></svg> ÁLL</span><span class="cp-speed" id="cpSpeed">0 km/h</span>
     </div>
     <div class="cp-row">
       <button class="cp-chip go" id="cpDoorOpen" type="button">Ajtók nyit</button>
       <button class="cp-chip stop" id="cpDoorClose" type="button">Ajtók zár</button>
-      <i class="led g" id="ledOpen" title="Nyitva"></i><i class="led r" id="ledLocked" title="Reteszelve" hidden></i>
+      <i class="led g" id="ledOpen" title="Nyitva"></i><i class="led r" id="ledLocked" title="Reteszelve" hidden=""></i>
     </div>
     <div class="cp-row">
       <button class="cp-chip" id="cpManual" type="button" aria-pressed="false">Kézi</button>
       <div class="cp-lever" id="cpLever" role="radiogroup" aria-label="Irányváltó">
-        <button type="button" role="radio" data-v="R" aria-checked="false" aria-label="Tolatás"><svg class="gl" viewBox="0 0 10 10" aria-hidden="true"><path d="M8 1.2 1 5 8 8.8z" fill="currentColor"/></svg></button>
-        <button type="button" role="radio" data-v="N" aria-checked="false" aria-label="Semleges"><svg class="gl" viewBox="0 0 10 10" aria-hidden="true"><rect x="2" y="2" width="6" height="6" rx="1" fill="currentColor"/></svg></button>
-        <button type="button" role="radio" data-v="F" aria-checked="true" aria-label="Előre"><svg class="gl" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 1.2 9 5 2 8.8z" fill="currentColor"/></svg></button>
+        <button type="button" role="radio" data-v="R" aria-checked="false" aria-label="Tolatás"><svg class="gl" viewBox="0 0 10 10" aria-hidden="true"><path d="M8 1.2 1 5 8 8.8z" fill="currentColor"></path></svg></button>
+        <button type="button" role="radio" data-v="N" aria-checked="false" aria-label="Semleges"><svg class="gl" viewBox="0 0 10 10" aria-hidden="true"><rect x="2" y="2" width="6" height="6" rx="1" fill="currentColor"></rect></svg></button>
+        <button type="button" role="radio" data-v="F" aria-checked="true" aria-label="Előre"><svg class="gl" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 1.2 9 5 2 8.8z" fill="currentColor"></path></svg></button>
       </div>
       <button class="cp-estop" id="cpEstop" type="button" aria-pressed="false" aria-label="Kényszerfék">STOP</button>
     </div>
@@ -612,21 +593,21 @@ body {
       <button class="flat-sw" id="cpMains" type="button" role="switch" aria-checked="true" aria-label="Hálózati főkapcsoló: a környék áramellátása"><span class="fs-on">BE</span><span class="fs-off">KI</span><i></i></button>
     </div>
   </section>
-  <section class="lxp" id="lxp" aria-label="Fénysorompó kezelőszekrény" hidden>
+  <section class="lxp" id="lxp" aria-label="Fénysorompó kezelőszekrény" hidden="">
     <div class="cp-head"><span class="cp-title">Fénysorompó · Fő út</span><span class="cp-target" id="lxState">szabad</span><button class="cp-close" id="lxClose" type="button" aria-label="Bezárás">×</button></div>
     <div class="lx-gate" id="lxGate">
       <ol class="lx-steps" aria-label="Bejutás lépései"><li class="on">Kulcs be</li><li>Elfordít</li><li>Ajtó nyit</li></ol>
       <p class="lx-gate-txt" id="lxGateTxt">A szekrény zárva. Tedd be a szolgálati kulcsot.</p>
       <button class="lx-go" id="lxGo" type="button">Kulcs behelyezése</button>
     </div>
-    <div class="lx-board" id="lxBoard" hidden>
+    <div class="lx-board" id="lxBoard" hidden="">
       <svg class="lx-mimic" id="lxMimic" viewBox="0 0 220 92" aria-hidden="true">
-        <rect x="0" y="0" width="220" height="92" rx="6" fill="#E9E5D6"/>
-        <path d="M40 92 L92 0 H128 L76 92 Z" fill="#B9B6AA"/>
-        <g stroke="#3A3D3F" stroke-width="2.4"><path d="M6 36H214M6 58H214"/></g>
-        <g stroke="#3A3D3F" stroke-width="1" opacity=".55"><path d="M10 31v10M22 31v10M34 31v10M150 31v10M162 31v10M174 31v10M186 31v10M198 31v10M10 53v10M22 53v10M34 53v10M150 53v10M162 53v10M174 53v10M186 53v10M198 53v10"/></g>
-        <g class="lx-head" transform="translate(40 80)"><path d="M-14 -9 H14 L0 9 Z" fill="#1C1E20"/><circle class="r1" cx="-6" cy="-4" r="3.6"/><circle class="r2" cx="6" cy="-4" r="3.6"/><circle class="w" cx="0" cy="3" r="3"/></g>
-        <g class="lx-head" transform="translate(150 12)"><path d="M-14 -9 H14 L0 9 Z" fill="#1C1E20"/><circle class="r1" cx="-6" cy="-4" r="3.6"/><circle class="r2" cx="6" cy="-4" r="3.6"/><circle class="w" cx="0" cy="3" r="3"/></g>
+        <rect x="0" y="0" width="220" height="92" rx="6" fill="#E9E5D6"></rect>
+        <path d="M40 92 L92 0 H128 L76 92 Z" fill="#B9B6AA"></path>
+        <g stroke="#3A3D3F" stroke-width="2.4"><path d="M6 36H214M6 58H214"></path></g>
+        <g stroke="#3A3D3F" stroke-width="1" opacity=".55"><path d="M10 31v10M22 31v10M34 31v10M150 31v10M162 31v10M174 31v10M186 31v10M198 31v10M10 53v10M22 53v10M34 53v10M150 53v10M162 53v10M174 53v10M186 53v10M198 53v10"></path></g>
+        <g class="lx-head" transform="translate(40 80)"><path d="M-14 -9 H14 L0 9 Z" fill="#1C1E20"></path><circle class="r1" cx="-6" cy="-4" r="3.6"></circle><circle class="r2" cx="6" cy="-4" r="3.6"></circle><circle class="w" cx="0" cy="3" r="3"></circle></g>
+        <g class="lx-head" transform="translate(150 12)"><path d="M-14 -9 H14 L0 9 Z" fill="#1C1E20"></path><circle class="r1" cx="-6" cy="-4" r="3.6"></circle><circle class="r2" cx="6" cy="-4" r="3.6"></circle><circle class="w" cx="0" cy="3" r="3"></circle></g>
         <text x="214" y="88" text-anchor="end">FŐ ÚT · H6</text>
       </svg>
       <div class="lx-leds">
@@ -642,7 +623,7 @@ body {
       </div>
     </div>
   </section>
-  <div class="backdrop" id="ttBackdrop" hidden>
+  <div class="backdrop" id="ttBackdrop" hidden="">
     <section class="timetable" role="dialog" aria-modal="true" aria-labelledby="ttTitle">
       <div class="tt-head">
         <span class="badge-h6" aria-hidden="true">H6</span>
@@ -659,30 +640,31 @@ body {
     </section>
   </div>
 
-  <div class="fade" id="fade" hidden><p id="fadeText"></p></div>
+  <div class="fade" id="fade" hidden=""><p id="fadeText"></p></div>
 </div>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="M4.5 15.5 12 7l7.5 8.5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
-  <symbol id="i-arrow-down" viewBox="0 0 24 24"><path d="M4.5 8.5 12 17l7.5-8.5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
-  <symbol id="i-left" viewBox="0 0 24 24"><path d="M15.5 4.5 7 12l8.5 7.5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
-  <symbol id="i-right" viewBox="0 0 24 24"><path d="M8.5 4.5 17 12l-8.5 7.5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
-  <symbol id="i-hand" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 3.3"/></symbol>
-  <symbol id="i-sit" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13h16M5 9h14M6 13v6M18 13v6M6 9V6M18 9V6"/></g></symbol>
-  <symbol id="i-stand" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.8" r="2.2" fill="currentColor" stroke="none"/><path d="M12 8.5v6.5M12 15l-3 5.5M12 15l3 5.5M7.5 11.5 12 9.5l4.5 2"/></g></symbol>
-  <symbol id="i-trash" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M9.5 7V4.8h5V7M6.8 7l1 13h8.4l1-13M10.5 10.5v6.5M13.5 10.5v6.5"/></g></symbol>
-  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/></symbol>
-  <symbol id="i-clock" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="2.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M7.5 8.5h9M7.5 12h9M7.5 15.5h5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
-  <symbol id="i-door" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"><rect x="4.5" y="3" width="15" height="18" rx="1.5"/><path d="M12 3v18"/><path d="M8 9.5h1M15 9.5h1"/></g></symbol>
-  <symbol id="i-up" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19h5v-5h5V9h5V5"/><path d="M15 5h3v3"/></g></symbol>
-  <symbol id="i-down" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h5v5h5v5h5v4"/><path d="M15.5 16.5 18 19l2.5-2.5"/></g></symbol>
-  <symbol id="i-cross" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 8h18M3 16h18"/><path d="M7 5v14M17 5v14" stroke-width="1.6" opacity=".7"/><path d="M12 3.5v17M9.5 6 12 3.5 14.5 6M9.5 18 12 20.5 14.5 18" stroke-width="2.4" stroke-linejoin="round"/></g></symbol>
-  <symbol id="i-map" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M5.5 10.5h13M5.5 14.5h13M9 10.5l3-3h4"/></g></symbol>
-  <symbol id="i-panel" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M8 9v6M12 9v2M16 9v6"/></g><circle cx="12" cy="14" r="1.8" fill="currentColor"/></symbol>
-  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.6" fill="currentColor"/><g stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M5.3 5.3l1.7 1.7M17 17l1.7 1.7M5.3 18.7 7 17M17 7l1.7-1.7"/></g></symbol>
-  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M19.5 14.8A8 8 0 0 1 9.2 4.5a8 8 0 1 0 10.3 10.3Z" fill="currentColor"/></symbol>
-  <symbol id="i-sound" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12.5 5v14l-5-4.5H4z" fill="currentColor"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
-  <symbol id="i-mute" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12.5 5v14l-5-4.5H4z" fill="currentColor"/><path d="m16 9.5 5 5M21 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="M4.5 15.5 12 7l7.5 8.5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"></path></symbol>
+  <symbol id="i-arrow-down" viewBox="0 0 24 24"><path d="M4.5 8.5 12 17l7.5-8.5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"></path></symbol>
+  <symbol id="i-uturn" viewBox="0 0 24 24"><path d="M7 20V10.5a5 5 0 0 1 10 0V19M13.5 15.5 17 19l3.5-3.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="M15.5 4.5 7 12l8.5 7.5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"></path></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="M8.5 4.5 17 12l-8.5 7.5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"></path></symbol>
+  <symbol id="i-hand" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2" fill="currentColor"></circle><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 3.3"></circle></symbol>
+  <symbol id="i-sit" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13h16M5 9h14M6 13v6M18 13v6M6 9V6M18 9V6"></path></g></symbol>
+  <symbol id="i-stand" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.8" r="2.2" fill="currentColor" stroke="none"></circle><path d="M12 8.5v6.5M12 15l-3 5.5M12 15l3 5.5M7.5 11.5 12 9.5l4.5 2"></path></g></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M9.5 7V4.8h5V7M6.8 7l1 13h8.4l1-13M10.5 10.5v6.5M13.5 10.5v6.5"></path></g></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"></path><circle cx="12" cy="12" r="3.2" fill="currentColor"></circle></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="2.5" fill="none" stroke="currentColor" stroke-width="2.2"></rect><path d="M7.5 8.5h9M7.5 12h9M7.5 15.5h5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"></path></symbol>
+  <symbol id="i-door" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"><rect x="4.5" y="3" width="15" height="18" rx="1.5"></rect><path d="M12 3v18"></path><path d="M8 9.5h1M15 9.5h1"></path></g></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19h5v-5h5V9h5V5"></path><path d="M15 5h3v3"></path></g></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h5v5h5v5h5v4"></path><path d="M15.5 16.5 18 19l2.5-2.5"></path></g></symbol>
+  <symbol id="i-cross" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 8h18M3 16h18"></path><path d="M7 5v14M17 5v14" stroke-width="1.6" opacity=".7"></path><path d="M12 3.5v17M9.5 6 12 3.5 14.5 6M9.5 18 12 20.5 14.5 18" stroke-width="2.4" stroke-linejoin="round"></path></g></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M5.5 10.5h13M5.5 14.5h13M9 10.5l3-3h4"></path></g></symbol>
+  <symbol id="i-panel" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"></rect><path d="M8 9v6M12 9v2M16 9v6"></path></g><circle cx="12" cy="14" r="1.8" fill="currentColor"></circle></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.6" fill="currentColor"></circle><g stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M5.3 5.3l1.7 1.7M17 17l1.7 1.7M5.3 18.7 7 17M17 7l1.7-1.7"></path></g></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M19.5 14.8A8 8 0 0 1 9.2 4.5a8 8 0 1 0 10.3 10.3Z" fill="currentColor"></path></symbol>
+  <symbol id="i-sound" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12.5 5v14l-5-4.5H4z" fill="currentColor"></path><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></symbol>
+  <symbol id="i-mute" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12.5 5v14l-5-4.5H4z" fill="currentColor"></path><path d="m16 9.5 5 5M21 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></symbol>
 </svg>
 
 <script>
@@ -5108,7 +5090,7 @@ function scoreBuild() {
   const el = document.createElement('div');
   el.className = 'score-chip'; el.setAttribute('role', 'status'); el.setAttribute('aria-label', 'Szellempontok'); el.title = 'Szellempontok';
   el.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10a7 7 0 0114 0v10l-2.3-1.6L14.4 20 12 18.4 9.6 20l-2.3-1.6z" fill="#F6F1E4"/><circle cx="9.5" cy="10.5" r="1.4" fill="#1E5E42"/><circle cx="14.5" cy="10.5" r="1.4" fill="#1E5E42"/></svg><span>0</span>';
-  const hr = document.querySelector('.hud-right'); hr.insertBefore(el, hr.firstChild);
+  const hr = document.querySelector('.hud-right'); hr.querySelectorAll('.score-chip').forEach(n => n.remove()); hr.insertBefore(el, hr.firstChild);
   SCORE.el = el; SCORE.num = el.querySelector('span');
 }
 // key: the same intervention only scores again after `every` seconds
@@ -6056,7 +6038,7 @@ window.addEventListener('keydown', e => { if (e.code === 'Escape' && LXP.open) l
 // It is a separate little scene (x 5000–5122), the camera looks south across the road.
 // =====================================================================
 const SCENE = { back: false, frontX: -440 };
-const BACK = { x0: 5000, x1: 5156, items: [], ground: [], zebraX: 5000 - 3.8, zebraF: 5000 + 128.5 };   // the ghost arrives at (and leaves from) the zebra
+const BACK = { x0: 5000, x1: 5156, items: [], ground: [], zebraX: 5000 - 3.8, zebraF: 5000 + 103.9 };   // the ghost arrives at (and leaves from) the zebra
 const BD = { walk0: 0.3, curbN: 2.3, road0: 2.5, mid: 5.55, road1: 8.6, walk1: 11.2, yard1: 15.4, lane: 9.6 };
 (function buildBack() {
   const s0 = STATIC.length, g0 = GROUND.length, X0 = BACK.x0 - 40, X1 = BACK.x1 + 40;
@@ -6082,10 +6064,10 @@ const BD = { walk0: 0.3, curbN: 2.3, road0: 2.5, mid: 5.55, road1: 8.6, walk1: 1
 
   const bx = u => BACK.x0 + u;
   // ---- far background: a row of houses and trees beyond the gardens ----
-  for (const [u, w, h, col, rc] of [[-6, 11, 3.6, '#E9E1CF', C.roofTile], [12, 9, 3.4, '#F2EFE8', C.roofRed], [30, 12, 3.8, '#E4D3B4', C.roofBrown], [52, 10, 3.5, '#EFEADF', C.roofTile], [74, 11, 3.6, '#E9E1CF', C.roofRed], [96, 12, 3.4, '#F2EFE8', C.roofBrown], [118, 10, 3.6, '#E4D3B4', C.roofTile]]) {
+  for (const [u, w, h, col, rc] of [[-6, 11, 3.6, '#E9E1CF', C.roofTile], [12, 9, 3.4, '#F2EFE8', C.roofRed], [30, 12, 3.8, '#E4D3B4', C.roofBrown], [52, 10, 3.5, '#EFEADF', C.roofTile], [74, 11, 3.6, '#E9E1CF', C.roofRed], [96, 12, 3.4, '#F2EFE8', C.roofBrown]]) {
     house({ x0: bx(u), x1: bx(u + w), d0: 44, d1: 52, h, wall: col, wallS: mix(col, '#000000', 0.1), roof: { type: 'hip', hr: h + 3.2, c: rc, cs: mix(rc, '#000000', 0.2) } });
   }
-  for (let u = -10; u < 132; u += 7) treeRound(bx(u + 3), 56 + (u % 3) * 2, 11 + (u % 4), FAR, 7100 + u);
+  for (let u = -10; u < 132; u += 7) if (u + 3 < 110 || u + 3 > 148) treeRound(bx(u + 3), 56 + (u % 3) * 2, 11 + (u % 4), FAR, 7100 + u);   // none in the Erzsébet utca
   // ---- helpers ----
   const pole = (u, d, flowers, old) => add(d, bx(u) - 2, bx(u) + 2, () => {
     const x = bx(u), lk = 4000 + u * 3.1, ln = lampN(lk, old);
@@ -6320,24 +6302,520 @@ const BD = { walk0: 0.3, curbN: 2.3, road0: 2.5, mid: 5.55, road1: 8.6, walk1: 1
   pole(105.2, 10.9, true);
   pole(118.5, 10.9, false);
   treeRound(bx(106.4), 13.4, 7.5, MID, 7701);
-  // ---- 9. Ildi Divat Plus: the grey clothes shop with the dormers, a brick plinth, rails at the steps ----
-  house({ x0: bx(107), x1: bx(124), d0: 16.4, d1: 25, h: 3.8, wall: '#A9AEB3', wallS: '#92979C', roof: { type: 'gx', hr: 7.4, c: '#7A5A48', cs: '#664A3A' },
-    deco: w => {
-      plinth(w, 0.55, '#B9A27E');
-      fillR(2.4, -3.45, 8.6, 0.62, '#26282A'); ltext('ILDI DIVAT PLUS', 6.7, -3.14, 0.46, '#E9E7DF', 800);
-      for (const u of [1.0, 4.4, 10.8]) { fillR(u, -2.55, 1.9, 1.95, '#F4F4F0'); pane(u + 0.12, -2.45, 1.66, 1.75, '#4A5660', u); }
-      fillR(7.4, -2.6, 1.6, 2.6, '#F4F4F0'); fillR(7.55, -2.5, 1.3, 2.5, '#5A6670');
-      fillR(14.2, -2.6, 1.3, 2.6, '#1E2022'); ltext('ILDI', 14.85, -2.1, 0.22, '#FFF', 800); ltext('M–6XL', 14.85, -1.2, 0.13, '#FFF', 700);
-      for (const u of [1.0, 10.8]) strokeL([u, -0.9, u + 1.9, -0.9], '#8A8F93', 0.04);
-    } });
-  // beyond the zebra: a beige two-storey house with shops downstairs (Anna-ház)
-  house({ x0: bx(134), x1: bx(152), d0: 16.4, d1: 26, h: 6.6, wall: '#E7D3B0', wallS: '#CDB894', roof: { type: 'gx', hr: 9.6, c: '#8E5236', cs: '#6E3E29' },
-    deco: w => { plinth(w, 0.5, '#8A7E6C'); for (const u of [1.0, 5.6, 10.2]) { fillR(u, -2.6, 3.6, 2.1, '#E9E6DE'); pane(u + 0.12, -2.5, 3.36, 1.9, '#4F606B', u); } fillR(1.0, -3.3, 13, 0.5, '#7A3E30'); ltext('Anna-ház', 7.5, -3.05, 0.34, '#F2EBDA', 700, 'Barlow');
-      for (const u of [1.5, 5.5, 9.5, 13.5]) win(u, 4.0, 1.3, 1.4); } });
-  treeRound(bx(129.5), 13.0, 7.0, MID, 7702);
-  // the zebra over the Fő út and its signs
-  ground(BD.road1 - 0.01, bx(124), bx(134), () => { base(); for (let d = BD.road0 + 0.3; d < BD.road1 - 0.3; d += 1.0) face([[bx(126.5), d, 0.008], [bx(130.5), d, 0.008], [bx(130.5), d + 0.5, 0.008], [bx(126.5), d + 0.5, 0.008]], '#F2F1EC', true); });
-  for (const [u, d] of [[125.6, BD.road1 + 0.5], [131.4, BD.road0 - 0.4]]) add(d, bx(u) - 1, bx(u) + 1, () => {
+  // ---- 9. the corner of the Erzsébet utca (Street View, Fő út 1 / Erzsébet u. 1) ----
+  // Left: the ProGuard Europe corner house (Ildi Divat Plus on its Fő út side): grey render, a yellow brick plinth,
+  // the cut-off corner with the big ProGuard poster, cameras, white gutters, a brown hip roof with bell-shaped
+  // dormers and arched windows. Right: the Anna-ház with its brown shop fronts (GDN, CSOMBÓ), the script sign,
+  // cream window surrounds and the dark wooden eave brackets. Between them the Erzsébet utca runs away from us in
+  // perspective: grey concrete pavers, kerbs with rounded corners, parked cars on both sides (the blue ProGuard
+  // vans first), the one-way / no-parking signs on the corner, concrete poles, wires, and the houses down the street.
+  // a vertical plane that is not parallel to the Fő út: o = [x, d] of its left end, e = along it (left to right as
+  // seen from outside), n = outwards; u along it, v up, w outwards
+  const FR3 = (F, u, v, w = 0) => [F.o[0] + F.e[0] * u + F.n[0] * w, F.o[1] + F.e[1] * u + F.n[1] * w, v];
+  const fq = (F, u0, v0, u1, v1, fill, w = 0.012) => { base(); face([FR3(F, u0, v0, w), FR3(F, u1, v0, w), FR3(F, u1, v1, w), FR3(F, u0, v1, w)], fill, true); };
+  const facing = F => (cam.x - F.o[0]) * F.n[0] + (cam.z - F.o[1]) * F.n[1] > 0.05;
+  // a local metre frame (x along the plane, y down) linearised at one point: fine for posters and windows
+  const fAt = (F, u, v, w = 0.015) => {
+    const p = FR3(F, u, v, w), q = FR3(F, u + 0.05, v, w), X = sx(p[0], p[1]), Y = sy(v, p[1]), s = sc(p[1]);
+    ctx.setTransform((sx(q[0], q[1]) - X) / 0.05 * cam.dpr, (sy(v, q[1]) - Y) / 0.05 * cam.dpr, 0, s * cam.dpr, X * cam.dpr, Y * cam.dpr);
+  };
+  // the same, but drawing keeps the wall's own u coordinates (so the window seeds stay different)
+  const near = (F, uc, w) => { fAt(F, uc, 0, w); ctx.translate(-uc, 0); };
+  // lettering along such a wall, letter by letter, so it follows the perspective
+  const ftext = (F, str, u, v, size, color, weight = 800, family = 'Barlow Condensed') => {
+    base(); ctx.font = `${weight} ${size * 100}px "${family}", "Arial Narrow", sans-serif`;
+    const cs = [...str], ws = cs.map(c => ctx.measureText(c).width / 100);
+    let x = u - ws.reduce((a, b) => a + b, 0) / 2;
+    for (let i = 0; i < cs.length; i++) { fAt(F, x + ws[i] / 2, v, 0.03); ltext(cs[i], 0, 0, size, color, weight, family); x += ws[i]; }
+    base();
+  };
+  // takes what a helper (treeRound, shrubs …) adds to STATIC and hands back its draw functions
+  const grab = fn => { const n = STATIC.length; fn(); return STATIC.splice(n); };
+  const glassC = (seed, glass) => { const k = hash01(CUR_HOUSE, seed, 7.7); return k < 0.62 && lampN(CUR_HOUSE * 7.31 + k * 1000) > 0.3 + k * 0.6 ? (k < 0.12 ? '#DCE6F2' : '#F6D48C') : null; };
+  const brickPlinth = (F, w, h = 0.85) => {
+    fq(F, 0, 0, w, h, '#E3D8BB');
+    for (let i = 1, y = 0.17; y < h - 0.01; y += 0.17, i++) {
+      fq(F, 0, y - 0.016, w, y, '#C8BB9B', 0.014);
+      for (let u = (i % 2) * 0.36; u < w; u += 0.72) fq(F, u, y - 0.17, u + 0.016, y - 0.016, '#CFC3A4', 0.014);
+    }
+    fq(F, -0.03, h, w + 0.03, h + 0.07, '#D2C7AA', 0.04);
+  };
+  const domeCam = (u, v) => { fillR(u - 0.02, -v - 0.02, 0.05, 0.22, '#D8D8D2'); fillRR(u - 0.2, -v - 0.12, 0.34, 0.16, 0.05, '#EDEDE8'); circle(u - 0.12, -v + 0.05, 0.09, '#1E2022'); circle(u - 0.14, -v + 0.03, 0.025, '#5A6066'); };
+
+  // ---------- the ProGuard corner house ----------
+  const PG = { x0: bx(107), xc: bx(121.6), x1: bx(124), d0: 16.4, dc: 18.8, d1: 36, H: 4.4, HR: 9.6, ov: 0.45 };
+  PG.run = (PG.x1 - PG.x0) / 2 + PG.ov;
+  const S2 = Math.SQRT1_2, SLOPE = (PG.HR - PG.H) / PG.run;
+  const FF = { o: [PG.x0, PG.d0], e: [1, 0], n: [0, -1] }, WF = PG.xc - PG.x0;
+  const FC = { o: [PG.xc, PG.d0], e: [S2, S2], n: [S2, -S2] }, WC = (PG.x1 - PG.xc) * Math.SQRT2;
+  const FS = { o: [PG.x1, PG.dc], e: [0, 1], n: [1, 0] }, WS = PG.d1 - PG.dc;
+  // bell-shaped dormer outline (u from the middle, v up from its foot): straight cheeks, a flared eave, an ogee top
+  const bellOutline = (w, hs, ht, fl) => {
+    const top = [];
+    for (let i = 0; i <= 10; i++) {
+      const t = i / 10, y = hs + (ht - hs) * (t < 0.8 ? 0.8 * Math.sin(t / 0.8 * Math.PI / 2) : 0.8 + 0.2 * ((t - 0.8) / 0.2) ** 1.6);
+      top.push([-(w / 2 + fl) * (1 - t), y]);
+    }
+    return [[-w / 2, 0], [-w / 2, hs], ...top, ...top.slice(0, -1).reverse().map(([u, v]) => [-u, v]), [w / 2, hs], [w / 2, 0]];
+  };
+  const DORMERS = [
+    { F: FF, uc: 6.2, w: 1.9, hs: 1.3, ht: 2.9, kind: 'arch', n: 2, slope: SLOPE },
+    { F: FF, uc: 10.4, w: 2.7, hs: 1.5, ht: 3.3, kind: 'arch', n: 3, slope: SLOPE },
+    { F: FC, uc: WC / 2, w: 2.9, hs: 1.75, ht: 3.9, kind: 'board', n: 0, slope: SLOPE * 0.86 },
+    { F: FS, uc: 4.0, w: 3.3, hs: 1.55, ht: 3.6, kind: 'arch', n: 4, slope: SLOPE },
+    { F: FS, uc: 9.8, w: 2.6, hs: 1.4, ht: 3.2, kind: 'arch', n: 3, slope: SLOPE },
+  ];
+  for (const dm of DORMERS) { dm.out = bellOutline(dm.w, dm.hs, dm.ht, 0.16); dm.inner = bellOutline(dm.w - 0.26, dm.hs, dm.ht - 0.24, 0); dm.c = FR3(dm.F, dm.uc, PG.H + 1, -1); }
+  function dormer(dm) {
+    const { F, uc, w, hs, ht, slope } = dm, w0 = -0.35, b = PG.H + (PG.ov - w0) * slope * 0.95;
+    const P3 = (u, v, back) => FR3(F, uc + u, b + v, w0 - (back ? v / slope : 0));
+    const c = FR3(F, uc, b + hs * 0.5, w0 - 0.35), out = dm.out;
+    base();
+    // the cheeks and the curved little roof, running back until they meet the main roof
+    for (let i = 0; i < out.length - 1; i++) {
+      const [u0, v0] = out[i], [u1, v1] = out[i + 1];
+      if (v0 === 0 && v1 === 0) continue;
+      const col = Math.abs(u1 - u0) < 1e-6 ? '#C2C1BA' : Math.abs(v1 - v0) < 1e-6 ? '#5E4034' : (u0 < 0 ? '#86594A' : '#6E4A3C');
+      faceC([P3(u0, v0, false), P3(u1, v1, false), P3(u1, v1, true), P3(u0, v0, true)], col, c);
+    }
+    // the front: white fascia round the bell, the rendered (or boarded) gable, the window
+    fAt(F, uc, b, w0 + 0.004);
+    const path = pts => { ctx.beginPath(); pts.forEach(([u, v], i) => (i ? ctx.lineTo(u, -v) : ctx.moveTo(u, -v))); ctx.closePath(); };
+    path(out); ctx.fillStyle = '#F2F2EE'; ctx.fill();
+    path(dm.inner); ctx.fillStyle = dm.kind === 'board' ? '#E9E9E4' : '#DEDDD7'; ctx.fill();
+    if (dm.kind === 'board') {
+      ctx.save(); path(dm.inner); ctx.clip();
+      for (let u = -w / 2; u < w / 2; u += 0.2) fillR(u, -ht, 0.02, ht, '#CDCDC7');
+      ctx.restore();
+      fillR(-0.5, -(hs + 1.05), 1.0, 1.05, '#F4F4F0');
+      const lit = glassC(dm.uc * 3.1, 0);
+      const g = () => { fillR(-0.42, -(hs + 0.97), 0.84, 0.89, lit || '#55646D'); };
+      lit ? emit(g) : g();
+      fillR(-0.03, -(hs + 0.97), 0.06, 0.89, '#F4F4F0'); fillR(-0.42, -(hs + 0.6), 0.84, 0.05, '#F4F4F0');
+      fillR(-0.6, -(hs + 0.05), 1.2, 0.07, '#D6D5CF');
+    } else {
+      const ww = w - 0.62, ra = Math.min(ww / 2, ht - 0.42 - hs), y0 = 0.22;
+      const arch = (g = 0) => { ctx.beginPath(); ctx.moveTo(-ww / 2 - g, -y0 + g); ctx.lineTo(-ww / 2 - g, -hs); ctx.ellipse(0, -hs, ww / 2 + g, ra + g, 0, Math.PI, 0); ctx.lineTo(ww / 2 + g, -y0 + g); ctx.closePath(); };
+      arch(0.09); ctx.fillStyle = '#F6F6F2'; ctx.fill();
+      const lit = glassC(dm.uc * 3.1 + dm.w, 0);
+      const g = () => { arch(); ctx.fillStyle = lit || '#55646D'; ctx.fill(); };
+      lit ? emit(g) : g();
+      if (!lit) { ctx.save(); arch(); ctx.clip(); polyL([-ww / 2, -hs * 0.9, -ww / 2 + 0.35, -hs - ra, -ww / 2 + 0.6, -hs - ra, -ww / 2, -hs * 0.45], 'rgba(160,185,200,0.35)'); ctx.restore(); }
+      ctx.save(); arch(); ctx.clip();
+      for (let i = 1; i < dm.n; i++) fillR(-ww / 2 + i * ww / dm.n - 0.03, -(hs + ra), 0.06, hs + ra, '#F6F6F2');
+      fillR(-ww / 2, -hs * 0.62 - 0.03, ww, 0.06, '#F6F6F2'); fillR(-ww / 2, -hs - 0.03, ww, 0.06, '#F6F6F2');
+      ctx.restore();
+      fillR(-ww / 2 - 0.14, -y0, ww + 0.28, 0.07, '#D6D5CF');
+    }
+    base();
+  }
+  function proGuard() {
+    const { x0, xc, x1, d0, dc, d1, H, HR, ov } = PG, xm = (x0 + x1) / 2, cw = [xm, (d0 + d1) / 2, H / 2];
+    CUR_HOUSE = x0;
+    base();
+    const wall = (a, b, col) => faceC([[a[0], a[1], 0], [b[0], b[1], 0], [b[0], b[1], H], [a[0], a[1], H]], col, cw);
+    wall([x0, d1], [x0, d0], '#B9B8B2'); wall([x1, d1], [x0, d1], '#B9B2A4');
+    wall([x0, d0], [xc, d0], '#CBCAC4'); wall([xc, d0], [x1, dc], '#D8D2C5'); wall([x1, dc], [x1, d1], '#C6BEAE');
+    const cornice = (F, w) => { fq(F, -0.02, H - 0.42, w + 0.02, H - 0.36, '#AEADA6', 0.03); fq(F, -0.02, H - 0.36, w + 0.02, H, '#DEDCD5', 0.05); };
+    // the Fő út side: Ildi Divat Plus, the beauty salon, the house number, a camera
+    if (facing(FF)) {
+      brickPlinth(FF, WF); cornice(FF, WF);
+      near(FF, 3.4);
+      fillR(0.6, -3.55, 5.9, 0.62, '#26282A'); ltext('ILDI DIVAT PLUS', 3.55, -3.24, 0.44, '#E9E7DF', 800);
+      fillR(0.85, -2.55, 1.2, 2.55, '#F4F4F0'); pane(0.97, -2.43, 0.96, 2.35, '#4A5660', 11); fillR(0.97, -1.3, 0.96, 0.06, '#F4F4F0');
+      fillR(2.55, -2.65, 2.25, 1.8, '#F4F4F0'); pane(2.67, -2.53, 2.01, 1.56, '#4A5660', 12); strokeL([2.55, -0.95, 4.8, -0.95], '#8A8F93', 0.04);
+      fillR(5.35, -2.6, 1.25, 2.6, '#1E2022'); ltext('ILDI', 5.97, -2.1, 0.22, '#FFF', 800); ltext('M–6XL', 5.97, -1.2, 0.13, '#FFF', 700);
+      near(FF, 9.6);
+      fillR(7.4, -2.65, 2.1, 1.8, '#F4F4F0'); pane(7.52, -2.53, 1.86, 1.56, '#4A5660', 13);
+      fillR(7.7, -1.75, 0.55, 0.62, '#2F6FD0'); fillR(8.55, -1.55, 0.6, 0.42, '#3A86D8'); fillR(7.8, -1.62, 0.35, 0.08, '#FFFFFF'); fillR(8.65, -1.45, 0.4, 0.06, '#FFFFFF');
+      fillRR(9.85, -3.25, 1.45, 0.4, 0.05, '#F3E6EE'); ltext('Lélek-Varázs', 10.57, -3.05, 0.16, '#9A3D6E', 700, 'Barlow');
+      fillR(10.05, -2.6, 1.05, 2.6, '#F4F4F0'); pane(10.15, -2.5, 0.85, 1.4, '#4A5660', 14); fillR(10.15, -1.0, 0.85, 0.9, '#E2E1DB');
+      near(FF, 13.2);
+      fillR(11.75, -2.7, 0.55, 0.3, '#F4F4F0'); ltext('1', 12.02, -2.55, 0.2, '#2A2A2A', 800);
+      fillR(12.8, -2.0, 0.42, 0.55, '#E9E8E2'); fillR(12.86, -1.9, 0.3, 0.1, '#9AA0A4');
+      domeCam(13.9, 3.55);
+      fq(FF, WF - 0.26, 0.15, WF - 0.14, H - 0.05, '#DAD8D1', 0.08);
+    }
+    // the cut-off corner with the ProGuard poster
+    if (facing(FC)) {
+      brickPlinth(FC, WC); cornice(FC, WC);
+      near(FC, WC / 2, 0.03);
+      const u0 = 0.4, u1 = WC - 0.4, uw = u1 - u0, cx = (u0 + u1) / 2;
+      fillR(u0 - 0.06, -3.91, uw + 0.12, 2.97, '#B9A9A0');
+      const gr = ctx.createLinearGradient(0, -3.85, 0, -0.97); gr.addColorStop(0, '#EFE6DF'); gr.addColorStop(0.55, '#E3C3BA'); gr.addColorStop(1, '#D4695C');
+      ctx.fillStyle = gr; ctx.fillRect(u0, -3.85, uw, 2.88);
+      fillRR(cx - 0.62, -3.72, 1.24, 0.38, 0.04, '#2D58A8');
+      strokeL([cx - 0.5, -3.72, cx, -3.92, cx + 0.5, -3.72], '#2D58A8', 0.07); strokeL([cx - 0.3, -3.76, cx, -3.86, cx + 0.3, -3.76], '#FFFFFF', 0.03);
+      ltext('PRO GUARD', cx, -3.56, 0.22, '#FFFFFF', 800); fillRR(cx - 0.36, -3.38, 0.72, 0.13, 0.03, '#2D58A8'); ltext('europe', cx, -3.315, 0.1, '#FFFFFF', 700, 'Barlow');
+      ltext('Biztonságtechnikai', cx, -3.13, 0.12, '#B08A84', 700, 'Barlow'); ltext('Kis- és Nagykereskedelem', cx, -2.99, 0.11, '#B08A84', 700, 'Barlow');
+      ltext('Szaktanácsadás', u0 + 1.62, -2.74, 0.12, '#4A3C3A', 700, 'Barlow'); ltext('Tervezés', u0 + 1.62, -2.58, 0.12, '#4A3C3A', 700, 'Barlow'); ltext('Rendszerépítés', u0 + 1.62, -2.42, 0.12, '#4A3C3A', 700, 'Barlow');
+      // mum with a red cape and the boy on her shoulders, both pointing ahead
+      const m = u0 + 0.62;
+      polyL([m - 0.12, -2.3, m - 0.55, -1.0, m + 0.3, -1.0, m + 0.18, -2.3], '#C8302A');
+      fillRR(m - 0.14, -2.32, 0.3, 1.3, 0.1, '#2E3E6E'); circle(m + 0.01, -2.45, 0.12, '#E8B99A'); circle(m - 0.04, -2.5, 0.1, '#5A3424');
+      strokeL([m + 0.1, -2.2, m + 0.55, -2.42, m + 0.78, -2.44], '#E8B99A', 0.06);
+      polyL([m - 0.08, -2.62, m - 0.32, -2.2, m + 0.12, -2.62], '#D8423A'); fillRR(m - 0.1, -2.92, 0.22, 0.34, 0.06, '#C8302A'); circle(m + 0.02, -3.0, 0.09, '#E8B99A');
+      strokeL([m + 0.08, -2.85, m + 0.5, -2.98, m + 0.72, -3.0], '#E8B99A', 0.05);
+      ltext('proguard@europe.com', u0 + 1.62, -2.02, 0.08, '#5A4A48', 700, 'Barlow'); ltext('06 20 372 4420', u0 + 1.62, -1.82, 0.15, '#2A2A2A', 800); ltext('proguard-shop.hu', u0 + 1.62, -1.66, 0.08, '#5A4A48', 700, 'Barlow');
+      ltext('SAFETY', u0 + 1.7, -1.2, 0.2, '#F4E4DC', 800);
+      fillR(0.08, -0.6, 0.06, 0.12, '#6A6E70');
+      fq(FC, WC - 0.12, 0.15, WC - 0.01, H - 0.05, '#DAD8D1', 0.1);
+      fq(FC, 0.01, 0.15, 0.12, H - 0.05, '#DAD8D1', 0.1);
+      near(FC, 0.3, 0.03); domeCam(0.42, 3.6);
+      near(FC, WC - 0.3, 0.03); domeCam(WC - 0.25, 3.62);
+    }
+    // the Erzsébet utca side: the big blue lettering, the logo, the white windows and doors
+    if (facing(FS)) {
+      brickPlinth(FS, WS); cornice(FS, WS);
+      fq(FS, 0.04, 0.15, 0.16, H - 0.05, '#DAD8D1', 0.08);
+      ftext(FS, 'ProGuard Europe', 3.5, 3.42, 0.66, '#3E5E96');
+      near(FS, 6.9, 0.03);
+      polyL([6.9, -3.98, 7.42, -3.42, 6.9, -2.86, 6.38, -3.42], '#3E5E96'); polyL([6.9, -3.88, 7.32, -3.42, 6.9, -2.96, 6.48, -3.42], '#EEF2F7');
+      polyL([6.6, -3.3, 6.82, -3.62, 6.98, -3.42, 7.08, -3.52, 7.22, -3.3], '#3E5E96'); ltext('PRO', 6.9, -3.18, 0.1, '#3E5E96', 800);
+      strokeL([5.6, -2.88, 6.4, -2.84, 7.6, -2.9, 8.2, -2.98], '#3E5E96', 0.05);
+      ftext(FS, 'Bemutatóterem', 10.2, 3.42, 0.62, '#3E5E96');
+      near(FS, 12.4, 0.03); circle(12.45, -3.42, 0.22, '#C8302A'); fillR(12.33, -3.47, 0.24, 0.1, '#FFFFFF'); fillRR(12.75, -3.56, 0.62, 0.28, 0.04, '#2D58A8');
+      near(FS, 2.4); domeCam(0.55, 3.62);
+      fillR(1.1, -2.7, 2.6, 1.85, '#F4F4F0'); pane(1.26, -2.54, 2.28, 1.53, '#3E4C55', 21); fillR(1.0, -0.9, 2.8, 0.1, '#E6E4DD');
+      near(FS, 5.0);
+      fillR(4.45, -2.65, 1.1, 2.6, '#F4F4F0'); pane(4.57, -2.53, 0.86, 1.5, '#55646D', 22); fillR(4.57, -0.95, 0.86, 0.85, '#E4E3DD');
+      near(FS, 7.6);
+      for (const u of [6.4, 8.0]) { fillR(u, -2.45, 1.15, 1.45, '#F4F4F0'); pane(u + 0.12, -2.33, 0.91, 1.21, '#3E4C55', 23 + u); }
+      near(FS, 11.0);
+      fillR(9.8, -2.6, 1.05, 2.55, '#F4F4F0'); pane(9.92, -2.48, 0.81, 1.45, '#55646D', 25); fillR(9.92, -0.95, 0.81, 0.85, '#E4E3DD');
+      fillR(11.4, -2.45, 1.15, 1.45, '#F4F4F0'); pane(11.52, -2.33, 0.91, 1.21, '#3E4C55', 26);
+      near(FS, 14.6);
+      for (const u of [13.1, 15.2]) { fillR(u, -2.45, 1.15, 1.45, '#F4F4F0'); pane(u + 0.12, -2.33, 0.91, 1.21, '#3E4C55', 27 + u); }
+      fq(FS, WS - 0.3, 0.15, WS - 0.18, H - 0.05, '#DAD8D1', 0.08);
+    }
+    // the hip roof (the cut corner gets its own slope), white gutters, tile courses
+    const sw = 0.414 * ov;
+    const E1 = [x0 - ov, d0 - ov, H], E2 = [xc + sw, d0 - ov, H], E3 = [x1 + ov, dc - sw, H], E4 = [x1 + ov, d1 + ov, H], E5 = [x0 - ov, d1 + ov, H];
+    const R1 = [xm, d0 - ov + PG.run, HR], R2 = [xm, d1 + ov - PG.run, HR], cr = [xm, (d0 + d1) / 2, H + 0.3];
+    base();
+    faceC([E5, E1, R1, R2], '#76503F', cr); faceC([E4, E5, R2], '#6A4738', cr);
+    const sideV = faceC([E3, E4, R2, R1], '#7A5040', cr), cutV = faceC([E2, E3, R1], '#865A49', cr), frontV = faceC([E1, E2, R1], '#8F5E4A', cr);
+    const L = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
+    for (let k = 1; k < 7; k++) {
+      const t = k / 7;
+      if (frontV) line3(L(E1, R1, t), L(E2, R1, t), '#7C4F3E', 0.035);
+      if (cutV) line3(L(E2, R1, t), L(E3, R1, t), '#744A3B', 0.035);
+      if (sideV) line3(L(E3, R1, t), L(E4, R2, t), '#6C4537', 0.035);
+    }
+    for (const [a, b] of [[E1, R1], [E2, R1], [E3, R1], [E4, R2], [R1, R2]]) line3(a, b, '#5E3E31', 0.08);
+    for (const [a, b] of [[E1, E2], [E2, E3], [E3, E4]]) line3([a[0], a[1], H - 0.06], [b[0], b[1], H - 0.06], '#E6E5E0', 0.14);
+    // the dormers, the farther ones first
+    const ds = DORMERS.filter(dm => facing(dm.F)).sort((a, b) => Math.hypot(b.c[0] - cam.x, b.c[1]) - Math.hypot(a.c[0] - cam.x, a.c[1]));
+    for (const dm of ds) dormer(dm);
+  }
+
+  // ---------- simple blocks for the houses down the street ----------
+  // roof: 'ridgeD' (ridge running away from us, gables at d0/d1), 'ridgeX' (ridge along the Fő út, gables
+  // facing the Erzsébet utca), 'hip' or 'flat'; deco runs after the walls, before the roof
+  function blk(o) {
+    const { x0, x1, d0, d1, h } = o, ov = o.ov ?? 0.35, xm = (x0 + x1) / 2, dm = (d0 + d1) / 2, hr = o.hr ?? h + 3;
+    CUR_HOUSE = x0 + d0;
+    box(x0, x1, d0, d1, 0, h, { f: o.wall, s: o.wallS, t: o.roof === 'flat' ? o.rc : undefined });
+    base();
+    const cw = [xm, dm, h * 0.5], cr = [xm, dm, h + 0.05];
+    if (o.roof === 'ridgeD') { faceC([[x0, d0, h], [x1, d0, h], [xm, d0, hr]], o.wall, cw); faceC([[x0, d1, h], [x1, d1, h], [xm, d1, hr]], o.wall, cw); }
+    if (o.roof === 'ridgeX') { faceC([[x0, d0, h], [x0, d1, h], [x0, dm, hr]], o.wallS, cw); faceC([[x1, d0, h], [x1, d1, h], [x1, dm, hr]], o.wallS, cw); }
+    if (o.deco) o.deco();
+    base();
+    if (o.roof === 'ridgeD') {
+      faceC([[x0 - ov, d0 - ov, h - 0.1], [xm, d0 - ov, hr], [xm, d1 + ov, hr], [x0 - ov, d1 + ov, h - 0.1]], o.rc, cr);
+      faceC([[x1 + ov, d0 - ov, h - 0.1], [xm, d0 - ov, hr], [xm, d1 + ov, hr], [x1 + ov, d1 + ov, h - 0.1]], o.rcs, cr);
+      line3([x0 - ov, d0 - ov, h - 0.1], [xm, d0 - ov, hr], o.rcs, 0.12); line3([xm, d0 - ov, hr], [x1 + ov, d0 - ov, h - 0.1], o.rcs, 0.12);
+    } else if (o.roof === 'ridgeX') {
+      faceC([[x0 - ov, d0 - ov, h - 0.1], [x1 + ov, d0 - ov, h - 0.1], [x1 + ov, dm, hr], [x0 - ov, dm, hr]], o.rc, cr);
+      faceC([[x0 - ov, d1 + ov, h - 0.1], [x1 + ov, d1 + ov, h - 0.1], [x1 + ov, dm, hr], [x0 - ov, dm, hr]], o.rcs, cr);
+      line3([x1 + ov, d0 - ov, h - 0.1], [x1 + ov, dm, hr], o.rcs, 0.12); line3([x0 - ov, d0 - ov, h - 0.1], [x0 - ov, dm, hr], o.rcs, 0.12);
+    } else if (o.roof === 'hip') {
+      const i = Math.min((x1 - x0) / 2, (d1 - d0) / 2) + ov;
+      const A = [x0 - ov, d0 - ov, h], B = [x1 + ov, d0 - ov, h], Cc = [x1 + ov, d1 + ov, h], Dd = [x0 - ov, d1 + ov, h], R1 = [x0 - ov + i, dm, hr], R2 = [x1 + ov - i, dm, hr];
+      faceC([Dd, A, R1], o.rcs, cr); faceC([B, Cc, R2], o.rcs, cr); faceC([Cc, Dd, R1, R2], o.rcs, cr); faceC([A, B, R2, R1], o.rc, cr);
+      line3(A, B, o.rcs, 0.1);
+    }
+    if (o.after) o.after();
+  }
+  // windows on a wall plane, each linearised at its own centre
+  const wallWins = (F, list, o = {}) => { if (!facing(F)) return; for (const [u, h0, w, h] of list) { near(F, u + w / 2); win(u, h0, w, h, o); } base(); };
+  const XL = bx(124), XR = bx(134);                                   // the house fronts along the Erzsébet utca
+  const FLx = (d0, d1) => ({ o: [XL, d0], e: [0, 1], n: [1, 0] });   // a wall on the left side, facing the street
+  const FRx = (d0, d1) => ({ o: [XR, d1], e: [0, -1], n: [-1, 0] }); // a wall on the right side, facing the street
+
+  // ---------- the left side of the Erzsébet utca beyond the ProGuard house (as in the Erzsébet utca scene) ----------
+  const PFLANK = [];   // [k (the far end), draw], drawn far to near before the corner house
+  // the old brick wall with the corrugated cap and the rusty, tagged iron door; a brick shed behind it
+  PFLANK.push([46.5, () => blk({ x0: bx(117.6), x1: bx(123.4), d0: 37.2, d1: 46.5, h: 2.9, hr: 4.9, roof: 'ridgeD', wall: '#B06A4E', wallS: '#94573F', rc: '#B0603E', rcs: '#8E4A30' })]);
+  PFLANK.push([48, () => {
+    box(XL - 0.25, XL, 36.3, 48, 0, 2.5, { f: '#B06A4E', s: '#A2603F', t: '#8E8A80' });
+    const F = FLx(36.3, 48);
+    if (!facing(F)) return;
+    for (let v = 0.15; v < 2.5; v += 0.15) fq(F, 0, v - 0.015, 11.7, v, '#9A5A42');
+    for (let u = 1.6; u < 11.7; u += 3.2) fq(F, u, 0, u + 0.35, 2.5, '#A86046', 0.02);
+    fq(F, -0.05, 2.5, 11.75, 2.66, '#8E8A80', 0.06);
+    fq(F, 7.9, 0, 9.3, 2.2, '#7A4A32', 0.025); fq(F, 8.0, 0.05, 9.2, 2.1, '#8E5838', 0.03);
+    ftext(F, 'FTP', 8.6, 1.45, 0.42, '#E9E7DF'); ftext(F, 'GANG', 8.6, 0.85, 0.36, '#E9E7DF');
+  }]);
+  // the old beige house with its gable to the street, a green gate in front
+  PFLANK.push([57.5, () => blk({ x0: bx(115), x1: bx(123.4), d0: 49.4, d1: 57.4, h: 5.6, hr: 9.0, roof: 'ridgeX', wall: '#E2D4B4', wallS: '#D2C3A0', rc: '#A85A3C', rcs: '#8E4A30',
+    deco: () => wallWins({ o: [bx(123.4), 49.4], e: [0, 1], n: [1, 0] }, [[1.0, 1.1, 1.0, 1.2], [5.8, 1.1, 1.0, 1.2], [1.2, 3.6, 0.9, 1.1], [5.8, 3.6, 0.9, 1.1], [3.5, 6.2, 0.9, 0.9]]) })]);
+  PFLANK.push([49.4, () => {
+    const F = FLx(48, 49.4);
+    box(XL - 0.1, XL, 48.1, 49.3, 0, 1.8, { f: '#2F6B45', s: '#2A5E3D', t: '#3A7A50' });
+    if (facing(F)) for (let u = 0.15; u < 1.25; u += 0.12) fq(F, u, 0.05, u + 0.03, 1.75, '#24553A', 0.02);
+  }]);
+  // the empty lot behind a green mesh fence, a tree and bushes inside
+  for (const it of grab(() => { treeRound(bx(119.2), 62.5, 9.5, MID, 7810); shrubs(bx(116), bx(123), 64.5, 1.6, 7811); })) PFLANK.push([it.k, it.draw]);
+  PFLANK.push([66, () => {
+    base(); const F = FLx(57.8, 66);
+    face([FR3(F, 0, 0.05, -0.1), FR3(F, 8.2, 0.05, -0.1), FR3(F, 8.2, 1.85, -0.1), FR3(F, 0, 1.85, -0.1)], 'rgba(70,120,80,0.32)', true);
+    for (let u = 0; u <= 8.2; u += 2.05) box(XL - 0.15, XL - 0.05, 57.8 + u, 57.9 + u, 0, 1.95, { f: '#2F6B45', s: '#285C3B', t: '#3A7A50' });
+    base(); line3(FR3(F, 0, 1.9, -0.1), FR3(F, 8.2, 1.9, -0.1), '#2F6B45', 0.05); line3(FR3(F, 0, 0.1, -0.1), FR3(F, 8.2, 0.1, -0.1), '#2F6B45', 0.04);
+  }]);
+  // the white block, then more houses, fences and trees far down the street
+  PFLANK.push([76, () => blk({ x0: bx(114), x1: bx(123.5), d0: 66.5, d1: 76, h: 6.3, roof: 'flat', wall: '#F2EFE8', wallS: '#DDD9CF', rc: '#C9C7C0', rcs: '#B5B3AC',
+    deco: () => wallWins({ o: [bx(123.5), 66.5], e: [0, 1], n: [1, 0] }, [[1.2, 1.0, 1.3, 1.3], [4.2, 1.0, 1.3, 1.3], [7.2, 1.0, 1.3, 1.3], [1.2, 3.9, 1.3, 1.3], [4.2, 3.9, 1.3, 1.3], [7.2, 3.9, 1.3, 1.3]], { cross: false }) })]);
+  for (const [d0, d1, wall, rc, rcs, roof] of [[80, 89, '#EFEADF', C.roofTile, '#7E4930', 'hip'], [93, 101.5, '#E9D9B8', '#5E6266', '#4E5256', 'ridgeX'], [110, 118, '#F4F1EA', C.roofRed, '#963B2A', 'hip']]) {
+    PFLANK.push([d1, () => blk({ x0: bx(114.5), x1: bx(122.8), d0, d1, h: 3.7, hr: 7.0, roof, wall, wallS: mix(wall, '#000000', 0.1), rc, rcs,
+      deco: () => wallWins({ o: [bx(122.8), d0], e: [0, 1], n: [1, 0] }, [[1.2, 1.0, 1.2, 1.2], [d1 - d0 - 2.4, 1.0, 1.2, 1.2]]) })]);
+    PFLANK.push([d0 - 0.5, () => { box(XL - 0.12, XL, d0 - 3.5, d0 + 0.5, 0, 1.4, { f: '#E2DED4', s: '#CFCBC1', t: '#ECE8DE' }); }]);
+  }
+  for (const it of grab(() => { treeRound(bx(119), 91, 8.5, MID, 7812); treeRound(bx(118.5), 106, 9.5, MID, 7813); hedge(bx(121), XL - 0.1, 104, 1.6, C.hedge); })) PFLANK.push([it.k, it.draw]);
+  PFLANK.sort((a, b) => b[0] - a[0]);
+
+  // ---------- the Anna-ház ----------
+  const AN = { x0: bx(134), x1: bx(152), d0: 16.4, d1: 27, H: 9.4, HR: 14.6, ov: 0.85 };
+  const AX = { x0: bx(134), x1: bx(145), d0: 27, d1: 46, H: 6.2, HR: 10.0, ov: 0.8 };
+  const BRK = '#4A2E22', BRKD = '#38221A';
+  const bracketsX = (x, da, db, H, ov) => { base(); for (let d = da; d < db; d += 1.2) { face([[x, d, H - 0.95], [x, d, H - 0.02], [x - ov + 0.12, d, H - 0.02], [x - 0.35, d, H - 0.55]], BRK, true); face([[x, d + 0.08, H - 0.9], [x, d + 0.08, H - 0.05], [x - 0.3, d + 0.08, H - 0.05]], BRKD, true); } };
+  const surround = (u, h0, w, h) => { fillR(u - 0.26, -(h0 + h + 0.26), w + 0.52, h + 0.52, '#EBDDBF'); fillR(u - 0.26, -h0 + 0.26, w + 0.52, 0.07, '#BFA984'); };
+  function annex() {
+    const { x0, d0, d1, H, ov } = AX, F = FRx(d0, d1), W = d1 - d0;
+    blk({ x0, x1: AX.x1, d0, d1, h: H, hr: AX.HR, ov, roof: 'ridgeD', wall: '#DCC6A2', wallS: '#CDB690', rc: '#6E4030', rcs: '#7C4A36',
+      deco: () => {
+        if (facing(F)) {
+          fq(F, 0, 0, W, 3.3, '#7A5236'); fq(F, 0, 0, W, 0.4, '#6A5A4A', 0.02);
+          for (const [u, w, door] of [[0.6, 1.0, 1], [2.0, 2.4, 0], [5.2, 1.0, 1], [7.0, 2.4, 0], [10.2, 1.0, 1], [11.8, 2.6, 0], [15.0, 1.0, 1], [16.6, 2.0, 0]]) {
+            near(F, u + w / 2); pane(u, -(door ? 2.7 : 2.85), w, door ? 2.25 : 2.1, door ? '#3A464E' : '#46545D', u * 3);
+            if (!door) fillR(u, -1.9, w, 0.05, '#7A5236');
+          }
+          near(F, 3.2); fillRR(2.6, -3.25, 1.2, 0.38, 0.04, '#C8302A'); fillR(2.65, -3.0, 1.1, 0.1, '#2F5FBF'); ltext('TRAFIK', 3.2, -3.13, 0.14, '#FFFFFF', 800);
+          for (const u of [1.0, 3.6, 6.2, 8.8, 11.4, 14.0, 16.6]) { near(F, u + 0.5); surround(u, 3.75, 1.0, 1.45); win(u, 3.75, 1.0, 1.45, { frame: '#6A4430', sillC: '#E2D2B0' }); }
+          fq(F, 0, H - 0.65, W, H - 0.45, '#5A3A2A', 0.03);
+          fq(F, 0.12, 0.2, 0.24, H - 0.3, '#6A4A38', 0.06);
+        }
+        bracketsX(x0, d0 + 0.4, d1, H, ov);
+      } });
+  }
+  function annaHaz() {
+    const { x0, x1, d0, d1, H, HR, ov } = AN, W = x1 - x0, dm = (d0 + d1) / 2;
+    CUR_HOUSE = x0;
+    box(x0, x1, d0, d1, 0, H, { f: '#DDC7A3', s: '#CBB48E' });
+    // the front to the Fő út
+    at(x0, d0);
+    fillR(0, -3.95, W, 3.95, '#7A5236'); fillR(0, -0.42, W, 0.42, '#6A5A4A');
+    const shop = (u, w, seed, gdn) => {
+      pane(u, -3.15, w, 2.6, '#3F4C55', seed);
+      if (!gdn) return;
+      fillR(u + 0.1, -3.02, w - 0.2, 0.24, '#D7E04A'); ltext('GDN Ingatlanhálózat', u + w / 2, -2.9, 0.13, '#2E6B34', 800);
+      for (let i = 0; i < 4; i++) for (let j = 0; j < Math.floor((w - 0.3) / 0.42); j++) { fillR(u + 0.18 + j * 0.42, -2.66 + i * 0.47, 0.34, 0.4, '#F2F2EE'); fillR(u + 0.21 + j * 0.42, -2.62 + i * 0.47, 0.28, 0.15, (i + j) % 3 ? '#7FA6C9' : '#9DBF7A'); }
+      fillR(u + 0.1, -0.86, w - 0.2, 0.26, '#F2F2EE'); ltext('Országos ingatlan kínálat', u + w / 2, -0.73, 0.1, '#2E6B34', 700);
+    };
+    pane(0.55, -3.15, 0.9, 2.7, '#3A464E', 1); shop(1.75, 2.6, 2, true); pane(4.65, -3.15, 0.95, 2.7, '#3A464E', 3);
+    shop(5.9, 3.0, 4, true); pane(9.2, -3.15, 0.95, 2.7, '#3A464E', 5); shop(10.45, 3.0, 6, false);
+    fillR(10.85, -2.75, 1.7, 0.95, '#18191B'); fillR(10.6, -1.0, 2.5, 0.35, '#F2F2EE'); ltext('GDN', 11.85, -0.82, 0.18, '#2E6B34', 800);
+    pane(13.75, -3.15, 0.95, 2.7, '#3A464E', 7); shop(14.9, 2.6, 8, true);
+    // the green running LED sign, the brown CSOMBÓ board, the Anna-ház script
+    fillR(0.35, -3.92, 4.7, 0.6, '#1A2420');
+    emit(() => { for (let i = 0; i < 40; i++) for (let j = 0; j < 3; j++) circle(0.5 + i * 0.112, -3.75 + j * 0.13, 0.032, (i + j * 2) % 7 ? '#2FCB66' : '#14502C'); });
+    fillR(5.15, -3.92, W - 5.5, 0.6, '#8A5A3A'); ltext('CSOMBÓ', 7.5, -3.6, 0.5, '#F4EEE2', 800, 'Barlow'); ltext('INGATLANIRODA', 12.8, -3.6, 0.3, '#F4EEE2', 700, 'Barlow');
+    ltext('Anna-ház', 3.7, -4.32, 0.66, '#5E3626', 'italic 700', 'Georgia');
+    strokeL([1.9, -4.02, 3.2, -4.08, 4.6, -4.06, 5.6, -3.98], '#5E3626', 0.035);
+    for (const u of [2.3, 6.4, 11.0, 15.1]) for (const [h0, hh] of [[4.95, 1.55], [7.25, 1.35]]) { surround(u, h0, 1.25, hh); win(u, h0, 1.25, hh, { frame: '#F4EFE4', sillC: '#E2D2B0' }); }
+    fillR(0.12, -H, 0.12, H - 0.2, '#6A4A38');
+    // the side to the Erzsébet utca
+    const F = FRx(d0, d1), WSd = d1 - d0;
+    if (facing(F)) {
+      fq(F, 0, 0, WSd, 3.95, '#7A5236'); fq(F, 0, 0, WSd, 0.42, '#6A5A4A', 0.02);
+      for (const [u, w, door] of [[0.6, 2.2, 0], [3.2, 0.95, 1], [4.6, 2.4, 0], [7.4, 0.95, 1], [8.7, 1.6, 0]]) { near(F, u + w / 2); pane(u, -3.15, w, door ? 2.7 : 2.5, door ? '#3A464E' : '#46545D', 40 + u); }
+      for (const u of [1.6, 4.8, 8.0]) for (const [h0, hh] of [[4.95, 1.55], [7.25, 1.35]]) { near(F, u + 0.6); surround(u, h0, 1.2, hh); win(u, h0, 1.2, hh, { frame: '#F4EFE4', sillC: '#E2D2B0' }); }
+      fq(F, WSd - 0.25, 0.2, WSd - 0.13, H - 0.2, '#6A4A38', 0.06);
+    }
+    if (cam.x < x0 + 1) bracketsX(x0, d0 + 0.3, d1, H, ov);
+    // the brackets along the front, the dark fascia
+    base();
+    for (let u = 0.35; u < W; u += 1.45) {
+      box(x0 + u - 0.06, x0 + u + 0.06, d0 - ov + 0.12, d0, H - 0.8, H - 0.02, { f: BRK, s: BRKD });
+      base(); face([[x0 + u, d0, H - 0.95], [x0 + u, d0, H - 0.02], [x0 + u, d0 - ov + 0.12, H - 0.02], [x0 + u, d0 - 0.35, H - 0.55]], BRK, true);
+    }
+    // the steep hip roof with two small dormers, tile courses
+    const A = [x0 - ov, d0 - ov, H], B = [x1 + ov, d0 - ov, H], Cc = [x1 + ov, d1 + ov, H], Dd = [x0 - ov, d1 + ov, H], i = (d1 - d0) / 2 + ov;
+    const R1 = [x0 - ov + i, dm, HR], R2 = [x1 + ov - i, dm, HR], cr = [(x0 + x1) / 2, dm, H + 0.2];
+    base();
+    const lv = faceC([Dd, A, R1], '#6A3E2D', cr); faceC([B, Cc, R2], '#6A3E2D', cr); faceC([Cc, Dd, R1, R2], '#6A3E2D', cr);
+    const fv = faceC([A, B, R2, R1], '#7C4A36', cr);
+    const L = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
+    for (let k = 1; k < 8; k++) { const t = k / 8; if (fv) line3(L(A, R1, t), L(B, R2, t), '#6E412F', 0.035); if (lv) line3(L(Dd, R1, t), L(A, R1, t), '#5E3627', 0.035); }
+    line3(A, B, BRK, 0.18); if (cam.x < x0 - ov) line3(A, Dd, BRK, 0.18);
+    for (const [a, b] of [[A, R1], [B, R2], [R1, R2]]) line3(a, b, '#57321F', 0.08);
+    for (const u of [4.2, 13.2]) {
+      const x = x0 + u, d = d0 + 0.9, h0 = H + (d - d0 + ov) * (HR - H) / i - 0.25;
+      box(x, x + 1.5, d, d + 1.4, h0, h0 + 1.5, { f: '#E2CDA8', s: '#C9B28C' });
+      base(); face([[x - 0.15, d - 0.05, h0 + 1.5], [x + 1.65, d - 0.05, h0 + 1.5], [x + 0.75, d - 0.05, h0 + 2.3]], '#D6BF98', true);
+      face([[x - 0.25, d - 0.15, h0 + 1.45], [x + 0.75, d - 0.15, h0 + 2.38], [x + 0.75, d + 1.6, h0 + 2.38], [x - 0.25, d + 1.6, h0 + 1.45]], '#7C4A36', true);
+      face([[x + 1.75, d - 0.15, h0 + 1.45], [x + 0.75, d - 0.15, h0 + 2.38], [x + 0.75, d + 1.6, h0 + 2.38], [x + 1.75, d + 1.6, h0 + 1.45]], '#6A3E2D', true);
+      line3([x - 0.25, d - 0.15, h0 + 1.45], [x + 0.75, d - 0.15, h0 + 2.38], BRK, 0.1); line3([x + 0.75, d - 0.15, h0 + 2.38], [x + 1.75, d - 0.15, h0 + 1.45], BRK, 0.1);
+      at(x, d); win(0.35, h0 + 0.25, 0.8, 1.0, { frame: '#F4EFE4' });
+    }
+  }
+  // the right side of the street beyond the Anna-ház: a white house, hedges, a grey-roofed house, trees
+  const AFLANK = [];
+  for (const [d0, d1, x1, h, hr, wall, rc, rcs, roof] of [[48, 57, 146, 3.8, 7.4, '#F0EDE6', '#9A5A3A', '#7E4930', 'hip'], [64, 73, 145, 6.2, 9.8, '#E7DCC4', '#5E6266', '#4E5256', 'ridgeD'], [81, 89, 146, 3.6, 6.8, '#EFEADF', C.roofTile, '#7E4930', 'hip'], [96, 104, 145, 3.8, 7.0, '#F2EFE8', C.roofBrown, '#653F2B', 'ridgeD']]) {
+    const xa = bx(135.6);
+    AFLANK.push([d1, () => blk({ x0: xa, x1: bx(x1), d0, d1, h, hr, roof, wall, wallS: mix(wall, '#000000', 0.1), rc, rcs,
+      deco: () => wallWins({ o: [xa, d1], e: [0, -1], n: [-1, 0] }, [[1.2, 1.0, 1.2, 1.2], [d1 - d0 - 2.4, 1.0, 1.2, 1.2]].concat(h > 5 ? [[1.2, 3.8, 1.2, 1.2], [d1 - d0 - 2.4, 3.8, 1.2, 1.2]] : [])) })]);
+    AFLANK.push([d0, () => { box(XR, XR + 0.15, d0 - 1.6, d0 + 0.2, 0, 1.3, { f: '#E8E4DA', s: '#D2CEC4', t: '#F0ECE2' }); }]);
+  }
+  for (const it of grab(() => { hedge(XR + 0.3, bx(140), 60, 1.8, C.hedge); treeRound(bx(139.5), 77.5, 9, MID, 7820); treeRound(bx(140.5), 92, 10, MID, 7821); shrubs(XR + 0.4, bx(141), 108, 1.5, 7822); })) AFLANK.push([it.k, it.draw]);
+  AFLANK.sort((a, b) => b[0] - a[0]);
+
+  // ---------- the street itself: pavers, kerbs, pavements, a manhole, the white X, doormats ----------
+  const EL = bx(125.4), ER = bx(132.0), EEND = 152;
+  const arc = (cx, cd, r, a0, a1, n = 8) => Array.from({ length: n + 1 }, (_, i) => { const a = lerp(a0, a1, i / n); return [cx + Math.cos(a) * r, cd + Math.sin(a) * r]; });
+  const ROADP = [...arc(EL - 1.5, 12.7, 1.5, -Math.PI / 2, 0), [EL, EEND], [ER, EEND], ...arc(ER + 1.5, 12.7, 1.5, Math.PI, Math.PI * 1.5)];
+  ground(11.19, XL - 20, XR + 20, () => {
+    base();
+    face([[bx(106), 15.35, 0.1], [EL, 15.35, 0.1], [EL, EEND, 0.1], [XL, EEND, 0.1], [XL, PG.dc, 0.1], [PG.xc, PG.d0, 0.1], [bx(106), PG.d0, 0.1]], '#BAB8B1', true);
+    face([[ER, 15.35, 0.1], [bx(153), 15.35, 0.1], [bx(153), 16.4, 0.1], [XR, 16.4, 0.1], [XR, EEND, 0.1], [ER, EEND, 0.1]], '#BAB8B1', true);
+    face(ROADP.map(([x, d]) => [x, d, 0.012]), '#A4A39D', true);
+    // the paver joints: across the street, then along it
+    for (let d = 11.6; d < 70; d += d < 40 ? 0.6 : 1.2) face([[EL - 0.05, d, 0.013], [ER + 0.05, d, 0.013], [ER + 0.05, d + 0.035, 0.013], [EL - 0.05, d + 0.035, 0.013]], '#96958F', true);
+    for (let x = EL + 0.45; x < ER; x += 0.45) face([[x, 11.9, 0.013], [x + 0.03, 11.9, 0.013], [x + 0.03, 60, 0.013], [x, 60, 0.013]], '#9A9993', true);
+    for (let d = 19; d < 80; d += 0.9) { face([[XL, d, 0.101], [EL, d, 0.101], [EL, d + 0.03, 0.101], [XL, d + 0.03, 0.101]], '#A9A7A0', true); face([[ER, d, 0.101], [XR, d, 0.101], [XR, d + 0.03, 0.101], [ER, d + 0.03, 0.101]], '#A9A7A0', true); }
+    // the kerbs (their faces only where we can see them), the darker gutter strips
+    if (cam.x > EL) face([[EL, 12.7, 0.012], [EL, EEND, 0.012], [EL, EEND, 0.1], [EL, 12.7, 0.1]], '#8E8C86', true);
+    if (cam.x < ER) face([[ER, 12.7, 0.012], [ER, EEND, 0.012], [ER, EEND, 0.1], [ER, 12.7, 0.1]], '#8E8C86', true);
+    face([[EL - 0.14, 12.7, 0.102], [EL, 12.7, 0.102], [EL, EEND, 0.102], [EL - 0.14, EEND, 0.102]], '#CFCDC6', true);
+    face([[ER, 12.7, 0.102], [ER + 0.14, 12.7, 0.102], [ER + 0.14, EEND, 0.102], [ER, EEND, 0.102]], '#CFCDC6', true);
+    face([[EL + 1.75, 14, 0.014], [EL + 2.05, 14, 0.014], [EL + 2.05, EEND, 0.014], [EL + 1.75, EEND, 0.014]], '#8F8E89', true);
+    face([[ER - 0.3, 14, 0.014], [ER - 0.05, 14, 0.014], [ER - 0.05, EEND, 0.014], [ER - 0.3, EEND, 0.014]], '#94938E', true);
+    // the white X painted on the street, the manhole, a gully, the mats in front of the doors
+    const xm = bx(128.8), X = (d, a, b) => face([[xm + a - 0.07, d - b, 0.015], [xm + a + 0.07, d - b, 0.015], [xm - a + 0.07, d + b, 0.015], [xm - a - 0.07, d + b, 0.015]], '#E6E5DF', true);
+    X(24.2, -0.8, 0.55); X(24.2, 0.8, 0.55);
+    face(arc(bx(129.1), 14.2, 0.42, 0, TAU, 16).map(([x, d]) => [x, d, 0.016]), '#5C5B57', true);
+    face(arc(bx(129.1), 14.2, 0.32, 0, TAU, 16).map(([x, d]) => [x, d, 0.017]), '#6C6A65', true);
+    face([[bx(128.7), 27.5, 0.015], [bx(129.3), 27.5, 0.015], [bx(129.3), 28.1, 0.015], [bx(128.7), 28.1, 0.015]], '#56554F', true);
+    face([[XL + 0.1, 23.2, 0.104], [XL + 1.2, 23.2, 0.104], [XL + 1.2, 24.6, 0.104], [XL + 0.1, 24.6, 0.104]], '#6E4A3E', true);
+    face([[bx(132.6), 18.6, 0.104], [bx(133.4), 18.6, 0.104], [bx(133.4), 19.4, 0.104], [bx(132.6), 19.4, 0.104]], '#6E4A3E', true);
+  });
+
+  // ---------- parked cars, poles and wires in the street ----------
+  const CORR = [];
+  const plate = (cx, cd, hl) => { at(cx, cd - hl - 0.01); fillR(-0.26, -0.66, 0.52, 0.12, '#F2F2EE'); fillR(-0.26, -0.66, 0.05, 0.12, '#2F5FBF'); };
+  for (const [u, d, kind, col, pg] of [[126.45, 22.6, 'van', '#2D5FC4', 1], [126.45, 28.2, 'van', '#3468C8', 1], [126.4, 33.9, 'wagon', '#B8322B'], [126.4, 39.9, 'car', '#2B2E33'], [126.4, 46.8, 'car', '#E8E8E4'], [126.4, 55.5, 'wagon', '#7C8287'], [126.4, 65.5, 'car', '#3A4C66'], [126.4, 77, 'car', '#B33A33'],
+    [131.0, 21.8, 'car', '#C9CCCF'], [131.0, 27.4, 'car', '#F2F2EE'], [131.0, 33.4, 'van', '#3A4048'], [131.0, 41.2, 'car', '#2F5D4C'], [131.0, 51.5, 'car', '#C9CCCF'], [131.0, 62.5, 'wagon', '#2B2E33'], [131.0, 72, 'car', '#8A4A2E']]) {
+    const cx = bx(u), phi = Math.PI / 2, hl = CAR_KINDS_S[kind] / 2, hw = CAR_W_S[kind] / 2;
+    CORR.push([carNearDS(d, phi, kind), () => {
+      drawCarO(cx, d, phi, kind, col);
+      plate(cx, d, hl);
+      if (!pg) return;
+      // the ProGuard vans: roof rack, the livery on the side and on the back doors
+      for (const a of [-1.3, -0.1, 1.1]) obox(cx, d + a, phi, 0.04, hw - 0.08, 1.98, 2.05, '#8E9296', '#7A7E82', '#A6AAAE');
+      for (const b of [-1, 1]) obox(cx + b * (hw - 0.12), d - 0.1, phi, hl - 0.75, 0.03, 2.03, 2.09, '#8E9296', '#7A7E82', '#A6AAAE');
+      at(cx, d - hl + 0.14); fillRR(-0.42, -1.82, 0.84, 0.3, 0.04, '#FFFFFF'); ltext('PRO GUARD', 0, -1.67, 0.11, '#2D58A8', 800);
+      ltext('38 183 2100', 0, -1.38, 0.16, '#FFFFFF', 800);
+      const FV = { o: [cx + hw + 0.01, d - hl], e: [0, 1], n: [1, 0] };
+      if (facing(FV)) {
+        ftext(FV, '38 183 2100', 1.55, 1.62, 0.3, '#FFFFFF');
+        near(FV, 3.25, 0.02); fillRR(2.85, -1.82, 0.8, 0.45, 0.06, '#FFFFFF'); ltext('PRO', 3.25, -1.68, 0.12, '#2D58A8', 800); ltext('GUARD', 3.25, -1.52, 0.11, '#2D58A8', 800);
+        ltext('PROFESSZIONÁLIS BIZTONSÁGTECHNIKA', 1.6, -1.35, 0.06, '#FFFFFF', 700, 'Barlow');
+        base();
+      }
+    }]);
+  }
+  // concrete poles: street lamps on the left, the tall double-crossarm pole and plain ones on the right
+  const POLES_E = [[124.75, 39, 'lamp'], [124.75, 63, ''], [124.75, 87, 'lamp'], [124.75, 111, ''], [133.25, 47, 'A'], [133.25, 75, ''], [133.25, 103, '']];
+  for (const [u, d, kind] of POLES_E) {
+    const x = bx(u), H = kind === 'A' ? 10.2 : 8.8, lk = 4700 + d;
+    CORR.push([d - 0.2, () => {
+      box(x - 0.13, x + 0.13, d - 0.13, d + 0.13, 0, H, { f: '#B8B4AB', s: '#A09C93', t: '#C6C2B9' });
+      at(x, d); for (let h = 1.0; h < H - 0.6; h += 0.6) circle(0, -h, 0.03, '#8F8B83');
+      base();
+      if (kind === 'A') {
+        for (const h of [H - 0.45, H - 1.35]) {
+          box(x - 1.05, x + 1.05, d - 0.05, d + 0.05, h - 0.09, h, { f: '#5E6062', s: '#4E5052', t: '#6E7072' });
+          for (const a of [-0.95, -0.35, 0.35, 0.95]) box(x + a - 0.035, x + a + 0.035, d - 0.035, d + 0.035, h, h + 0.24, { f: '#ECECE8', s: '#D2D2CC' });
+        }
+        box(x - 0.09, x + 0.09, d + 0.5, d + 0.68, 0, H - 1.6, { f: '#ADA99F', s: '#98948B' });   // the strut
+        box(x + 0.15, x + 0.55, d - 0.35, d - 0.13, 3.2, 3.9, { f: '#8C9196', s: '#767B80', t: '#9AA0A5' });
+      } else {
+        box(x - 0.55, x + 0.55, d - 0.04, d + 0.04, H - 0.4, H - 0.32, { f: '#5E6062', s: '#4E5052', t: '#6E7072' });
+        for (const a of [-0.45, 0.45]) box(x + a - 0.03, x + a + 0.03, d - 0.03, d + 0.03, H - 0.32, H - 0.12, { f: '#ECECE8', s: '#D2D2CC' });
+      }
+      if (kind === 'lamp') {
+        line3([x, d, H - 1.4], [x + 1.5, d, H - 1.15], '#8C9093', 0.07);
+        box(x + 1.25, x + 1.85, d - 0.12, d + 0.12, H - 1.3, H - 1.12, { f: '#5E6366', s: '#4E5356', t: '#6E7376' });
+        const ln = lampN(lk);
+        if (ln > 0.15) { emit(() => { at(x + 1.55, d); fillR(-0.25, H - 1.3 > 0 ? -(H - 1.3) : 0, 0.5, 0.06, '#FFE2AE'); }); lampLight(x + 1.55, d, H - 1.32, d, 0.02, 3.4, '255,214,150', ln); }
+      }
+    }]);
+  }
+  // the wires along both sides of the street (the near ones over the Fő út are drawn on their own)
+  const sagW = (a, b, s, w = 0.022) => {
+    base(); if (Math.min(a[1], b[1]) - cam.z < NEAR) return;
+    ctx.beginPath();
+    for (let i = 0; i <= 14; i++) { const t = i / 14, x = lerp(a[0], b[0], t), d = lerp(a[1], b[1], t), h = lerp(a[2], b[2], t) - 4 * s * t * (1 - t); i ? ctx.lineTo(sx(x, d), sy(h, d)) : ctx.moveTo(sx(x, d), sy(h, d)); }
+    ctx.strokeStyle = C.wire; ctx.lineWidth = Math.max(0.8, w * sc(Math.min(a[1], b[1]))); ctx.stroke();
+  };
+  const WIRES_E = [];
+  const lp = POLES_E.filter(p => p[0] < 128), rp = POLES_E.filter(p => p[0] > 128);
+  for (let i = 0; i < lp.length - 1; i++) for (const a of [-0.45, 0.45]) WIRES_E.push([[bx(lp[i][0] + a), lp[i][1], 8.6], [bx(lp[i + 1][0] + a), lp[i + 1][1], 8.6], 0.45]);
+  for (let i = 0; i < rp.length - 1; i++) for (const a of [-0.95, -0.35, 0.35, 0.95]) WIRES_E.push([[bx(rp[i][0] + a), rp[i][1], i ? 8.6 : 10.0], [bx(rp[i + 1][0] + a), rp[i + 1][1], 8.6], 0.5]);
+  for (const a of [-0.35, 0.35]) WIRES_E.push([[bx(133.25 + a), 47, 9.1], [bx(124.75 + a), 39, 8.6], 0.25]);
+  WIRES_E.push([[bx(133.25), 47, 9.1], [XR, 30, 6.6], 0.2]);
+  CORR.push([-1, () => { for (const [a, b, s] of WIRES_E) sagW(a, b, s); }]);
+  CORR.sort((a, b) => b[0] - a[0]);
+
+  // ---------- the three big pieces, sorted against each other by where the camera is ----------
+  // seen from the left of the opening the ProGuard house hides the street, from the right the Anna-ház does;
+  // standing in front of it both are drawn first and the street over them
+  add(16.4, bx(105), bx(125), () => { for (const [, f] of PFLANK) f(); proGuard(); }, 40);
+  const itP = STATIC[STATIC.length - 1];
+  add(16.4, bx(133), bx(153), () => { for (const [, f] of AFLANK) f(); annex(); annaHaz(); }, 40);
+  const itA = STATIC[STATIC.length - 1];
+  add(16.4, bx(122), bx(136), () => { for (const [, f] of CORR) f(); }, 16.4);
+  const itC = STATIC[STATIC.length - 1];
+  const kRow = c => 16.6 + Math.abs(c - cam.x) * 0.001, cP = bx(115.5), cA = bx(143);
+  Object.defineProperty(itP, 'k', { get: () => kRow(cP), enumerable: true });
+  Object.defineProperty(itA, 'k', { get: () => kRow(cA), enumerable: true });
+  Object.defineProperty(itC, 'k', { get: () => { const kp = kRow(cP), ka = kRow(cA); return cam.x > XL && cam.x < XR ? Math.min(kp, ka) - 0.0002 : (kp + ka) / 2; }, enumerable: true });
+  for (const it of [itP, itA, itC]) it.lk = 16.4;
+  // far down the street: dark trees closing the view, a pale house where the street bends
+  add(131, bx(122), bx(136), () => blk({ x0: bx(124.6), x1: bx(133.4), d0: 131, d1: 139, h: 4.0, hr: 7.2, roof: 'hip', wall: '#E8DDB8', wallS: '#D2C6A0', rc: '#8A5A44', rcs: '#74493A' }));
+  for (const [u, d, h, s] of [[117, 126, 11, 1], [121.5, 141, 13, 2], [126, 146, 12, 3], [130.5, 150, 14, 4], [136.5, 128, 11, 5], [140, 143, 12, 6], [145, 124, 10, 7]]) treeRound(bx(u), d, h, ['#4F7A44', '#3F6B3A', '#5E8A4C'], 7830 + s);
+  // the wires over the Fő út corner: from the pole by the zebra to the Anna-ház, and up the street
+  add(10.8, bx(116), bx(140), () => {
+    for (const [a, b, s] of [[[bx(118.5), 10.95, 8.75], [bx(136.2), 16.3, 7.6], 0.5], [[bx(118.5), 10.95, 8.45], [bx(136.8), 16.3, 7.3], 0.55], [[bx(118.5), 10.95, 8.6], [bx(132.9), 47, 9.1], 0.6], [[bx(118.5), 10.95, 8.3], [bx(133.6), 47, 9.1], 0.6]]) sagW(a, b, s);
+  });
+  // the signs on the corner: one way, no parking (2 hours with a disc on workdays 8–18, bicycles excepted)
+  add(15.6, bx(131.8), bx(133.6), () => {
+    const x = bx(132.7), d = 15.6;
+    box(x - 0.035, x + 0.035, d, d + 0.07, 0.1, 3.7, { f: '#9EA3A6', s: '#7F8487' });
+    at(x, d);
+    fillRR(-0.3, -3.74, 0.6, 0.62, 0.04, '#FFFFFF'); fillRR(-0.27, -3.71, 0.54, 0.56, 0.03, '#1F5FA8');
+    polyL([0, -3.64, 0.18, -3.4, 0.065, -3.4, 0.065, -3.2, -0.065, -3.2, -0.065, -3.4, -0.18, -3.4], '#FFFFFF');
+    circle(0, -2.76, 0.3, '#FFFFFF'); circle(0, -2.76, 0.28, '#D33A2F'); circle(0, -2.76, 0.205, '#1F5FA8'); strokeL([-0.15, -2.91, 0.15, -2.61], '#D33A2F', 0.06);
+    fillRR(-0.2, -2.4, 0.4, 0.3, 0.02, '#FFFFFF'); circle(0, -2.25, 0.1, '#2A2A2A'); circle(0, -2.25, 0.082, '#FFFFFF'); strokeL([0, -2.31, 0, -2.25, 0.05, -2.22], '#2A2A2A', 0.016);
+    fillRR(-0.2, -2.06, 0.4, 0.13, 0.02, '#FFFFFF'); ltext('2 óra', 0, -1.995, 0.09, '#1A1A1A', 800);
+    fillRR(-0.24, -1.89, 0.48, 0.2, 0.02, '#FFFFFF'); ltext('MUNKANAPOKON', 0, -1.83, 0.055, '#1A1A1A', 800); ltext('08–18h', 0, -1.745, 0.065, '#1A1A1A', 800);
+    fillRR(-0.2, -1.65, 0.4, 0.26, 0.02, '#FFFFFF'); ltext('KIVÉVE', 0, -1.58, 0.065, '#1A1A1A', 800);
+    circle(-0.08, -1.45, 0.035, '#1A1A1A'); circle(0.06, -1.45, 0.035, '#1A1A1A'); strokeL([-0.08, -1.45, -0.02, -1.5, 0.06, -1.45], '#1A1A1A', 0.012);
+  });
+  // the zebra over the Fő út, by the left end of the corner house (Street View: next to the lamp pole)
+  ground(BD.road1 - 0.01, bx(100), bx(108), () => { base(); for (let d = BD.road0 + 0.3; d < BD.road1 - 0.3; d += 1.0) face([[bx(101.9), d, 0.008], [bx(105.9), d, 0.008], [bx(105.9), d + 0.5, 0.008], [bx(101.9), d + 0.5, 0.008]], '#F2F1EC', true); });
+  for (const [u, d] of [[106.6, BD.road1 + 0.5], [101.2, BD.road0 - 0.4]]) add(d, bx(u) - 1, bx(u) + 1, () => {
     at(bx(u), d); fillR(-0.04, -2.75, 0.08, 2.75, '#8A8F93');
     fillRR(-0.33, -3.05, 0.66, 0.66, 0.05, '#FFFFFF'); fillRR(-0.3, -3.02, 0.6, 0.6, 0.04, C.blue);
     polyL([-0.24, -2.48, 0.24, -2.48, 0, -2.95], '#FFFFFF'); circle(0, -2.77, 0.045, '#1A1A1A'); strokeL([0, -2.72, -0.02, -2.6, -0.08, -2.52], '#1A1A1A', 0.03);
@@ -6370,7 +6848,7 @@ SCENE.padok = false;
   const GRAVEL = [[px(7), 7.6], [px(22), 7.6], [px(27), 8.95], [px(8), 8.95]];
   ground(PD.wall, X0, X1, () => {
     bandX(PD.curb, PD.wall, 0.1, '#7C7E82', X0, X1);
-    base(); const [l, r] = visRange(6.5, 2);
+    base(); const [l, r] = visRange(PD.wall, 2);
     face([[l, PD.curb, 0.101], [r, PD.curb, 0.101], [r, PD.curb + 0.35, 0.101], [l, PD.curb + 0.35, 0.101]], '#8E9094', true);
     let row = 0;
     for (let d = PD.curb + 0.35; d < PD.wall - 0.05; d += 0.42, row++) {
@@ -6756,7 +7234,7 @@ function gTag(str, x, y, size, fill, line, rot = -0.06) {
   ground(JD.path0, X0, X1, () => {
     band(JD.road1, JD.verge1, 0.01, '#9DAE62');
     band(0.3, JD.road1, 0, '#86888B');                 // the worn asphalt of the Jókai Mór utca
-    base(); const [l, r] = visRange(6, 3);
+    base(); const [l, r] = visRange(JD.road1 + 0.2, 3);
     // a couple of faint repaired strips and a straight sandy edge by the verge
     for (let x = Math.floor(l / 23) * 23; x < r; x += 23) face([[x + 4, 3.6, 0.002], [x + 10, 3.6, 0.002], [x + 10, 5.2, 0.002], [x + 4, 5.2, 0.002]], '#818386', true);
     face([[l, JD.road1 - 0.7, 0.003], [r, JD.road1 - 0.7, 0.003], [r, JD.road1, 0.003], [l, JD.road1, 0.003]], '#B3AA94', true);
@@ -6960,7 +7438,7 @@ function jokBike(b) {
 // tagged iron door, the yard of the yellow old house, the empty lot behind a green mesh fence, the white
 // block, then the corner with the little Kozmetika house and the ivy-covered beer garden.
 // =====================================================================
-const ERZ = { x0: 11000, x1: 11106, items: [], ground: [], mouth: 5000 + 132.4 };
+const ERZ = { x0: 11000, x1: 11106, items: [], ground: [], mouth: 5000 + 128.7 };
 const ED = { lane: 5.2, road1: 7.6, walk1: 9.6, front: 10.4 };
 SCENE.erz = false;
 (function buildErz() {
@@ -6970,7 +7448,7 @@ SCENE.erz = false;
   // grey concrete pavers everywhere (road and pavement), a low kerb between them
   ground(ED.walk1, X0, X1, () => {
     band(0.3, ED.walk1, 0, '#A3A49F');
-    base(); const [l, r] = visRange(5, 3);
+    base(); const [l, r] = visRange(ED.walk1 + 0.2, 3);   // widest at the far edge, or the pavement ends in a slant
     for (let d = 0.8; d < ED.walk1; d += 0.5) face([[l, d, 0.002], [r, d, 0.002], [r, d + 0.02, 0.002], [l, d + 0.02, 0.002]], '#93948F', true);
     face([[l, ED.road1, 0.08], [r, ED.road1, 0.08], [r, ED.road1 + 0.18, 0.08], [l, ED.road1 + 0.18, 0.08]], '#C2C3BE', true);
     face([[l, ED.road1 + 0.18, 0.06], [r, ED.road1 + 0.18, 0.06], [r, ED.walk1, 0.06], [l, ED.walk1, 0.06]], '#B1B2AC', true);
@@ -7120,7 +7598,7 @@ SCENE.erz = false;
   // the paved floor of the garden and the forecourt, the pergola's shade
   ground(BD0 + 0.05, ex(72), ex(107), () => {
     bandX(F + 0.25, BD0, 0.012, '#BDB8AC', ex(72.6), ex(106));
-    base(); const [l, r] = visRange(F + 3, 2), a = Math.max(l, ex(72.6)), b = Math.min(r, ex(106));
+    base(); const [l, r] = visRange(BD0, 2), a = Math.max(l, ex(72.6)), b = Math.min(r, ex(106));
     if (b > a) {
       for (let d = F + 0.85; d < BD0; d += 0.6) face([[a, d, 0.013], [b, d, 0.013], [b, d + 0.03, 0.013], [a, d + 0.03, 0.013]], '#ADA89C', true);
       for (let x = Math.ceil(a / 0.9) * 0.9; x < b; x += 0.9) face([[x, F + 0.25, 0.013], [x + 0.03, F + 0.25, 0.013], [x + 0.03, BD0, 0.013], [x, BD0, 0.013]], '#ADA89C', true);
@@ -7133,14 +7611,23 @@ SCENE.erz = false;
   const kneesD = (d, dir) => { for (const x of PG.posts) line3([x, d, 2.02], [x, d + dir * 0.62, PG.h], PC.s, 0.07); };
   const kneesX = d => { for (const x of PG.posts) { at(x, d); if (x - 0.6 > GA) strokeL([0, -2.02, -0.6, -2.5], PC.f, 0.08); if (x + 0.6 < GB) strokeL([0, -2.02, 0.6, -2.5], PC.f, 0.08); } };
   add(PG.dB + 0.12, GA - 1, GB + 1, () => { for (const x of PG.posts) post(x, PG.dB); beam(PG.dB); kneesX(PG.dB); kneesD(PG.dB, -1); });
-  // the flat roof: seen from above it hides everything under it, so it is drawn last; from below, first
+  // the roof: an open lattice of slats on the rafters (not a solid slab), so the white wall of the borozó, its
+  // windows and the sign show through the gaps and the pergola reads as its own structure in front of the house.
+  // Seen from above it is drawn last (over the tables), from below first.
+  const SL = []; for (let d = rd0 + 0.06; d < rd1 - 0.12; d += 0.5) SL.push(d);
   add(PG.dB + 0.3, GA - 1, GB + 1, () => {
-    const above = cam.h > RT;
+    const above = cam.h > RT, slat = { f: '#2A4A33', s: '#22402A', t: '#3F6A4A' };
     base();
-    if (!above) face([[GA - 0.1, rd0, RB], [GB + 0.1, rd0, RB], [GB + 0.1, rd1, RB], [GA - 0.1, rd1, RB]], '#22352A', true);
-    for (const x of PG.posts) box(x - 0.06, x + 0.06, rd0 + 0.08, rd1 - 0.08, PG.h, RB, PC);     // rafters on the beams
-    box(GA - 0.1, GB + 0.1, rd0, rd1, RB, RT, { f: PC.f, s: PC.s, t: '#4E5C51' });
-    if (above) for (let x = GA + 0.25; x < GB; x += 0.5) line3([x, rd0 + 0.03, RT + 0.002], [x, rd1, RT + 0.002], '#435146', 0.035);
+    const slats = () => { for (let i = SL.length - 1; i >= 0; i--) {
+      const d = SL[i];
+      if (!above) face([[GA - 0.1, d, RB], [GB + 0.1, d, RB], [GB + 0.1, d + 0.16, RB], [GA - 0.1, d + 0.16, RB]], '#1C2E22', true);
+      box(GA - 0.1, GB + 0.1, d, d + 0.16, RB, RT, slat);
+    } };
+    const rafters = () => { for (const x of PG.posts) box(x - 0.06, x + 0.06, rd0, rd1, PG.h, RB, PC); };
+    // the fascia boards at the front and back edge frame the lattice
+    const fascia = () => { box(GA - 0.12, GB + 0.12, rd1 - 0.1, rd1, PG.h + 0.04, RT + 0.02, { f: '#2E5638', s: '#23412B', t: '#4A7A56' });
+      box(GA - 0.12, GB + 0.12, rd0, rd0 + 0.1, PG.h + 0.04, RT + 0.02, { f: '#2E5638', s: '#23412B', t: '#4A7A56' }); };
+    if (above) { rafters(); slats(); fascia(); } else { slats(); rafters(); fascia(); }
   }, PG.dB);
   dynK(rd0 - 0.03, PG.dB + 0.3, () => cam.h > RT);
   add(PG.dF, GA - 1, GB + 1, () => { kneesD(PG.dF, 1); for (const x of PG.posts) post(x, PG.dF); beam(PG.dF); kneesX(PG.dF); });
@@ -7333,6 +7820,23 @@ function goPadok(inside) {
     SCENE.padok = inside;
     if (inside) { ch.lane = 'padok'; ch.x = PADOK.x0 + 8; ch.facing = 1; }
     else { ch.lane = 'back'; ch.x = BACK.zebraF; ch.facing = -1; }
+    ch.d = LANES[ch.lane].d; ch.g = groundAt(ch.lane, ch.x); ch.key = null;
+    cam.x = ch.x + ch.facing * 2;
+    ch.mode = 'walk';
+    fadeOut();
+  }, 750);
+}
+
+// walking on past Dunaharaszti külső along the Fő út: out at the benches, still walking left
+function goPadokFromKulso() {
+  if (ch.mode !== 'walk') return;
+  AU.unlock(); AU.ui();
+  ch.mode = 'turn'; ch.speed = 0; input.left = input.right = false;
+  SCENE.frontX = ch.x;
+  fadeIn('<b>Továbbsétálsz a Fő úton</b><br>a padokhoz, a dohánybolt felé');
+  setTimeout(() => {
+    SCENE.back = true; SCENE.padok = true;
+    ch.lane = 'padok'; ch.x = PADOK.x1 - 8; ch.facing = -1;
     ch.d = LANES[ch.lane].d; ch.g = groundAt(ch.lane, ch.x); ch.key = null;
     cam.x = ch.x + ch.facing * 2;
     ch.mode = 'walk';
@@ -8449,9 +8953,9 @@ function updateActionUI() {
   const dk = atSpot ? (SCENE.back ? 'b' : 'f') : '';
   if (dk !== UI.dohiKey) {
     UI.dohiKey = dk; UI.dohiBtn.hidden = !dk;
-    UI.dohiBtn.classList.toggle('back', dk === 'b');
-    UI.dohiTip.textContent = dk === 'b' ? 'Vissza a HÉV-megállóhoz' : 'Átmenet a túloldalra';
-    UI.dohiBtn.setAttribute('aria-label', dk === 'b' ? 'Átmenet a túloldalra, vissza a HÉV-megállóhoz' : 'Átmenet a túloldalra, a Nemzeti Dohányboltba');
+    UI.dohiTip.textContent = dk === 'b' ? 'HÉV' : 'Fő út';
+    UI.dohiBtn.title = dk === 'b' ? 'Vissza a HÉV-megállóhoz' : 'Fő út';
+    UI.dohiBtn.setAttribute('aria-label', dk === 'b' ? 'Át a Fő úton, vissza a HÉV-megállóhoz' : 'Át a Fő úton, a dohánybolt felé');
   }
   // the stop name: only inside a stop's area (and not while riding)
   const st = ch.mode === 'aboard' || ch.mode === 'board' ? null : stationArea(ch.x);
@@ -8749,6 +9253,8 @@ function frame(nowMs) {
   if (SCENE.hid && ch.lane === 'hid' && atEdge(-1, HID.x0 - 5)) goHid(false);
   if (SCENE.jokai && ch.lane === 'jokai' && atEdge(-1, JOK.x0 - 5)) goJokai(false);
   if (SCENE.erz && ch.lane === 'erz' && atEdge(-1, ERZ.x0 - 5)) goErz(false);
+  // past Dunaharaszti külső the Fő út goes on to the bench corner (from there, left: over the zebra to the tobacco shop)
+  if (!SCENE.back && !SCENE.duna && ch.lane === 'street' && atEdge(-1, WORLD.minX + 1)) goPadokFromKulso();
   zcUpdate(dt);
   AU.listener.x = ch.x; AU.listener.d = ch.mode === 'aboard' ? (TRAINS.find(q => q.id === ch.ride.id)?.td ?? D.trackN) : ch.d;
   AU.update(dt, TRAINS, ROAD.cars.filter(c => Math.abs(c.x - AU.listener.x) < 120));
@@ -8796,6 +9302,10 @@ const WELCOME_LOGO = `<svg viewBox="0 0 120 120" class="wl-logo" aria-hidden="tr
 </svg>`;
 function showWelcome(onGo) {
   let skip = false; try { skip = localStorage.getItem('dhsim.welcome.skip') === '1'; } catch (e) { /* storage blocked */ }
+  // a page saved from the browser ("Save as") keeps a dead, handler-less copy of this overlay: drop it
+  // (it sits after the script, so sweep again once the whole page is parsed)
+  const sweep = () => document.querySelectorAll('.wl:not([data-live])').forEach(n => n.remove());
+  sweep(); if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sweep, { once: true });
   if (skip) { onGo(); return; }
   const st = document.createElement('style');
   st.textContent = `
@@ -8804,7 +9314,7 @@ function showWelcome(onGo) {
 .wl-card { position: relative; width: 380px; max-width: 100%; max-height: calc(100dvh - 32px); overflow-y: auto; overscroll-behavior: contain; background: #F6F1E4; color: #1C2924; border-radius: 28px;
   padding: 30px 24px 18px; box-shadow: 0 20px 60px rgba(0,0,0,.35); display: flex; flex-direction: column; align-items: center; gap: 18px; text-align: center;
   font: 600 14px/1.3 "Barlow", system-ui, sans-serif; animation: lx-in .4s cubic-bezier(.3,1.4,.5,1); }
-.wl-x { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border: 0; border-radius: 50%; background: #E9E1CD; color: #1C2924; font: 800 14px/1 sans-serif; cursor: pointer; }
+.wl-x { position: absolute; z-index: 2; top: 10px; right: 10px; width: 40px; height: 40px; touch-action: manipulation; border: 0; border-radius: 50%; background: #E9E1CD; color: #1C2924; font: 800 14px/1 sans-serif; cursor: pointer; }
 .wl-hero { display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .wl-logo { width: 96px; height: 96px; filter: drop-shadow(0 8px 14px rgba(20,94,67,.3)); }
 .wl-name { font: 800 32px/0.95 var(--display); color: #1E7F5C; letter-spacing: .01em; }
@@ -8826,7 +9336,7 @@ function showWelcome(onGo) {
 .wl-ib:active { background: #E2D8BF; }`;
   document.head.appendChild(st);
   const el = document.createElement('div');
-  el.className = 'wl'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Dunaharaszti Szimulátor');
+  el.className = 'wl'; el.dataset.live = '1'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Dunaharaszti Szimulátor');
   const ic = (d, t) => `<div class="wl-f"><svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg><span>${t}</span></div>`;
   el.innerHTML = `<div class="wl-card"><button class="wl-x" id="wlX" type="button" aria-label="Bezárás">✕</button>
   <div class="wl-hero">${WELCOME_LOGO}<div class="wl-name">Dunaharaszti<br>Szimulátor</div><div class="wl-sub">H6 · Ráckevei HÉV</div></div>
@@ -8891,5 +9401,4 @@ if (window.claude?.hot?.ready) window.claude.hot.ready(start); else start(window
 if (!window.claude?.hot?.data?.x) showWelcome(() => {});
 })();
 </script>
-
 </body></html>
