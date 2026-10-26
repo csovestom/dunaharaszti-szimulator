@@ -5888,7 +5888,7 @@ let PANEL_KEY = '';
 function panelUpdate(dt) {
   BLACKOUT.t += dt; if (BLACKOUT.flash > 0) BLACKOUT.flash = Math.max(0, BLACKOUT.flash - dt);
   if (!PANEL.open) return;
-  const offLine = SCENE.erz || SCENE.back || SCENE.duna || SCENE.padok || SCENE.hid || SCENE.jokai || ch.lane === 'fside';
+  const offLine = SCENE.erz || SCENE.dozsa || SCENE.back || SCENE.duna || SCENE.padok || SCENE.hid || SCENE.jokai || ch.lane === 'fside';
   if (offLine) PANEL.target = null;
   const tr = offLine ? null : panelPickTarget(false), c = tr && CTRL.get(tr.id);
   CP.root.classList.toggle('no-train', !tr);
@@ -6241,12 +6241,14 @@ const TPORT = { root: $p('tppanel'), btn: $p('tpBtn'), close: $p('tpClose'), lis
     { id: 'millen', name: 'Millenniumtelep Hév Megálló', lane: 'street', x: 1372, facing: 1 },
     { id: 'dohi', name: 'Fő út - Dohánybolt', lane: 'back', x: 5000 + 89, facing: 1 },
     { id: 'erz', name: 'Gyuri Borozó', lane: 'erz', x: 11000 + 79, facing: 1 },
+    { id: 'dozsa', name: 'Dózsa György út', lane: 'back', x: 5000 + 409.9, facing: 1 },
     { id: 'ckp', name: 'Checkpoint', lane: 'back', x: 5000 + 269.4, facing: 1 },
   ] };
-const anySideScene = () => SCENE.back || SCENE.duna || SCENE.padok || SCENE.hid || SCENE.jokai || SCENE.erz;
+const anySideScene = () => SCENE.back || SCENE.duna || SCENE.padok || SCENE.hid || SCENE.jokai || SCENE.erz || SCENE.dozsa;
 function tpHere(sp) {
   if (sp.lane === 'street') return !anySideScene() && Math.abs(ch.x - sp.x) < 60 && ['street', ...({ kulso: ['kplat', 'kfar'], millen: ['mplat', 'mfar'] }[sp.id] || ['plat', 'far'])].includes(ch.lane);
-  if (sp.lane === 'back') return SCENE.back && !SCENE.padok && !SCENE.erz && ch.lane === 'back' && Math.abs(ch.x - sp.x) < 60;
+  if (sp.lane === 'back') return SCENE.back && !SCENE.padok && !SCENE.erz && !SCENE.dozsa && ch.lane === 'back' && Math.abs(ch.x - sp.x) < 60;
+  if (sp.lane === 'dozsa') return SCENE.dozsa && ch.lane === 'dozsa' && Math.abs(ch.x - sp.x) < 60;
   return SCENE.erz && ch.lane === 'erz';
 }
 function tpRender() {
@@ -6269,12 +6271,13 @@ function teleportTo(sp) {
   ch.mode = 'turn'; ch.speed = 0; input.left = input.right = false;
   fadeIn(`<b>Teleport</b><br>${sp.name}`);
   setTimeout(() => {
-    SCENE.back = SCENE.duna = SCENE.padok = SCENE.hid = SCENE.jokai = SCENE.erz = false;
+    SCENE.back = SCENE.duna = SCENE.padok = SCENE.hid = SCENE.jokai = SCENE.erz = SCENE.dozsa = false;
     if (sp.lane === 'back') { SCENE.back = true; SCENE.frontX = PXK.x; }
     if (sp.lane === 'erz') { SCENE.back = true; SCENE.erz = true; SCENE.frontX = PXK.x; }
+    if (sp.lane === 'dozsa') { SCENE.back = true; SCENE.dozsa = true; SCENE.frontX = PXK.x; }
     ch.lane = sp.lane; ch.x = sp.x; ch.facing = sp.facing;
     ch.d = LANES[ch.lane].d; ch.g = groundAt(ch.lane, ch.x); ch.key = null;
-    cam.x = sp.lane === 'street' ? clamp(ch.x + ch.facing * 2, WORLD.minX + 6, WORLD.maxX - 6) : sp.lane === 'back' ? clamp(ch.x + ch.facing * 2, BACK.x0 - 16, BACK.x1 - 6) : clamp(ch.x + ch.facing * 2, ERZ.x0 + 7, ERZ.x1 - 7);
+    cam.x = sp.lane === 'street' ? clamp(ch.x + ch.facing * 2, WORLD.minX + 6, WORLD.maxX - 6) : sp.lane === 'back' ? clamp(ch.x + ch.facing * 2, BACK.x0 - 16, BACK.x1 - 6) : sp.lane === 'dozsa' ? clamp(ch.x + ch.facing * 2, DGY.x0 + 7, DGY.x1 - 7) : clamp(ch.x + ch.facing * 2, ERZ.x0 + 7, ERZ.x1 - 7);
     ch.mode = 'walk';
     tpUpdate();
     setExpr('happy', 1.6);
@@ -8382,7 +8385,7 @@ const FOUT = { ivy: { t: -1e9 }, kut: { t: -1e9 }, red: { t: -1e9 }, ckp: { flag
     }
     // the lime tree by the Telekom wall: its own depth item behind the house fronts (inside the side-street group it was
     // drawn over the Telekom roof whenever the camera stood in front of the street)
-    treeRound(bx(409.3) - 0.6, 21.5, 8.5, ['#4A7A3E', '#3D6B35', '#5C8E4A'], 1301);
+    // (taken out: its trunk kept jumping in front of and behind the Telekom wall)
     for (const [u, d] of [[408.9, 34], [408.9, 62], [415.1, 48], [415.1, 80]]) {
       const x = bx(u);
       DCOR.push([d - 0.2, () => {
@@ -8416,20 +8419,34 @@ const FOUT = { ivy: { t: -1e9 }, kut: { t: -1e9 }, red: { t: -1e9 }, ckp: { flag
     for (const it of [itT, itJ, itD]) it.lk = 16.4;
 
     // ---------- beyond the corner: a house with solar panels, one more, trees ----------
-    hb({ u0: 433.6, u1: 442.3, d0: 16.4, d1: 26, h: 3.5, wall: '#EFE9DC', wallS: '#D8D2C5', roof: { t: 'hx', hr: 7.0, c: '#A9553B', cs: '#8E4630', ov: 0.45 },
+    // the solar-panel house and its neighbour stand wall to wall: the one farther sideways from the camera is drawn
+    // whole first, and at the shared wall their eaves stop at the wall line (they overlapped there)
+    {
+      const PV = [{ u0: 433.0, u1: 442.3, d0: 16.4, d1: 26, h: 3.5,   // wall to wall with the Papír Játék shop (a gap there showed the grass behind)
+      wall: '#EFE9DC', wallS: '#D8D2C5', roof: { t: 'hx', hr: 7.0, c: '#A9553B', cs: '#8E4630', ov: 0.45 },
       deco: w => { fillR(0, -0.5, w, 0.5, '#BDB4A2'); for (const u of [1.0, 3.6, 6.2]) shutterWin(u, 1.0, 1.2, 1.5, { dn: 0.5 }); },
       after: () => {
         // the solar panels on the front slope (the hip is nearly a pyramid: keep them inside the triangle)
-        const x0 = bx(433.6), ov = 0.45, i = Math.min((26 - 16.4) / 2 + ov, (442.3 - 433.6) / 2 + ov - 0.02), Wt = 442.3 - 433.6 + 2 * ov;
+        const x0 = bx(433.0), ov = 0.45, i = Math.min((26 - 16.4) / 2 + ov, (442.3 - 433.0) / 2 + ov - 0.02), Wt = 442.3 - 433.0 + 2 * ov;
         const P = (u, t) => [x0 - ov + u, lerp(16.4 - ov, 21.2, t), lerp(3.5, 7.0, t) + 0.05];
         base();
         for (const t0 of [0.14, 0.5]) {
           const t1 = t0 + 0.32, a = i * t1 + 0.15, b = Wt - i * t1 - 0.15;
           for (let u0 = a; u0 + 0.95 <= b; u0 += 1.0) { face([P(u0, t0), P(u0 + 0.95, t0), P(u0 + 0.95, t1), P(u0, t1)], '#2E4A78', true); line3(P(u0 + 0.47, t0), P(u0 + 0.47, t1), '#4A6A9A', 0.02); }
         }
-      } });
-    hb({ u0: 442.3, u1: 455, d0: 16.4, d1: 27, h: 3.6, wall: '#E6D6B6', wallS: '#D0C09E', roof: { t: 'gx', hr: 6.9, c: '#9A5A3A', cs: '#7E4930', ov: 0.45 }, chimney: [[448, 21.7, 7.6]],
-      deco: w => { fillR(0, -0.5, w, 0.5, '#B5A47E'); for (const u of [1.0, 3.4, 8.2, 10.6]) win(u, 1.0, 1.15, 1.45, { frame: '#6E4630', shutter: '#7A5236', sillC: '#E2D6B8' }); fillR(6.0, -2.3, 1.1, 2.3, '#6E4630'); } });
+      } }, { u0: 442.3, u1: 455, d0: 16.4, d1: 27, h: 3.6, wall: '#E6D6B6', wallS: '#D0C09E', roof: { t: 'gx', hr: 6.9, c: '#9A5A3A', cs: '#7E4930', ov: 0.45 }, chimney: [[448, 21.7, 7.6]],
+      deco: w => { fillR(0, -0.5, w, 0.5, '#B5A47E'); for (const u of [1.0, 3.4, 8.2, 10.6]) win(u, 1.0, 1.15, 1.45, { frame: '#6E4630', shutter: '#7A5236', sillC: '#E2D6B8' }); fillR(6.0, -2.3, 1.1, 2.3, '#6E4630'); } }];
+      const TR = [[0, 1], [1, 0]];
+      row(433.0, 455, () => {
+        const dist = PV.map(o => Math.max(0, bx(o.u0) - cam.x, cam.x - bx(o.u1)));
+        for (const i of [0, 1].sort((p, q) => dist[q] - dist[p])) {
+          const o = PV[i], ov = o.roof.ov ?? 0.45, x0 = bx(o.u0), x1 = bx(o.u1);
+          hbDraw({ ...o, roof: { ...o.roof, t: 'none' }, after: null });
+          CUR_HOUSE = x0; hroof(x0 + TR[i][0] * ov, x1 - TR[i][1] * ov, o.d0, o.d1, o.h, o.roof, o.wall, o.wallS);
+          if (o.after) o.after(); base();
+        }
+      });
+    }
     {
       treeRound(bx(458), 20, 10, MID, 1321); treeRound(bx(463.5), 22.5, 12, ['#4A7A3E', '#3D6B35', '#5C8E4A'], 1322); treeRound(bx(469.5), 20.5, 9.5, MID, 1323); shrubs(bx(455.4), bx(474), 17.2, 1.5, 1324); const g = [];
       row(455, 474, () => { for (const it of g) it.draw(); at(bx(455), 16.3); fillR(0, -0.5, 19, 0.5, '#D9D4C8'); bars(0, 19, 1.4, '#2A2C2E', 0.15); for (let u = 0; u <= 19; u += 3.8) fillR(u - 0.15, -1.55, 0.3, 1.55, '#E2DDD1'); });
@@ -8475,7 +8492,7 @@ const FOUT = { ivy: { t: -1e9 }, kut: { t: -1e9 }, red: { t: -1e9 }, ckp: { flag
       // the lawn bed in front of the Anna-ház
       if (bx(152.8) > l && bx(146.2) < r) { face([[bx(146.2), 11.5, 0.12], [bx(152.8), 11.5, 0.12], [bx(152.8), 15.2, 0.12], [bx(146.2), 15.2, 0.12]], '#CFCDC6', true); face([[bx(146.35), 11.62, 0.122], [bx(152.65), 11.62, 0.122], [bx(152.65), 15.08, 0.122], [bx(146.35), 15.08, 0.122]], '#7F9A4E', true); }
     });
-    for (const [a, b] of ISL) if (a !== 220.4 && a !== 258.5) shrubs(bx(a + 0.35), bx(b - 0.4), 13.6, 0.9, 1410 + a, ['#8FB04E', '#6E9440', '#A8C460']);
+    // (the shrubs on the pole islands were taken out: they slid over the gravel while walking)
     for (const [a, b] of STRIP) {
       const r = mulberry(1420 + a), cl = [];
       for (let u = a + 0.3; u < b - 0.3; u += 0.42 + r() * 0.25) cl.push([u, 11.8 + r() * 3.1, 0.38 + r() * 0.22, r() < 0.6]);
@@ -9679,6 +9696,952 @@ function goErz(inside) {
   }, 750);
 }
 
+// =====================================================================
+// THE DÓZSA GYÖRGY ÚT – its own scene: in from the Fő út at the Telekom corner, along the north side of the street
+// to the Bacchus Pub at the Márton Áron utca (Street View 2024, Beni's map). The camera stands on the road and looks
+// at the north side; the ghost walks on the pavement in front of the houses, away from the Fő út to the right.
+//   0–55 m   the Telekom corner house and its long wing: the yellow part with white box blinds, Royal Klíma
+//            (double glass door, sticker windows, the chalkboard, red rail, a red-white scissor barrier), the white
+//            part with roller shutters, the low white end; the Feniksbus minibus parked in front
+//   55–100   gravel drive, the white picket fence on its ochre wall with the willow and the big spruce, the ochre
+//            house with the bus shelter, a yellow fence, a hedge, the yield / STOP 100 m / Baja–Budapest signs
+//   100–124  the pale green gable house (Betűvágás · Plakátnyomtatás), the brown fence, the old house in the yard
+//   124–151  the old shop row: ochre (two brown gates), cream under slate (white blinds), the white sxl-divat shop
+//   151–186  the parking with three cars, the white Bacchus house behind the cypresses, the brick Bacchus Pub with
+//            its timber porches, barrels, the big tree, the white umbrella and the MENU board
+//   186–192  the Márton Áron utca (the street ends here: signs on the corner, the Zalakerámia fence beyond)
+// =====================================================================
+const DGY = { x0: 13000, x1: 13200, items: [], ground: [], mouth: 5000 + 412.0, end: 184.5 };
+const DGD = { lane: 10.5, road1: 7.2, edge: 7.36, verge1: 9.7, front: 11.6 };
+SCENE.dozsa = false;
+(function buildDozsa() {
+  const s0 = STATIC.length, g0 = GROUND.length, X0 = DGY.x0 - 80, X1 = DGY.x1 + 80, ex = u => DGY.x0 + u;
+  const F = DGD.front, R1 = DGD.road1, E1 = DGD.edge, V1 = DGD.verge1;
+  const FO = { w0: ex(-16.6), r0: ex(-14.6), r1: ex(-2.6), e1: ex(0) };   // the Fő út: west pavement, road, east pavement
+  const MA = { r0: ex(186.6), r1: ex(192.4) };                          // the Márton Áron utca
+  // ---------- helpers (the same as on the Fő út) ----------
+  const FR3 = (Fp, u, v, w = 0) => [Fp.o[0] + Fp.e[0] * u + Fp.n[0] * w, Fp.o[1] + Fp.e[1] * u + Fp.n[1] * w, v];
+  const fq = (Fp, u0, v0, u1, v1, fill, w = 0.012) => { base(); face([FR3(Fp, u0, v0, w), FR3(Fp, u1, v0, w), FR3(Fp, u1, v1, w), FR3(Fp, u0, v1, w)], fill, true); };
+  const facing = Fp => (cam.x - Fp.o[0]) * Fp.n[0] + (cam.z - Fp.o[1]) * Fp.n[1] > 0.05;
+  const fAt = (Fp, u, v, w = 0.015) => {
+    const p = FR3(Fp, u, v, w), q = FR3(Fp, u + 0.05, v, w), X = sx(p[0], p[1]), Y = sy(v, p[1]), s = sc(p[1]);
+    ctx.setTransform((sx(q[0], q[1]) - X) / 0.05 * cam.dpr, (sy(v, q[1]) - Y) / 0.05 * cam.dpr, 0, s * cam.dpr, X * cam.dpr, Y * cam.dpr);
+  };
+  const near = (Fp, uc, w) => { fAt(Fp, uc, 0, w); ctx.translate(-uc, 0); };
+  const ftext = (Fp, str, u, v, size, color, weight = 800, family = 'Barlow Condensed') => {
+    base(); ctx.font = `${weight} ${size * 100}px "${family}", "Arial Narrow", sans-serif`;
+    const cs = [...str], ws = cs.map(c => ctx.measureText(c).width / 100);
+    let x = u - ws.reduce((a, b) => a + b, 0) / 2;
+    for (let i = 0; i < cs.length; i++) { fAt(Fp, x + ws[i] / 2, v, 0.03); ltext(cs[i], 0, 0, size, color, weight, family); x += ws[i]; }
+    base();
+  };
+  const wallWins = (Fp, list, o = {}) => { if (!facing(Fp)) return; for (const [u, h0, w, h] of list) { near(Fp, u + w / 2); win(u, h0, w, h, o); } base(); };
+  const sagW = (a, b, s, w = 0.022) => {
+    base(); if (Math.min(a[1], b[1]) - cam.z < NEAR) return;
+    ctx.beginPath();
+    for (let i = 0; i <= 14; i++) { const t = i / 14, x = lerp(a[0], b[0], t), d = lerp(a[1], b[1], t), h = lerp(a[2], b[2], t) - 4 * s * t * (1 - t); i ? ctx.lineTo(sx(x, d), sy(h, d)) : ctx.moveTo(sx(x, d), sy(h, d)); }
+    ctx.strokeStyle = C.wire; ctx.lineWidth = Math.max(0.8, w * sc(Math.min(a[1], b[1]))); ctx.stroke();
+  };
+  // a sort key that depends on the camera
+  const dynK = (k1, k2, cond) => { const it = STATIC[STATIC.length - 1]; Object.defineProperty(it, 'k', { get: () => cond() ? k1 : k2, enumerable: true }); };
+  // the houses of the street front: drawn among themselves the farther (sideways) first (see renderDozsa)
+  // (k0: the base of the sort key; a house set back from the pavement keeps a deeper one)
+  const row = (u0, u1, draw, d1 = F + 9, k0 = F + 0.7) => { add(k0, ex(u0) - 0.6, ex(u1) + 0.6, draw, d1 + 1); STATIC[STATIC.length - 1].row = true; STATIC[STATIC.length - 1].rk = k0; };
+  // roofs: 'hx' hip with the ridge along the street, 'hd' hip end to the street, 'gd' gable to the street,
+  // 'gx' ridge along the street with side gables, 'flat'
+  const hroof = (x0, x1, d0, d1, h, Rf, wall, wallS) => {
+    const ov = Rf.ov ?? 0.45, xm = (x0 + x1) / 2, dm = (d0 + d1) / 2, hr = Rf.hr, c = Rf.c, cs = Rf.cs ?? mix(c, '#000000', 0.16), e = Rf.e ?? mix(c, '#000000', 0.34);
+    const fa = Rf.fa ?? mix(c, '#1A1410', 0.55), so = Rf.so ?? mix(cs, '#1A1410', 0.4), FH = Rf.fh ?? 0.22;
+    const A = [x0 - ov, d0 - ov, h], B = [x1 + ov, d0 - ov, h], Cc = [x1 + ov, d1 + ov, h], Dd = [x0 - ov, d1 + ov, h], cr = [xm, dm, h + 0.05], cw = [xm, dm, h * 0.5];
+    const L = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
+    const courses = (p, q, r, s, col) => { for (let k = 1; k < 7; k++) line3(L(p, s, k / 7), L(q, r, k / 7), col, 0.03); };
+    const board = (p, q, hh) => face([[p[0], p[1], hh], [q[0], q[1], hh], [q[0], q[1], hh - FH], [p[0], p[1], hh - FH]], fa, true);
+    const hipBoards = () => { if (cam.x < x0 - ov) board(Dd, A, h); else if (cam.x > x1 + ov) board(B, Cc, h); board(A, B, h); };
+    base();
+    if (Rf.t === 'hx') {
+      const i = Math.min((d1 - d0) / 2 + ov, (x1 - x0) / 2 + ov - 0.02), P1 = [x0 - ov + i, dm, hr], P2 = [x1 + ov - i, dm, hr];
+      faceC([Dd, A, P1], cs, cr); faceC([B, Cc, P2], cs, cr); faceC([Cc, Dd, P1, P2], cs, cr);
+      if (faceC([A, B, P2, P1], c, cr) && Rf.lines !== false) courses(A, B, P2, P1, mix(c, '#000000', 0.1));
+      hipBoards();
+      line3(P1, P2, e, 0.09); line3(A, P1, e, 0.08); line3(B, P2, e, 0.08);
+    } else if (Rf.t === 'hd') {
+      const i = Math.min((x1 - x0) / 2 + ov, (d1 - d0) / 2 + ov - 0.02), P1 = [xm, d0 - ov + i, hr], P2 = [xm, d1 + ov - i, hr];
+      faceC([Cc, Dd, P2], cs, cr);
+      if (faceC([Dd, A, P1, P2], cs, cr) | faceC([B, Cc, P2, P1], cs, cr)) line3(P1, P2, e, 0.09);
+      if (faceC([A, B, P1], c, cr) && Rf.lines !== false) for (let k = 1; k < 6; k++) line3(L(A, P1, k / 6), L(B, P1, k / 6), mix(c, '#000000', 0.1), 0.03);
+      hipBoards();
+      line3(A, P1, e, 0.08); line3(B, P1, e, 0.08);
+    } else if (Rf.t === 'gd') {
+      faceC([[x0, d0, h], [x1, d0, h], [xm, d0, hr]], wall, cw); faceC([[x0, d1, h], [x1, d1, h], [xm, d1, hr]], wall, cw);
+      if (Rf.gable) { at(x0, d0); Rf.gable(x1 - x0); base(); }
+      const P = [x0 - ov, d0 - ov, h - 0.15], Q = [xm, d0 - ov, hr + 0.04], P2 = [x1 + ov, d0 - ov, h - 0.15];
+      face([P, Q, [xm, d0, hr], [x0, d0, h]], so, true); face([Q, P2, [x1, d0, h], [xm, d0, hr]], so, true);
+      if (cam.h < h && cam.x < x0) face([P, [x0 - ov, d1 + ov, h - 0.15], [x0, d1, h], [x0, d0, h]], so, true);
+      if (cam.h < h && cam.x > x1) face([P2, [x1 + ov, d1 + ov, h - 0.15], [x1, d1, h], [x1, d0, h]], so, true);
+      faceC([P, Q, [xm, d1 + ov, hr + 0.04], [x0 - ov, d1 + ov, h - 0.15]], c, cr);
+      faceC([P2, Q, [xm, d1 + ov, hr + 0.04], [x1 + ov, d1 + ov, h - 0.15]], cs, cr);
+      if (cam.x < x0 - ov) board(P, [x0 - ov, d1 + ov], h - 0.15); else if (cam.x > x1 + ov) board(P2, [x1 + ov, d1 + ov], h - 0.15);
+      line3(P, Q, e, 0.16); line3(Q, P2, e, 0.16);
+    } else if (Rf.t === 'gx') {
+      faceC([[x0, d0, h], [x0, d1, h], [x0, dm, hr]], wallS, cw); faceC([[x1, d0, h], [x1, d1, h], [x1, dm, hr]], wallS, cw);
+      const P = [x0 - ov, d0 - ov, h - 0.12], Q = [x1 + ov, d0 - ov, h - 0.12];
+      if (cam.x < x0) { face([P, [x0 - ov, dm, hr], [x0, dm, hr], [x0, d0, h]], so, true); face([[x0 - ov, dm, hr], [x0 - ov, d1 + ov, h - 0.12], [x0, d1, h], [x0, dm, hr]], so, true); }
+      if (cam.x > x1) { face([Q, [x1 + ov, dm, hr], [x1, dm, hr], [x1, d0, h]], so, true); face([[x1 + ov, dm, hr], [x1 + ov, d1 + ov, h - 0.12], [x1, d1, h], [x1, dm, hr]], so, true); }
+      faceC([[x0 - ov, d1 + ov, h - 0.12], [x1 + ov, d1 + ov, h - 0.12], [x1 + ov, dm, hr], [x0 - ov, dm, hr]], cs, cr);
+      if (faceC([P, Q, [x1 + ov, dm, hr], [x0 - ov, dm, hr]], c, cr) && Rf.lines !== false) courses(P, Q, [x1 + ov, dm, hr], [x0 - ov, dm, hr], mix(c, '#000000', 0.1));
+      board(P, Q, h - 0.12);
+      line3([x0 - ov, d0 - ov, h - 0.12], [x0 - ov, dm, hr], e, 0.12); line3([x1 + ov, d0 - ov, h - 0.12], [x1 + ov, dm, hr], e, 0.12);
+      line3([x0 - ov, dm, hr], [x1 + ov, dm, hr], e, 0.08);
+    } else if (Rf.t === 'flat') box(x0 - 0.08, x1 + 0.08, d0 - 0.08, d1 + 0.08, h, h + (Rf.p ?? 0.4), { f: c, s: cs, t: Rf.top ?? '#BDBBB4' });
+  };
+  // a house: walls, the front (deco in the local frame of the front), chimneys, roof, then what stands before it
+  const hbD = o => {
+    const x0 = ex(o.u0), x1 = ex(o.u1), { d0, d1, h } = o;
+    CUR_HOUSE = x0;
+    if (o.behind) o.behind();
+    box(x0, x1, d0, d1, 0, h, { f: o.wall, s: o.wallS });
+    if (o.deco) { at(x0, d0); o.deco(x1 - x0); }
+    if (o.side) o.side(x0, x1);
+    for (const [u, d, chh] of o.chimney || []) box(ex(u) - 0.28, ex(u) + 0.28, d - 0.28, d + 0.28, h, chh, { f: o.chC || '#B05B3F', s: '#934A33', t: '#5A3A2E' });
+    hroof(x0, x1, d0, d1, h, o.roof, o.wall, o.wallS);
+    if (o.after) o.after(x0, x1);
+    base();
+  };
+  // a window with a roller shutter (pulled down to `dn`), the shutter box over it
+  const shutterWin = (u, h0, w, h, o = {}) => {
+    const dn = o.dn ?? 0.82;
+    fillR(u - 0.08, -(h0 + h + 0.08), w + 0.16, h + 0.16, o.frame || '#FFFFFF');
+    pane(u, -(h0 + h), w, h, o.glass || '#4F606B', h0 + u * 3);
+    fillR(u, -(h0 + h), w, h * dn, o.rs || '#F2F1EC');
+    ctx.fillStyle = o.rl || '#D6D4CC'; ctx.beginPath(); for (let y = h0 + h - 0.1; y > h0 + h * (1 - dn) + 0.02; y -= 0.1) ctx.rect(u, -y, w, 0.014); ctx.fill();
+    fillR(u, -(h0 + h * (1 - dn)) - 0.04, w, 0.04, o.lath || '#C9C7BF');
+    if (o.sill !== false) fillR(u - 0.12, -h0, w + 0.24, 0.07, o.sillC || '#D8D3C8');
+  };
+  // the white box of a roller blind over a window (the Telekom wing)
+  const blindBox = (u, w, top) => { fillR(u - 0.1, -(top + 0.36), w + 0.2, 0.36, '#F4F4F0'); fillR(u - 0.1, -top - 0.04, w + 0.2, 0.04, '#D6D6D0'); };
+  // a poster in a shop window: a flat block of colour with a few text lines
+  const lines = (u, y, w, n, col, gap = 0.12) => { ctx.fillStyle = col; ctx.beginPath(); for (let i = 0; i < n; i++) ctx.rect(u, y + i * gap, w * (0.55 + ((i * 37) % 10) / 22), 0.035); ctx.fill(); };
+  // a metal fence of vertical bars between two rails
+  const bars = (u0, u1, h, col, step = 0.13, w = 0.03) => { ctx.fillStyle = col; ctx.beginPath(); for (let u = u0 + 0.06; u < u1; u += step) ctx.rect(u, -h, w, h); ctx.rect(u0, -h, u1 - u0, 0.05); ctx.rect(u0, -0.2, u1 - u0, 0.045); ctx.fill(); };
+  const inView = (x0, x1, d) => { const [l, r] = visRange(d, 2); return x1 > l && x0 < r; };
+
+  // =================== the ground (far to near) ===================
+  ground(1e6, X0, X1, () => band(60, Infinity, 0, C.grassFar));
+  // the Fő út (running away from us on the left) and the Márton Áron utca (on the right)
+  ground(400, X0, X1, () => {
+    bandX(R1, 300, 0.004, C.asphalt, FO.r0, FO.r1);
+    bandX(R1, 300, 0.05, '#B9B7AF', FO.w0, FO.r0); bandX(R1, 300, 0.05, '#B9B7AF', FO.r1, FO.e1);
+    base(); const [, rr] = visRange(R1, 0);
+    for (let d = 9; d < 300; d += 9) face([[ex(-8.67), d, 0.006], [ex(-8.53), d, 0.006], [ex(-8.53), d + 4.5, 0.006], [ex(-8.67), d + 4.5, 0.006]], C.roadLine, true);
+    if (rr > MA.r0 - 20) bandX(R1, 300, 0.004, '#7C7D80', MA.r0, MA.r1);
+  });
+  // the yards behind the street front
+  ground(60, X0, X1, () => { bandX(F, 60, 0.002, C.grass, FO.e1, MA.r0); bandX(F, 60, 0.002, C.grass, MA.r1, X1 + 200); bandX(R1, 60, 0.002, C.grass, X0 - 200, FO.w0); });
+  DGY.yardGround = [];
+  // the pavement: grey concrete pavers, the joints across; round the Fő út corner
+  ground(F, X0, X1, () => {
+    const pv = '#BAB8B0', jt = '#A7A59D';
+    bandX(V1, F, 0.05, pv, FO.r1, MA.r0); bandX(V1, F, 0.05, pv, MA.r1, X1 + 200);
+    base(); const [l, r] = visRange(V1, 2);
+    for (let d = V1 + 0.4; d < F; d += 0.4) for (const [a, b] of [[Math.max(l, FO.r1), Math.min(r, MA.r0)], [Math.max(l, MA.r1), r]]) if (b > a) face([[a, d, 0.052], [b, d, 0.052], [b, d + 0.02, 0.052], [a, d + 0.02, 0.052]], jt, true);
+  });
+  // the verge between the road and the pavement: grass, worn gravel where cars stand, pavers in front of the shops
+  ground(V1, X0, X1, () => {
+    bandX(E1, V1, 0.02, '#94AD5E', FO.e1, MA.r0); bandX(E1, V1, 0.02, '#94AD5E', MA.r1, X1 + 200);
+    for (const [a, b] of [[12.5, 37], [42, 60.5], [101, 106.5], [109.5, 124]]) bandX(E1, V1 - 0.1, 0.022, '#B8B0A0', ex(a), ex(b));
+    for (const [a, b] of [[16, 22], [47, 52], [113, 119]]) bandX(E1 + 0.3, V1 - 0.5, 0.023, '#A79E8F', ex(a), ex(b));
+    bandX(E1, V1, 0.05, '#B5B3AB', ex(137.5), MA.r0);                 // paved in front of the shops, the parking and the pub
+    bandX(V1 - 0.32, V1, 0.052, '#A86A52', ex(137.5), MA.r0);         // a row of red pavers at the pavement's edge
+    // the corner by the Fő út: a little lawn with a clipped hedge round the lamp post
+    bandX(E1, V1, 0.03, '#8FAA5A', FO.r1, ex(1.5));
+  });
+  // the edge of the road: a concrete strip; the Dózsa György út asphalt with its centre line
+  ground(E1, X0, X1, () => {
+    bandX(R1, E1, 0.03, '#C2C3BE', FO.r1, MA.r0); bandX(R1, E1, 0.03, '#C2C3BE', MA.r1, X1 + 200);
+  });
+  ground(R1, X0, X1, () => {
+    band(0.3, R1, 0, C.asphalt);
+    base(); const [l, r] = visRange(R1, 3);
+    // patches of newer asphalt, the centre line (dashes), the zebra over the mouth at the Fő út
+    for (const [a, b] of [[20, 31], [64, 70], [131, 140]]) bandX(R1 - 2.6, R1 - 0.2, 0.002, C.asphaltD, ex(a), ex(b));
+    for (let x = Math.floor(l / 9) * 9; x < r; x += 9) if (x > FO.r1 + 4) face([[x, 3.55, 0.004], [x + 3.2, 3.55, 0.004], [x + 3.2, 3.67, 0.004], [x, 3.67, 0.004]], C.roadLine, true);
+    for (let d = 0.6; d < R1 - 0.3; d += 1.0) face([[ex(-2.4), d, 0.005], [ex(0.8), d, 0.005], [ex(0.8), d + 0.5, 0.005], [ex(-2.4), d + 0.5, 0.005]], '#F2F1EC', true);
+    face([[ex(1.2), 3.7, 0.005], [ex(1.5), 3.7, 0.005], [ex(1.5), R1 - 0.2, 0.005], [ex(1.2), R1 - 0.2, 0.005]], '#F2F1EC', true);   // the stop line
+    for (const u of [27.5, 88, 146]) { const x = ex(u); face([[x - 0.35, 5.2, 0.006], [x + 0.35, 5.2, 0.006], [x + 0.35, 5.75, 0.006], [x - 0.35, 5.75, 0.006]], '#5E5F62', true); }
+  });
+
+  // =================== the background: a second row of houses and gardens behind the street front ===================
+  {
+    const r = mulberry(13500), walls = ['#EFE9DA', '#E9D8B6', '#F2EFE8', '#E6CFA8', '#F4F1EA', '#E8C9B0', '#DDE3D0'];
+    const roofs = [[C.roofTile, '#7E4930'], ['#6E7274', '#5A5E60'], [C.roofRed, '#963B2A'], [C.roofBrown, '#653F2B'], ['#A85A3C', '#8E4A30']];
+    for (let u = -6, w = 0; u < 230; u += w + 2 + r() * 3) {
+      w = 8 + r() * 4; const h = 3.1 + r() * 1.4, rf = roofs[Math.floor(r() * roofs.length)], wall = walls[Math.floor(r() * walls.length)], d0 = F + 30 + r() * 6;
+      house({ x0: ex(u), x1: ex(u + w), d0, d1: d0 + 8, h, wall, wallS: mix(wall, '#000000', 0.12), roof: { type: r() < 0.45 ? 'gd' : 'hip', hr: h + 2.8 + r() * 1.2, c: rf[0], cs: rf[1], inset: 3 },
+        chimney: r() < 0.6 ? [ex(u + w * (0.25 + r() * 0.5)), d0 + 4, h + 4.0] : null,
+        deco: w2 => { for (let x = 1.2; x < w2 - 1.5; x += 3.3) win(x, 1.0, 1.15, 1.2, { cross: r() < 0.5 }); } });
+    }
+    // garden trees between the rows, a far line of tree tops behind
+    for (let u = -4; u < 232; u += 5 + r() * 5) treeRound(ex(u), F + 24 + r() * 5, 7.5 + r() * 4, r() < 0.5 ? MID : ['#4A7A3E', '#3D6B35', '#5C8E4A'], 13520 + Math.round(u * 10));
+    for (let u = -10; u < 240; u += 4 + r() * 4) treeRound(ex(u), F + 48 + r() * 10, 10 + r() * 5, FAR, 13900 + Math.round(u * 10));
+    for (const u of [36, 92, 131, 168]) treeConifer(ex(u), F + 27 + (u % 3), 11 + (u % 4), 14100 + u);
+  }
+
+  // =================== poles, wires, lamps ===================
+  // concrete poles along the verge (the holes up the shaft), some with a street lamp, a red petunia basket, signs
+  const POLES = [-1.0, 9.8, 31.0, 52.4, 72.6, 96.0, 118.5, 142.0, 166.5, 194.2, 214.0];
+  const PD = 8.7;
+  const flowerBasket = (hb, s = 1) => {        // in the local frame of the pole: a hanging basket of red petunias
+    strokeL([0, -(hb + 0.55 * s), 0.0, -(hb + 0.1 * s)], '#2A2C2E', 0.02);
+    ctx.beginPath(); ctx.ellipse(0, -hb, 0.36 * s, 0.24 * s, 0, 0, TAU); ctx.fillStyle = '#3E6A30'; ctx.fill();
+    for (const [a, b, r] of [[-0.3, 0.05, 0.13], [-0.16, 0.16, 0.12], [0.02, 0.2, 0.13], [0.2, 0.14, 0.12], [0.32, 0.02, 0.11], [-0.08, -0.06, 0.12], [0.12, -0.08, 0.11], [-0.26, -0.12, 0.09], [0.28, -0.14, 0.09], [0.0, -0.22, 0.1]])
+      circle(a * s, -(hb + b * s), r * s, (a * 31 + b * 17) % 0.2 > 0.1 ? '#D8283A' : '#E8485A');
+    for (const [a, b] of [[-0.22, -0.18], [0.24, -0.22], [0.06, 0.3], [-0.34, 0.12]]) strokeL([a * 0.6 * s, -(hb + 0.1 * s), a * s, -(hb - b * s)], '#3E6A30', 0.03 * s);
+  };
+  for (const u of POLES) add(PD, ex(u) - 2.5, ex(u) + 2.5, () => {
+    const x = ex(u), d = PD;
+    box(x - 0.17, x + 0.17, d - 0.17, d + 0.17, 0, 9.4, { f: '#C3C0B8', s: '#ADAAA2', t: '#D2CFC7' });
+    at(x, d); ctx.fillStyle = '#8F8B83'; ctx.beginPath(); for (let h = 0.7; h < 9; h += 0.5) ctx.rect(-0.06, -(h + 0.28), 0.12, 0.28); ctx.fill();
+    fillR(-0.55, -8.95, 1.1, 0.09, '#8E8B84'); for (const a of [-0.45, 0.45]) { fillR(a - 0.04, -9.08, 0.08, 0.14, '#E8E6E0'); }
+    fillR(-0.42, -7.55, 0.84, 0.07, '#8E8B84');
+    // the street lamp on its arm over the road
+    if ([31.0, 72.6, 118.5, 166.5, 214.0].includes(u)) {
+      const ln = lampN(13200 + u);
+      strokeL([0, -7.9, -0.6, -8.25, -1.7, -8.3], '#8C9093', 0.07); fillRR(-2.05, -8.42, 0.7, 0.2, 0.07, '#5E6366'); fillR(-1.95, -8.24, 0.5, 0.04, '#D9DCD8');
+      if (ln > 0.05) { emit(() => fillRR(-1.96, -8.25, 0.52, 0.06, 0.03, '#FFE3B0')); lampLight(x - 1.7, d, 8.2, d - 3, 0, 5.4, '255,214,150', ln); }
+    }
+    if ([9.8, 52.4, 96.0, 142.0, 194.2, 214.0].includes(u)) { at(x, d - 0.2); flowerBasket(u === 52.4 ? 3.05 : 3.35); }
+  });
+  // the wires: three on the pole tops, one lower (telephone)
+  add(PD - 0.05, X0, X1, () => {
+    const [l, r] = visRange(PD, 6);
+    for (let i = 0; i < POLES.length - 1; i++) {
+      const a = ex(POLES[i]), b = ex(POLES[i + 1]);
+      if (b < l || a > r) continue;
+      for (const [h, s, o] of [[9.02, 0.55, -0.45], [9.02, 0.6, 0.45], [8.62, 0.5, 0], [7.5, 0.45, -0.35]]) sagW([a + o, PD, h], [b + o, PD, h], s, 0.02);
+    }
+    if (l < ex(-1)) { sagW([ex(-1) - 0.45, PD, 9.02], [ex(-16), 30, 9.0], 0.5); sagW([ex(-1) + 0.45, PD, 9.02], [ex(-14), 60, 9.0], 0.6); }
+  });
+
+  // =================== the corner at the Fő út ===================
+  // a little lawn with a clipped hedge, the lamp post with the priority-road diamond, the green 510 plate, the 40 sign
+  hedge(ex(-2.2), ex(1.2), 8.05, 0.62, '#4E7F3E');
+  add(PD - 0.1, ex(-2.5), ex(0.5), () => {
+    at(ex(-1.0), PD - 0.2);
+    // yellow priority diamond
+    ctx.save(); ctx.translate(0, -2.92); ctx.rotate(Math.PI / 4); fillR(-0.27, -0.27, 0.54, 0.54, '#FFFFFF'); fillR(-0.2, -0.2, 0.4, 0.4, '#F2C21E'); ctx.restore();
+    fillRR(-0.24, -2.43, 0.48, 0.26, 0.03, '#FFFFFF'); fillRR(-0.22, -2.41, 0.44, 0.22, 0.025, '#1E7A3E'); ltext('510', 0, -2.3, 0.16, '#FFFFFF', 800);
+    circle(0, -1.86, 0.25, '#FFFFFF'); circle(0, -1.86, 0.23, '#D33A2F'); circle(0, -1.86, 0.18, '#FFFFFF'); ltext('40', 0, -1.85, 0.18, '#1E1E1E', 800, 'Barlow');
+    fillR(-0.02, -2.95, 0.04, 1.3, '#9AA0A3');
+  });
+  // the pedestrian light on the corner (green man), the push button
+  add(9.85, ex(0), ex(1.2), () => {
+    const x = ex(0.55), d = 9.85;
+    box(x - 0.05, x + 0.05, d - 0.05, d + 0.05, 0, 2.95, { f: '#8E9396', s: '#7A7F82', t: '#A2A7AA' });
+    at(x, d - 0.06);
+    fillRR(-0.17, -2.95, 0.34, 0.66, 0.04, '#1E2022');
+    circle(0, -2.78, 0.1, '#3A2220'); fillR(-0.03, -2.86, 0.06, 0.14, '#2A1A1A');
+    const g = !BLACKOUT.on; const gm = () => { circle(0, -2.45, 0.1, g ? '#4AE08A' : '#203A28'); fillR(-0.025, -2.53, 0.05, 0.14, g ? '#E9FFF2' : '#2A3A2E'); };
+    if (g) emit(gm); else gm();
+    fillRR(-0.1, -1.25, 0.2, 0.3, 0.03, '#E9C21E'); circle(0, -1.12, 0.05, '#1E2022');
+  });
+  // across the Fő út: the trees and houses of the far side (the HÉV side), a pole and a parked car
+  for (const [u, d, h, s] of [[-19, 16, 9, 1], [-23, 24, 11, 2], [-21, 36, 10, 3], [-26, 14, 8, 4], [-18, 48, 12, 5]]) treeRound(ex(u), d, h, MID, 13300 + s);
+  house({ x0: ex(-34), x1: ex(-24), d0: 26, d1: 34, h: 3.4, wall: '#EDE5D2', wallS: '#D5CCB8', roof: { type: 'hip', hr: 6.6, c: C.roofTile, cs: '#7E4930' } });
+  house({ x0: ex(-14), x1: ex(-4), d0: 66, d1: 74, h: 3.6, wall: '#F1EEE6', wallS: '#D8D4CA', roof: { type: 'hip', hr: 6.8, c: C.roofRed, cs: '#963B2A' } });
+
+  // =================== 0–55 m: the Telekom corner house and its long wing ===================
+  {
+    const S2 = Math.SQRT1_2, TG = Math.tan(Math.PI / 8);
+    const T0 = ex(0), T1 = ex(10.6), cc = 1.8, TD1 = F + 22.9, h = 3.9, hr = 7.6, ov = 0.5;
+    const WALL = '#EADCA8', WALLS = '#D6C892', RC = '#B65A3C', RCS = '#984A31', EDGE = '#7A3A26';
+    const FF = { o: [T0 + cc, F], e: [1, 0], n: [0, -1] }, WF = T1 - T0 - cc;
+    const FC = { o: [T0, F + cc], e: [S2, -S2], n: [-S2, -S2] }, WC = cc * Math.SQRT2;
+    const FRt = { o: [T1, F], e: [0, 1], n: [1, 0] };
+    const wallQ = (Fp, W, fill) => { base(); return face([FR3(Fp, 0, 0), FR3(Fp, W, 0), FR3(Fp, W, h), FR3(Fp, 0, h)], fill); };
+    // the roof points: eaves (corner cut like the house), the ridge running away from the street
+    const xm = (T0 + T1) / 2, iT = (T1 - T0) / 2 + ov;
+    const Cc = [T0 + cc - ov * TG, F - ov, h], Dd = [T0 - ov, F + cc - ov * TG, h], Ar = [T1 + ov, F - ov, h], Br = [T1 + ov, TD1 + ov, h], Bl = [T0 - ov, TD1 + ov, h];
+    const P1 = [xm, F - ov + iT, hr], P2 = [xm, TD1 + ov - iT, hr], crT = [xm, (F + TD1) / 2, h + 0.05];
+    // the wing roof continues the front slope of the corner house (same pitch), its ridge lower
+    const W1 = ex(49.5), WD1 = F + 7.9, kT = (hr - h) / iT, dR = (F + WD1) / 2, hrW = h + kT * (dR - (F - ov));
+    const V = [T1 + ov - (dR - (F - ov)), dR, hrW], Wr = [W1 + ov, F - ov, h], Wb = [W1 + ov, WD1 + ov, h], Wp = [W1 + ov - (dR - (F - ov)), dR, hrW], Vb = [T1 + ov, WD1 + ov, h];
+    const crW = [(T1 + W1) / 2, dR, h];
+    const L3 = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
+    const board = (p, q, hh = h, fa = '#5A2E22') => face([[p[0], p[1], hh], [q[0], q[1], hh], [q[0], q[1], hh - 0.22], [p[0], p[1], hh - 0.22]], fa, true);
+    // its right wall only behind the wing (in front of that it is the wall the two share); drawn before the wing
+    const telekomBack = () => { base(); const Fb = { o: [T1, WD1], e: [0, 1], n: [1, 0] }; face([FR3(Fb, 0, 0), FR3(Fb, TD1 - WD1, 0), FR3(Fb, TD1 - WD1, h), FR3(Fb, 0, h)], WALLS); };
+    const telekom = () => {
+      CUR_HOUSE = T0;
+      base();
+      face([FR3({ o: [T0, TD1], e: [0, -1], n: [-1, 0] }, 0, 0), FR3({ o: [T0, TD1], e: [0, -1], n: [-1, 0] }, TD1 - F - cc, 0), FR3({ o: [T0, TD1], e: [0, -1], n: [-1, 0] }, TD1 - F - cc, h), FR3({ o: [T0, TD1], e: [0, -1], n: [-1, 0] }, 0, h)], WALLS);
+      if (wallQ(FC, WC, WALL)) {
+        fq(FC, 0, 0, WC, 0.55, '#8E9092', 0.008);
+        near(FC, WC / 2, 0.01);
+        fillR(0.3, -3.0, WC - 0.6, 3.0, '#F6F6F2'); pane(0.4, -2.88, WC - 0.8, 2.8, '#3A4852', 401); fillR(WC / 2 - 0.03, -2.88, 0.06, 2.8, '#F6F6F2');
+        fillR(0.4, -1.1, WC - 0.8, 0.05, '#C9CCCC');
+        fillR(0.2, -3.62, WC - 0.4, 0.5, '#F4F4F0'); ltext('T', WC / 2, -3.36, 0.42, '#E20074', 800);
+        base();
+      }
+      if (wallQ(FF, WF, WALL)) {
+        at(T0 + cc, F);
+        fillR(0, -0.55, WF, 0.55, '#8E9092'); fillR(0, -0.57, WF, 0.03, '#A3A5A6');
+        // two windows with white box blinds, the left one with the pink Telekom poster
+        for (const [u, poster] of [[0.6, true], [2.65, false]]) {
+          blindBox(u, 1.5, 2.6); win(u, 1.05, 1.5, 1.55, { frame: '#F6F2E6', cross: false });
+          fillR(u, -2.6, 1.5, 0.45, '#ECECE6'); for (let v = 2.2; v < 2.6; v += 0.08) fillR(u, -v, 1.5, 0.01, '#CFCFC8');
+          if (poster) { fillR(u + 0.15, -2.1, 1.2, 0.95, '#E79AC2'); circle(u + 0.55, -1.7, 0.3, '#F6C2DA'); circle(u + 0.95, -1.45, 0.26, '#C2307A'); lines(u + 0.3, -1.25, 0.9, 2, '#FFFFFF', 0.09); }
+        }
+        // the shop entrance: white frame glass door, a flat white canopy, the magenta T board, two steps
+        fillR(4.6, -2.75, 1.65, 2.75, '#F6F6F2'); pane(4.72, -2.63, 1.41, 2.6, '#33414A', 402); fillR(5.395, -2.63, 0.06, 2.6, '#F6F6F2');
+        fillR(4.75, -1.2, 1.35, 0.05, '#C9CCCC'); fillRR(4.9, -1.95, 0.5, 0.2, 0.02, '#E20074'); ltext('T', 5.15, -1.85, 0.16, '#FFFFFF', 800);
+        fillR(4.35, -2.95, 2.15, 0.12, '#F2F2EE'); fillR(4.35, -2.83, 2.15, 0.03, '#C9C9C2');
+        fillR(4.75, -3.6, 0.95, 0.5, '#F4F4F0'); ltext('T', 5.22, -3.34, 0.42, '#E20074', 800);
+        // the right window, the cornice, a downpipe
+        blindBox(6.95, 1.35, 2.6); win(6.95, 1.05, 1.35, 1.55, { frame: '#F6F2E6', cross: false }); fillR(6.95, -2.6, 1.35, 0.6, '#ECECE6');
+        fillR(0, -(h - 0.05), WF, 0.22, '#F4EEDA');
+        fillR(WF - 0.2, -(h - 0.15), 0.08, h - 0.3, '#D9D9D4');
+        base();
+      }
+      // the steps in front of the door
+      box(T0 + cc + 4.4, T0 + cc + 6.45, F - 0.55, F, 0, 0.16, { f: '#C9C7C0', s: '#B3B1AA', t: '#D8D6CF' });
+      box(T0 + cc + 4.5, T0 + cc + 6.35, F - 0.28, F, 0.16, 0.31, { f: '#C9C7C0', s: '#B3B1AA', t: '#D8D6CF' });
+      // the chimney, then the roof
+      box(ex(7.6) - 0.3, ex(7.6) + 0.3, F + 9.0, F + 9.6, h, hr + 0.9, { f: '#B05B3F', s: '#934A33', t: '#5A3A2E' });
+      base();
+      faceC([Bl, Dd, P1, P2], RCS, crT); faceC([Ar, Br, P2, P1], RCS, crT); faceC([Br, Bl, P2], RCS, crT);
+      faceC([Dd, Cc, P1], mix(RC, RCS, 0.45), crT);
+      if (faceC([Cc, Ar, P1], RC, crT)) for (let k = 1; k < 6; k++) line3(L3(Cc, P1, k / 6), L3(Ar, P1, k / 6), mix(RC, '#000000', 0.1), 0.03);
+      board(Cc, Ar); board(Dd, Cc);
+      // the ridge runs away from the street behind the front slope: it only shows from above
+      line3(Cc, P1, EDGE, 0.08); line3(Dd, P1, EDGE, 0.08); if (cam.h > hr) line3(P1, P2, EDGE, 0.08);
+      line3(V, P1, EDGE, 0.08);
+    };
+    const wingWalls = () => {
+      CUR_HOUSE = T1;
+      box(T1, W1, F, WD1, 0, h, { f: '#EEEDE7', s: '#D9D7CF' });
+      at(T1, F);
+      const yel = 14.0, bei = 29.6, WW = W1 - T1;          // the yellow part, the beige Royal Klíma part, then white
+      fillR(0, -h, yel, h, WALL); fillR(yel, -h, bei - yel, h, '#D9CBA2');
+      // plinths, cornices
+      fillR(0, -0.55, yel, 0.55, '#8E9092'); fillR(0, -(h - 0.05), yel, 0.22, '#F4EEDA');
+      fillR(yel, -0.62, bei - yel, 0.62, '#C49A72'); ctx.fillStyle = '#D9B898'; ctx.beginPath(); for (let v = 0.1; v < 0.62; v += 0.1) ctx.rect(yel, -v, bei - yel, 0.012); ctx.fill();
+      ctx.fillStyle = '#AE845E'; ctx.beginPath(); for (let v = 0, k = 0; v < 0.6; v += 0.1, k++) for (let u = yel + (k % 2) * 0.12; u < bei; u += 0.24) ctx.rect(u, -(v + 0.1), 0.012, 0.1); ctx.fill();
+      fillR(yel, -(h - 0.05), bei - yel, 0.2, '#E3D8BA');
+      fillR(bei, -0.48, WW - bei, 0.48, '#B4B2AA'); fillR(bei, -(h - 0.05), WW - bei, 0.18, '#F7F6F2');
+      // the yellow part: windows with the white blinds half down, the white blind boxes
+      for (const u of [1.6, 4.7, 7.8, 10.9]) {
+        blindBox(u, 1.35, 2.6); win(u, 1.05, 1.35, 1.55, { frame: '#F6F2E6', cross: false });
+        fillR(u, -2.6, 1.35, 0.55 + (u % 3) * 0.1, '#EDEDE7'); fillR(u, -2.05 + (u % 3) * 0.1 - 0.03 - (u % 3) * 0.2, 1.35, 0.03, '#C9C9C2');
+      }
+      fillR(yel - 0.1, -(h - 0.1), 0.09, h - 0.1, '#E9E9E3');
+      // Royal Klíma: the double glass door and its step
+      const K = yel;
+      fillR(K + 0.5, -2.62, 1.95, 2.62, '#F6F6F2'); pane(K + 0.62, -2.5, 0.8, 2.47, '#33424B', 410); pane(K + 1.53, -2.5, 0.8, 2.47, '#33424B', 411);
+      fillR(K + 1.44, -2.5, 0.07, 2.47, '#F6F6F2'); fillR(K + 0.7, -1.62, 0.35, 0.22, '#F2F2EE'); fillR(K + 0.72, -1.6, 0.31, 0.03, '#2E5DA0');
+      // the two pull handles: one solid plate across the meeting stiles (thin bars shimmered while walking)
+      fillR(K + 1.33, -1.4, 0.32, 0.4, '#B9BCBC'); fillR(K + 1.44, -1.4, 0.07, 0.4, '#F6F6F2');
+      // the two red-brown downpipes, bent at the top into the gutter
+      for (const u of [K + 3.35, K + 3.68]) { fillR(u, -(h - 0.25), 0.09, h - 0.25, '#B4533A'); fillR(u - 0.06, -0.22, 0.2, 0.1, '#9E4532'); }
+      fillR(K + 3.3, -(h - 0.2), 0.5, 0.08, '#A04A34');
+      // the sticker windows and the door between (the blue round icons, lines of text, ROYAL KLÍMA)
+      const sticker = (u, w, icon, title) => {
+        fillR(u - 0.08, -2.5, w + 0.16, 1.62, '#FFFFFF'); fillR(u, -2.42, w, 1.47, '#E9EDEF');
+        fillR(u + w / 2 - 0.025, -2.42, 0.05, 1.47, '#FFFFFF');
+        if (icon) { circle(u + 0.3, -2.12, 0.15, '#2E5DA0'); circle(u + 0.3, -2.12, 0.1, '#E9EDEF'); circle(u + 0.3, -2.12, 0.05, '#2E5DA0'); }
+        ctx.save(); ctx.translate(u + 0.12, -1.78); ctx.rotate(-Math.PI / 2); ltext(title, 0, 0, 0.07, '#2E3E5A', 800, 'Barlow Condensed', 'left'); ctx.restore();
+        lines(u + w / 2 + 0.06, -2.25, w / 2 - 0.12, 8, '#4A5A6E', 0.1);
+        ltext('ROYAL', u + w * 0.3, -1.12, 0.1, '#2E3E5A', 800); ltext('KLÍMA', u + w * 0.3, -1.04, 0.05, '#2E5DA0', 800);
+        fillR(u - 0.12, -0.95, w + 0.24, 0.07, '#D8D3C8');
+      };
+      sticker(K + 4.3, 1.2, true, 'KLÍMATECHNIKA');
+      fillR(K + 6.15, -2.38, 1.0, 2.38, '#F6F6F2'); fillR(K + 6.25, -2.28, 0.8, 2.25, '#E6EAEC'); fillR(K + 6.3, -2.2, 0.7, 1.1, '#3A4852');
+      fillR(K + 6.32, -2.18, 0.66, 0.62, '#F4F6F6'); ltext('ELÉRHETŐSÉGEK', K + 6.65, -2.08, 0.06, '#2E3E5A', 800); circle(K + 6.65, -1.88, 0.07, '#2E5DA0'); lines(K + 6.4, -1.74, 0.5, 2, '#4A5A6E', 0.07);
+      fillR(K + 6.95, -1.25, 0.06, 0.12, '#9AA0A3');
+      // the chalkboard: AMIT ESZEL AZZÁ LESZEL
+      fillR(K + 7.52, -2.25, 0.86, 1.32, '#2A2420'); fillR(K + 7.58, -2.19, 0.74, 1.2, '#1A1C1C');
+      ltext('"AMIT ESZEL', K + 7.95, -2.02, 0.075, '#E9E7DF', 700, 'Georgia'); ltext('AZZÁ LESZEL"', K + 7.95, -1.93, 0.075, '#E9E7DF', 700, 'Georgia');
+      strokeL([K + 7.7, -1.86, K + 8.2, -1.86], '#BDBBB4', 0.008);
+      sticker(K + 8.95, 1.2, true, 'ÉPÜLETÜZEMELTETÉS');
+      sticker(K + 10.95, 1.2, false, 'TERVEZÉS · KIVITELEZÉS');
+      sticker(K + 12.95, 1.2, true, 'ÉPÜLETFELÚJÍTÁS');
+      fillR(bei - 0.1, -(h - 0.1), 0.09, h - 0.1, '#A9A9A2');
+      // the white part: three windows with beige roller shutters in deep reveals
+      for (const u of [bei + 1.0, bei + 3.7, bei + 6.4]) { fillR(u - 0.14, -2.62, 1.53, 1.74, '#DCDAD2'); shutterWin(u, 1.0, 1.25, 1.45, { dn: 0.92, rs: '#BFB49C', rl: '#A89D86', lath: '#9A907A', frame: '#F4F4F0' }); }
+      fillR(WW - 0.18, -(h - 0.15), 0.08, h - 0.3, '#D9D9D4');
+      base();
+      // steps in front of the two doors
+      box(T1 + K + 0.3, T1 + K + 2.65, F - 0.45, F, 0, 0.15, { f: '#C9C7C0', s: '#B3B1AA', t: '#D8D6CF' });
+      box(T1 + K + 5.95, T1 + K + 7.35, F - 0.45, F, 0, 0.15, { f: '#C9C7C0', s: '#B3B1AA', t: '#D8D6CF' });
+    };
+    const wingRoof = () => {
+      box(ex(36.5) - 0.28, ex(36.5) + 0.28, F + 4.6, F + 5.2, h, hrW + 0.7, { f: '#B05B3F', s: '#934A33', t: '#5A3A2E' });
+      base();
+      faceC([Vb, Wb, Wp, V], RCS, crW); faceC([Wr, Wb, Wp], RCS, crW);
+      if (faceC([Ar, Wr, Wp, V], RC, crW)) for (let k = 1; k < 7; k++) line3(L3(Ar, V, k / 7), L3(Wr, Wp, k / 7), mix(RC, '#000000', 0.1), 0.03);
+      board(Ar, Wr); if (cam.x > W1 + ov) board(Wr, Wb);
+      line3(V, Wp, EDGE, 0.08); line3(Wr, Wp, EDGE, 0.08);
+    };
+    // the low white end with the door, the white iron gate, the barred window, the outdoor unit
+    const A0 = W1, A1 = ex(54.5), AD1 = F + 6.5, ah = 3.2, ahr = 5.3, aov = 0.4;
+    const annex = () => {
+      CUR_HOUSE = A0;
+      box(A0, A1, F, AD1, 0, ah, { f: '#F1F0EB', s: '#DCDAD3' });
+      at(A0, F);
+      const w = A1 - A0;
+      fillR(0, -0.45, w, 0.45, '#A9A79F'); fillR(0, -(ah - 0.04), w, 0.16, '#F8F7F3');
+      fillR(0.85, -2.4, 1.1, 2.4, '#7A4E32'); fillR(0.95, -2.3, 0.9, 2.3, '#8E5E3E'); pane(1.05, -2.2, 0.7, 1.1, '#3A4852', 420); fillR(1.66, -1.2, 0.08, 0.05, '#C9B57A');
+      fillRR(0.22, -1.55, 0.36, 0.42, 0.03, '#1E2022'); fillR(0.26, -1.32, 0.28, 0.03, '#3A3D40');
+      // the white wrought-iron gate with scrolls, the shady passage behind it
+      fillR(2.12, -1.78, 1.3, 1.78, '#8E8C86'); fillR(2.12, -1.78, 1.3, 0.5, '#7A7872');
+      ctx.fillStyle = '#F4F4F0'; ctx.beginPath(); for (let u = 2.18; u < 3.38; u += 0.11) ctx.rect(u, -1.75, 0.025, 1.7); ctx.rect(2.12, -1.78, 1.3, 0.05); ctx.rect(2.12, -0.12, 1.3, 0.05); ctx.rect(2.12, -1.0, 1.3, 0.035); ctx.fill();
+      ctx.strokeStyle = '#F4F4F0'; ctx.lineWidth = 0.025; for (let u = 2.3; u < 3.3; u += 0.32) { ctx.beginPath(); ctx.arc(u + 0.08, -1.42, 0.09, 0, Math.PI * 1.6); ctx.stroke(); }
+      fillR(2.05, -1.85, 0.08, 1.85, '#DADAD4'); fillR(3.42, -1.85, 0.08, 1.85, '#DADAD4');
+      // the barred window, the outdoor unit high up, a little lamp
+      win(3.75, 1.0, 0.9, 1.05, { frame: '#F4F4F0', cross: false }); ctx.fillStyle = '#F4F4F0'; ctx.beginPath(); for (let u = 3.8; u < 4.65; u += 0.12) ctx.rect(u, -2.05, 0.02, 1.05); ctx.fill();
+      fillRR(2.2, -2.95, 0.72, 0.48, 0.03, '#E9E9E4'); circle(2.4, -2.71, 0.15, '#C9CAC5'); circle(2.4, -2.71, 0.11, '#B4B5B0'); fillR(2.62, -2.88, 0.24, 0.3, '#DCDCD6');
+      fillR(w - 0.16, -(ah - 0.1), 0.07, ah - 0.2, '#D9D9D4');
+      base();
+      box(A0 + 0.75, A0 + 2.05, F - 0.4, F, 0, 0.15, { f: '#C9C7C0', s: '#B3B1AA', t: '#D8D6CF' });
+      // its side wall to the drive: one small window
+      const FSd = { o: [A1, F], e: [0, 1], n: [1, 0] };
+      wallWins(FSd, [[2.4, 1.2, 0.9, 1.0]], { frame: '#F4F4F0', cross: false });
+      // the roof: hipped at the right, against the wing at the left
+      const a = [A0, F - aov, ah], b = [A1 + aov, F - aov, ah], c2 = [A1 + aov, AD1 + aov, ah], d2 = [A0, AD1 + aov, ah], dm = (F + AD1) / 2, ia = dm - (F - aov);
+      const p1 = [A0, dm, ahr], p2 = [A1 + aov - ia, dm, ahr], cr = [(A0 + A1) / 2, dm, ah];
+      base();
+      faceC([d2, a, p1], '#F1F0EB', cr); faceC([c2, d2, p1, p2], '#8E4A34', cr); faceC([b, c2, p2], '#8E4A34', cr);
+      if (faceC([a, b, p2, p1], '#A85A40', cr)) for (let k = 1; k < 5; k++) line3(L3(a, p1, k / 5), L3(b, p2, k / 5), '#93503A', 0.03);
+      board(a, b, ah, '#5A2E22'); if (cam.x > A1 + aov) board(b, c2, ah, '#5A2E22');
+      line3(b, p2, '#6E3424', 0.07); line3(p1, p2, '#6E3424', 0.07);
+    };
+    row(0, 54.5, () => {
+      if (cam.x < T1) { annex(); wingWalls(); telekom(); wingRoof(); }
+      else if (cam.x < A0) { annex(); telekomBack(); wingWalls(); telekom(); wingRoof(); }
+      else { telekomBack(); wingWalls(); telekom(); wingRoof(); annex(); }
+    }, TD1);
+    // the pole by the Telekom: BENU 0-24, the Toldi Medical board, the petunias
+    add(PD - 0.25, ex(8.5), ex(11.2), () => {
+      at(ex(9.8), PD - 0.2);
+      fillRR(-0.42, -4.75, 0.84, 0.62, 0.03, '#FFFFFF'); fillRR(-0.4, -4.73, 0.8, 0.58, 0.025, '#1E4E9A');
+      ltext('Kiadó', 0, -4.6, 0.1, '#FFFFFF', 800); ltext('üzlethelyiség', 0, -4.48, 0.08, '#FFFFFF', 700); lines(-0.3, -4.38, 0.6, 2, '#C9D8EE', 0.07);
+      fillRR(-0.36, -4.1, 0.72, 0.42, 0.03, '#FFFFFF'); ltext('BENU', -0.06, -3.98, 0.13, '#1E8E5A', 800); fillRR(0.12, -4.05, 0.2, 0.18, 0.02, '#1E8E5A'); ltext('0-24', 0.22, -3.96, 0.08, '#FFFFFF', 800);
+      ltext('gyógyszertár →', 0, -3.8, 0.07, '#1E8E5A', 700);
+      fillRR(-0.3, -3.62, 0.6, 0.72, 0.03, '#FFFFFF'); fillR(-0.26, -3.58, 0.52, 0.1, '#1E4E9A'); ltext('TOLDI MEDICAL', 0, -3.53, 0.06, '#FFFFFF', 800);
+      lines(-0.22, -3.42, 0.44, 3, '#2A4E8A', 0.07); polyL([-0.18, -3.12, 0.06, -3.2, 0.06, -3.16, 0.18, -3.16, 0.18, -3.08, 0.06, -3.08, 0.06, -3.04], '#1E4E9A');
+      ltext('vérvétel · labor', 0, -2.96, 0.06, '#1E4E9A', 800);
+      for (const y of [-4.2, -3.66, -2.94]) fillR(-0.06, y, 0.12, 0.05, '#7A7F82');
+    });
+  }
+
+  // ---- in front of it: parked cars, the red-white scissor barrier, the red rail, the Feniksbus, the bins, the MOL pole ----
+  parkedCars([[ex(14.8), 8.25, Math.PI, 'wagon', '#3E4246'], [ex(20.1), 8.2, Math.PI, 'car', '#EEEEEA'], [ex(25.3), 8.25, Math.PI, 'car', '#C3C6C9'], [ex(35.1), 8.3, Math.PI, 'wagon', '#6F757B'],
+    [ex(57.4), 8.15, Math.PI, 'car', '#2E3236']]);
+  // the scissor barrier round a patch of dug-up verge (red and white slats, two feet)
+  add(9.0, ex(27.2), ex(32.4), () => {
+    const a = ex(27.6), b = ex(32.0), d0 = 9.0, d1 = 9.6, hh = 1.0;
+    base(); face([[a + 0.2, d0 + 0.05, 0.025], [b - 0.2, d0 + 0.05, 0.025], [b - 0.2, d1 - 0.05, 0.025], [a + 0.2, d1 - 0.05, 0.025]], '#B9A88C', true);
+    for (const [p, q] of [[[a, d1], [a, d0]], [[b, d0], [b, d1]]]) for (let t = 0; t < 1; t += 0.34) { const P = (tt, hgt) => [lerp(p[0], q[0], tt), lerp(p[1], q[1], tt), hgt]; line3(P(t, 0.15), P(t + 0.34, hh - 0.05), '#D8323A', 0.035); line3(P(t, hh - 0.05), P(t + 0.34, 0.15), '#F2F0EA', 0.035); }
+    at(a, d0);
+    const w = b - a, n = 12; ctx.lineWidth = 0.05;
+    for (let i = 0; i < n; i++) { const u0 = i * w / n, u1 = (i + 1) * w / n; strokeL([u0, -0.15, u1, -(hh - 0.05)], i % 2 ? '#F2F0EA' : '#D8323A', 0.045); strokeL([u0, -(hh - 0.05), u1, -0.15], i % 2 ? '#D8323A' : '#F2F0EA', 0.045); }
+    for (const u of [0, w]) { fillR(u - 0.04, -hh, 0.08, hh, '#D8323A'); fillR(u - 0.04, -hh * 0.66, 0.08, hh * 0.22, '#F2F0EA'); fillRR(u - 0.22, -0.06, 0.44, 0.06, 0.02, '#1E2022'); }
+  });
+  // the red-brown rail along the edge of the pavement in front of the doors
+  add(V1 + 0.05, ex(28.2), ex(33.8), () => {
+    const d = V1 + 0.05, a = ex(28.4), b = ex(33.6), c = '#A8483A';
+    line3([a, d, 0.95], [b, d, 0.95], c, 0.05); line3([a, d, 0.5], [b, d, 0.5], c, 0.03);
+    for (const x of [a, (a + b) / 2, b]) line3([x, d, 0], [x, d, 0.97], c, 0.05);
+  });
+  // the white Feniksbus (Ventona) minibus parked half on the verge, its back to the gravel drive
+  {
+    const x0 = ex(44.2), x1 = ex(51.9), d0 = 7.05, d1 = 9.15, hb = 0.34, ht = 2.78, BODY = '#F3F3EF', BS = '#DCDCD6';
+    const FRr = { o: [x1, d0], e: [0, 1], n: [1, 0] }, FRf = { o: [x0, d1], e: [0, -1], n: [-1, 0] };
+    add(d0, x0 - 1, x1 + 1, () => {
+      base(); face([[x0 - 0.1, d0 - 0.12, 0.004], [x1 + 0.1, d0 - 0.12, 0.004], [x1 + 0.1, d1 + 0.12, 0.004], [x0 - 0.1, d1 + 0.12, 0.004]], 'rgba(30,34,36,0.3)', true);
+      box(x0, x1, d0, d1, hb, ht, { f: BODY, s: BS, t: '#F8F8F5' });
+      box(x0 + 0.15, x1 - 0.15, d0 + 0.12, d1 - 0.12, ht, ht + 0.12, { f: '#E9E9E4', s: '#D6D6D0', t: '#EFEFEA' });
+      // the side towards us: the band of windows, the driver's window, the blue swoosh, the wheels
+      at(x0, d0);
+      const L = x1 - x0;
+      fillR(0.2, -2.42, L - 0.45, 1.02, '#2A333A');
+      for (let u = 1.55; u < L - 0.5; u += 1.18) fillR(u, -2.42, 0.1, 1.02, BODY);
+      fillR(0.25, -2.36, 1.15, 0.95, '#33414A'); fillR(0.3, -1.42, 1.05, 0.04, '#1E2428');
+      for (const [u, t] of [[1.7, 0.3], [2.9, 0.5], [4.1, 0.25], [5.3, 0.45]]) fillR(u, -2.38, 0.95, t, '#3E4E58');
+      fillR(0.05, -0.62, L - 0.1, 0.06, '#C9C9C3');
+      ctx.strokeStyle = '#2E64B0'; ctx.lineWidth = 0.05; for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.moveTo(L - 2.6 + k * 0.08, -0.8 - k * 0.07); ctx.quadraticCurveTo(L - 1.9, -1.25 - k * 0.07, L - 1.1, -0.95 - k * 0.07); ctx.stroke(); }
+      ltext('VENTONA', L - 1.8, -0.82, 0.12, '#2E64B0', 800);
+      for (const u of [1.35, L - 1.75]) { ctx.beginPath(); ctx.arc(u, -0.36, 0.5, Math.PI, 0); ctx.fillStyle = '#2A2C2E'; ctx.fill(); circle(u, -0.36, 0.36, '#1F2122'); circle(u, -0.36, 0.15, '#A2A6A8'); }
+      fillR(L - 0.15, -1.15, 0.1, 0.35, '#E85A2A');
+      // the back (seen from the right): big rear window, red lamps, FENIKSBUS, the 100 / 80 stickers
+      if (facing(FRr)) {
+        const W = d1 - d0;
+        fq(FRr, 0.12, 1.55, W - 0.12, 2.55, '#2A333A', 0.01);
+        fq(FRr, 0.02, 0.5, 0.14, 1.5, '#C8302A', 0.012); fq(FRr, W - 0.14, 0.5, W - 0.02, 1.5, '#C8302A', 0.012);
+        fq(FRr, 0.3, 0.38, W - 0.3, 0.5, '#2A2C2E', 0.012);
+        ftext(FRr, 'FENIKSBUS', W / 2, 0.98, 0.15, '#6E7276');
+        for (const [u, v, t] of [[0.42, 2.25, '100'], [0.42, 1.95, '80']]) { near(FRr, u, 0.015); circle(u, -v, 0.12, '#D8323A'); circle(u, -v, 0.1, '#FFFFFF'); ltext(t, u, -v + 0.005, 0.08, '#1E1E1E', 800, 'Barlow'); }
+        base(); fq(FRr, W / 2 - 0.26, 0.62, W / 2 + 0.26, 0.74, '#F2F2EE', 0.016);
+      }
+      // the front (seen from the left): the windscreen, headlamps, bumper
+      if (facing(FRf)) {
+        const W = d1 - d0;
+        fq(FRf, 0.08, 1.3, W - 0.08, 2.6, '#33414A', 0.01); fq(FRf, 0.15, 0.62, 0.55, 0.8, '#E9E6DA', 0.012); fq(FRf, W - 0.55, 0.62, W - 0.15, 0.8, '#E9E6DA', 0.012);
+        fq(FRf, 0.05, 0.34, W - 0.05, 0.52, '#3A3D40', 0.012);
+      }
+      base();
+      // the ghost shows through when it floats behind the bus
+      if (ch.lane === 'dozsa' && ch.mode === 'walk' && ch.x > x0 - 0.7 && ch.x < x1 + 0.7) { const a = ch.alpha; ch.alpha = a * 0.42; drawChar(); ch.alpha = a; }
+    });
+  }
+  // the brown and the black wheelie bin by the pole at the end of the house
+  add(V1 - 0.15, ex(52.6), ex(54.2), () => {
+    for (const [u, c] of [[53.0, '#6E4A32'], [53.68, '#25282A']]) {
+      const x = ex(u), d = V1 - 0.15;
+      box(x - 0.28, x + 0.28, d - 0.3, d + 0.3, 0.05, 1.0, { f: c, s: mix(c, '#000000', 0.18), t: mix(c, '#FFFFFF', 0.08) });
+      box(x - 0.31, x + 0.31, d - 0.36, d + 0.33, 1.0, 1.07, { f: mix(c, '#000000', 0.1), s: mix(c, '#000000', 0.25), t: mix(c, '#FFFFFF', 0.12) });
+      at(x, d - 0.3); circle(-0.2, -0.08, 0.09, '#1E2022'); circle(0.2, -0.08, 0.09, '#1E2022');
+    }
+  });
+  // the MOL board on top of the pole, the traffic-light-ahead triangle below the petunias
+  add(PD - 0.25, ex(51.3), ex(53.5), () => {
+    at(ex(52.4), PD - 0.2);
+    fillRR(-0.48, -6.25, 0.96, 1.5, 0.05, '#9BC23C'); fillRR(-0.44, -6.21, 0.88, 1.42, 0.04, '#B5D44A');
+    ctx.save(); ctx.translate(-0.06, -5.78); ctx.rotate(-0.12); fillRR(-0.24, -0.18, 0.48, 0.36, 0.06, '#D8323A'); ltext('MOL', 0, 0.01, 0.2, '#FFFFFF', 800, 'Barlow'); ctx.restore();
+    polyL([-0.32, -5.05, 0.1, -5.25, 0.1, -5.15, 0.32, -5.15, 0.32, -4.95, 0.1, -4.95, 0.1, -4.85], '#1E2022');
+    ltext('2,1 km', 0.0, -5.38, 0.13, '#1E2022', 800);
+    polyL([0, -2.95, 0.3, -2.42, -0.3, -2.42], '#D8323A'); polyL([0, -2.86, 0.23, -2.47, -0.23, -2.47], '#FFFFFF');
+    fillRR(-0.045, -2.78, 0.09, 0.27, 0.02, '#1E2022'); circle(0, -2.73, 0.025, '#D8323A'); circle(0, -2.65, 0.025, '#E9B21E'); circle(0, -2.57, 0.025, '#2EA05A');
+    fillR(-0.025, -2.42, 0.05, 0.12, '#7A7F82');
+  });
+
+  // =================== 55–100 m ===================
+  // the gravel drive into the yard behind the long house; a white lorry and a cream shed at its end
+  ground(F + 30, X0, X1, () => { bandX(F - 0.02, F + 26, 0.008, '#C4BBA9', ex(54.6), ex(58.6)); bandX(F + 6, F + 26, 0.006, '#B5AC9A', ex(50), ex(62)); });
+  add(F + 17, ex(53), ex(61), () => drawCarO(ex(56.8), F + 18.5, 1.25, 'truck', '#F2F2EE'));
+  house({ x0: ex(50.5), x1: ex(61.5), d0: F + 23, d1: F + 29, h: 3.6, wall: '#E9E3D2', wallS: '#D2CCBA', roof: { type: 'gx', hr: 5.6, c: '#8E9294', cs: '#7A7E80' } });
+  // 5 Dózsa: the white picket fence on its ochre wall; behind it the willow, a big dark tree, the spruce; the house hidden
+  house({ x0: ex(61), x1: ex(73), d0: F + 13, d1: F + 21, h: 3.4, wall: '#EFE7D4', wallS: '#D7CFBB', roof: { type: 'hip', hr: 6.8, c: C.roofTile, cs: '#7E4930' }, chimney: [ex(69), F + 17, 7.6] });
+  treeRound(ex(62.2), F + 3.8, 8.2, ['#7FA65C', '#8DB468', '#6E9550'], 13401, '#A6C77F');   // the willow, kept compact behind the fence
+  treeRound(ex(66.6), F + 5.2, 10.5, ['#3D6B35', '#335E2E', '#4A7A3E'], 13402);
+  treeConifer(ex(69.2), F + 10.0, 12.5, 13403);
+  add(F + 0.95, ex(62), ex(64.6), () => { at(ex(63.3), F + 0.95); ctx.beginPath(); ctx.ellipse(0, -0.62, 0.95, 0.68, 0, 0, TAU); ctx.fillStyle = '#2F5A2C'; ctx.fill(); ctx.beginPath(); ctx.ellipse(-0.2, -0.86, 0.55, 0.35, 0, 0, TAU); ctx.fillStyle = '#3E6E36'; ctx.fill(); fillR(-0.95, -0.05, 1.9, 0.05, '#2A4A26'); });
+  add(F + 0.15, ex(58.4), ex(74.8), () => {
+    const a = ex(58.6), b = ex(74.6), d = F + 0.15;
+    box(a, b, d - 0.12, d + 0.12, 0, 0.5, { f: '#D9994A', s: '#C2853C', t: '#E6B06A' });
+    at(a, d - 0.12);
+    const w = b - a;
+    ctx.fillStyle = '#F4F4F0'; ctx.beginPath();
+    for (let u = 0.12; u < w - 0.05; u += 0.17) { ctx.moveTo(u, -0.5); ctx.lineTo(u, -1.33); ctx.lineTo(u + 0.045, -1.4); ctx.lineTo(u + 0.09, -1.33); ctx.lineTo(u + 0.09, -0.5); }
+    ctx.rect(0, -1.2, w, 0.06); ctx.rect(0, -0.72, w, 0.06); ctx.fill();
+    ctx.fillStyle = '#D9D9D3'; ctx.beginPath(); for (let u = 0.12; u < w - 0.05; u += 0.17) ctx.rect(u + 0.07, -1.33, 0.02, 0.83); ctx.fill();
+    for (let u = 0; u <= w + 0.01; u += w / 6) { fillR(u - 0.07, -1.5, 0.14, 1.0, '#FAFAF6'); fillR(u - 0.09, -1.55, 0.18, 0.06, '#E2E2DC'); fillR(u + 0.03, -1.5, 0.04, 1.0, '#E2E2DC'); }
+  });
+  // the ochre house with the grey roof; the bus shelter on the pavement in front of it
+  row(75.0, 85.5, () => hbD({ u0: 75.0, u1: 85.5, d0: F + 1.6, d1: F + 9.6, h: 3.3, wall: '#D9A55E', wallS: '#C08E4C', roof: { t: 'hx', hr: 6.0, c: '#8E9192', cs: '#7A7D7E', ov: 0.45 }, chimney: [[82.5, F + 6.5, 7.0]],
+    deco: w => {
+      fillR(0, -0.55, w, 0.55, '#8E4436'); fillR(0, -0.58, w, 0.04, '#A8584A');
+      for (const u of [1.3, 7.3]) shutterWin(u, 1.0, 1.25, 1.45, { dn: 0.55, frame: '#F4F4F0' });
+      fillR(4.3, -2.35, 1.0, 2.35, '#7A5A3E'); fillR(4.4, -2.25, 0.8, 2.25, '#8E6A4A'); fillR(4.5, -2.15, 0.6, 0.8, '#3A4852');
+      fillR(0, -3.3, w, 0.16, '#E2B672');
+    } }), F + 9.6, F + 1.65);
+  // seen from the left its side wall shows, and that lies behind the trees in the next garden: then it goes first
+  { const it = STATIC[STATIC.length - 1]; Object.defineProperty(it, 'rk', { get: () => cam.x < ex(75.0) ? F + 10.6 : F + 1.65, enumerable: true }); }
+  add(F + 1.6, ex(74.8), ex(86), () => { base(); face([[ex(75), F, 0.06], [ex(85.5), F, 0.06], [ex(85.5), F + 1.6, 0.06], [ex(75), F + 1.6, 0.06]], '#B4B2AA', true); }, F + 1.6);
+  const SH = { a: ex(76.8), b: ex(79.8), d0: F - 0.25, d1: F + 1.25 };
+  add(SH.d1, SH.a - 0.5, SH.b + 0.5, () => {        // the back of the shelter: the glass wall and the bench
+    base(); face([[SH.a, SH.d1, 0.08], [SH.b, SH.d1, 0.08], [SH.b, SH.d1, 2.3], [SH.a, SH.d1, 2.3]], 'rgba(170,200,210,0.32)', true);
+    line3([SH.a, SH.d1, 1.0], [SH.b, SH.d1, 1.0], '#7E868A', 0.03);
+    box(SH.a + 0.4, SH.b - 0.2, SH.d1 - 0.42, SH.d1 - 0.05, 0.42, 0.48, { f: '#6E767A', s: '#5E6568', t: '#8A9296' });
+    for (const x of [SH.a + 0.7, SH.b - 0.5]) box(x - 0.03, x + 0.03, SH.d1 - 0.3, SH.d1 - 0.24, 0, 0.42, { f: '#5E6568', s: '#4E5558' });
+  });
+  add(SH.d0, SH.a - 0.6, SH.b + 0.6, () => {        // the front: posts, the roof, the advertising panel at the left end
+    for (const [x, d] of [[SH.a, SH.d0], [SH.b, SH.d0], [SH.a, SH.d1], [SH.b, SH.d1]]) box(x - 0.04, x + 0.04, d - 0.04, d + 0.04, 0, 2.38, { f: '#5E6568', s: '#4E5558', t: '#7A8286' });
+    base(); face([[SH.b, SH.d0 + 0.1, 0.1], [SH.b, SH.d1, 0.1], [SH.b, SH.d1, 2.3], [SH.b, SH.d0 + 0.1, 2.3]], 'rgba(170,200,210,0.3)', true);
+    box(SH.a - 0.06, SH.a + 0.06, SH.d0 + 0.05, SH.d1 - 0.05, 0.25, 2.25, { f: '#4E5558', s: '#E9E4D6', t: '#5E6568' });
+    const FA = { o: [SH.a + 0.07, SH.d0 + 0.1], e: [0, 1], n: [1, 0] };
+    if (facing(FA)) { const ln = lampN(13410); const poster = () => { fq(FA, 0.06, 0.4, 1.24, 2.1, ln > 0.05 ? '#FFF4DC' : '#F2EEE4', 0.012); fq(FA, 0.16, 1.35, 1.14, 1.95, '#C8302A', 0.014); fq(FA, 0.16, 0.6, 1.14, 1.25, '#2E5DA0', 0.014); ftext(FA, 'HÉV + BUSZ', 0.65, 1.72, 0.12, '#FFFFFF'); }; if (ln > 0.05) emit(poster); else poster(); }
+    box(SH.a - 0.12, SH.b + 0.12, SH.d0 - 0.12, SH.d1 + 0.1, 2.38, 2.48, { f: '#6E767A', s: '#5E6568', t: '#C9D3D6' });
+  });
+  // the blue bus-stop sign by the kerb
+  add(9.35, ex(80), ex(81), () => { at(ex(80.5), 9.35); fillR(-0.03, -2.75, 0.06, 2.75, '#9AA0A3'); fillRR(-0.27, -2.95, 0.54, 0.54, 0.04, '#FFFFFF'); fillRR(-0.24, -2.92, 0.48, 0.48, 0.03, '#1F5FA8');
+    fillRR(-0.16, -2.84, 0.32, 0.24, 0.04, '#FFFFFF'); fillR(-0.13, -2.8, 0.26, 0.08, '#1F5FA8'); circle(-0.09, -2.58, 0.035, '#FFFFFF'); circle(0.09, -2.58, 0.035, '#FFFFFF'); });
+  // a yellow iron fence with a gate, then the clipped hedge; a garden tree and an old house behind
+  add(F + 0.15, ex(85.3), ex(88.6), () => {
+    box(ex(85.5), ex(88.3), F + 0.05, F + 0.25, 0, 0.35, { f: '#E2D9C6', s: '#CFC6B2', t: '#EDE6D6' });
+    at(ex(85.5), F + 0.05); bars(0, 2.8, 1.5, '#C9A04A', 0.12, 0.028); fillR(1.38, -1.55, 0.05, 1.55, '#B38A38');
+    for (const u of [0, 2.8]) fillR(u - 0.06, -1.62, 0.12, 1.62, '#B38A38');
+  });
+  hedge(ex(88.3), ex(97.2), F + 0.3, 1.35, '#3F6E36');
+  treeRound(ex(91.2), F + 5.5, 8.5, MID, 13404);
+  house({ x0: ex(86.5), x1: ex(97.5), d0: F + 12, d1: F + 19, h: 3.2, wall: '#EDE5CF', wallS: '#D5CDB7', roof: { type: 'hip', hr: 6.3, c: C.roofRed, cs: '#963B2A' } });
+  // the green Baja ← → Budapest sign and the yield sign with STOP 100 m, both turned to the traffic from the east
+  {
+    const sgn = (u, d, draw) => { const n = [0.57, -0.82], Fp = { o: [ex(u), d], e: [-n[1], n[0]], n }; add(d, ex(u) - 1, ex(u) + 1, () => {
+      box(ex(u) - 0.035, ex(u) + 0.035, d - 0.035, d + 0.035, 0, 2.95, { f: '#9AA0A3', s: '#7E8487', t: '#B4BABD' });
+      near(Fp, 0, 0.05); draw(); base(); }); };
+    sgn(92.0, 9.3, () => { fillRR(-0.55, -2.95, 1.1, 0.62, 0.05, '#FFFFFF'); fillRR(-0.52, -2.92, 1.04, 0.56, 0.04, '#1E7A3E');
+      fillR(-0.5, -2.64, 1.0, 0.02, '#FFFFFF'); ltext('← Baja', -0.15, -2.79, 0.15, '#FFFFFF', 800); ltext('Budapest →', 0.08, -2.5, 0.14, '#FFFFFF', 800);
+      fillRR(0.24, -2.86, 0.22, 0.14, 0.02, '#F2C21E'); ltext('51', 0.35, -2.79, 0.09, '#1E1E1E', 800); });
+    sgn(94.3, 9.3, () => { polyL([-0.34, -2.95, 0.34, -2.95, 0, -2.36], '#D8323A'); polyL([-0.25, -2.9, 0.25, -2.9, 0, -2.47], '#FFFFFF');
+      fillRR(-0.24, -2.3, 0.48, 0.32, 0.02, '#FFFFFF'); fillR(-0.22, -2.28, 0.44, 0.28, '#1E1E1E'); fillR(-0.2, -2.26, 0.4, 0.24, '#FFFFFF'); ltext('STOP', 0, -2.19, 0.1, '#1E1E1E', 800); ltext('100 m', 0, -2.08, 0.07, '#1E1E1E', 700); });
+  }
+  // the low grey block wall by the green house
+  add(F + 0.15, ex(97), ex(100.2), () => {
+    box(ex(97.2), ex(100), F + 0.05, F + 0.3, 0, 1.25, { f: '#D2D0C9', s: '#BDBBB4', t: '#E2E0D9' });
+    at(ex(97.2), F + 0.05); ctx.fillStyle = '#BDBBB4'; ctx.beginPath(); for (let v = 0.25, k = 0; v < 1.25; v += 0.25, k++) { ctx.rect(0, -v, 2.8, 0.02); for (let u = (k % 2) * 0.25; u < 2.8; u += 0.5) ctx.rect(u, -v, 0.02, 0.25); } ctx.fill();
+  });
+
+  // =================== 100–124 m ===================
+  // the pale green house with its gable to the street: Betűvágás · Plakátnyomtatás
+  row(100.0, 106.8, () => hbD({ u0: 100.0, u1: 106.8, d0: F + 0.3, d1: F + 9.5, h: 3.3, wall: '#C9D2B0', wallS: '#B3BC9A',
+    roof: { t: 'gd', hr: 7.0, c: '#8A4E3A', cs: '#743F2E', ov: 0.4,
+      gable: w => {
+        const xm = w / 2;
+        fillR(-0.05, -3.42, w + 0.1, 0.16, '#F2F2EC');
+        polyL([0, -3.3, xm, -6.95, w, -3.3, w - 0.18, -3.3, xm, -6.7, 0.18, -3.3], '#F2F2EC');
+        fillR(xm - 0.27, -5.55, 0.54, 0.62, '#F2F2EC'); pane(xm - 0.19, -5.47, 0.38, 0.46, '#3A4852', 501); fillR(xm - 0.02, -5.47, 0.04, 0.46, '#F2F2EC');
+      } },
+    deco: w => {
+      fillR(0, -0.45, w, 0.45, '#A9AAA4'); fillR(0, -0.08, w, 0.08, '#8E8F8A');
+      fillR(0, -3.3, 0.28, 3.3, '#F2F2EC'); fillR(w - 0.28, -3.3, 0.28, 3.3, '#F2F2EC');
+      // the shop window with white blinds, the barred door, the closed arched door
+      fillR(0.75, -2.3, 1.9, 1.55, '#F2F2EC'); fillR(0.85, -2.2, 1.7, 1.35, '#DCDCD4'); for (let v = 0.9; v < 2.2; v += 0.09) fillR(0.85, -v, 1.7, 0.012, '#BDBDB4');
+      fillR(0.7, -0.78, 2.0, 0.07, '#D8D3C8');
+      fillR(2.95, -2.3, 0.95, 2.3, '#F2F2EC'); fillR(3.03, -2.22, 0.79, 2.22, '#6E5A46'); pane(3.08, -2.16, 0.69, 1.95, '#3A4852', 502);
+      ctx.fillStyle = '#F4F4F0'; ctx.beginPath(); for (let u = 3.11; u < 3.75; u += 0.09) ctx.rect(u, -2.16, 0.02, 1.95); ctx.rect(3.08, -1.45, 0.69, 0.03); ctx.rect(3.08, -0.85, 0.69, 0.03); ctx.fill();
+      archWin(4.5, 0, 1.1, 2.3, '#F2F2EC', '#E6E6DE'); fillR(4.62, -1.65, 0.86, 0.03, '#CFCFC6'); fillR(5.0, -2.05, 0.1, 0.24, '#CFCFC6');
+      // the oval sign: red B and P, the lettering
+      ctx.beginPath(); ctx.ellipse(2.7, -3.02, 0.82, 0.36, 0, 0, TAU); ctx.fillStyle = '#C8302A'; ctx.fill();
+      ctx.beginPath(); ctx.ellipse(2.7, -3.02, 0.77, 0.31, 0, 0, TAU); ctx.fillStyle = '#FFFFFF'; ctx.fill();
+      ltext('B', 2.08, -3.12, 0.3, '#C8302A', 800, 'Georgia'); ltext('P', 2.0, -2.9, 0.26, '#C8302A', 800, 'Georgia');
+      ltext('etűvágás', 2.8, -3.12, 0.13, '#C8302A', 700, 'Georgia'); ltext('lakátnyomtatás', 2.85, -2.92, 0.1, '#C8302A', 700, 'Georgia');
+      for (let k = 0; k < 4; k++) fillR(2.55 + k * 0.08, -2.82, 0.04, 0.12, '#C8302A');
+      fillRR(w - 0.62, -3.15, 0.24, 0.2, 0.02, '#2A3A30'); ltext('4', w - 0.5, -3.05, 0.13, '#F2F2EC', 800);
+    },
+    side: (x0, x1) => { const FS = { o: [x1, F + 0.3], e: [0, 1], n: [1, 0] }; if (facing(FS)) { fq(FS, 0, 0, 9.2, 0.45, '#A9AAA4', 0.01); wallWins(FS, [[3.0, 1.0, 1.0, 1.2], [6.4, 1.0, 1.0, 1.2]], { frame: '#F2F2EC', cross: false }); } } }), F + 9.5);
+  add(F - 0.15, ex(100.2), ex(106.6), () => { box(ex(102.8), ex(104.0), F - 0.25, F + 0.3, 0, 0.15, { f: '#B9B7B0', s: '#A5A39C', t: '#CFCDC6' }); box(ex(104.35), ex(105.75), F - 0.25, F + 0.3, 0, 0.15, { f: '#B9B7B0', s: '#A5A39C', t: '#CFCDC6' }); });
+  treeConifer(ex(108.7), F + 10.5, 12.5, 13405);
+  // the brown iron fence with its double gate, the red bin on a post; the old house in the grassy yard
+  add(F + 0.15, ex(106.6), ex(123.8), () => {
+    const a = ex(106.8), b = ex(123.6), d = F + 0.15, w = b - a;
+    box(a, b, d - 0.08, d + 0.12, 0, 0.32, { f: '#A8A69E', s: '#94928A', t: '#BAB8B0' });
+    at(a, d - 0.08);
+    bars(0, w, 1.58, '#6E4632', 0.14, 0.03); fillR(0, -1.4, w, 0.035, '#6E4632');
+    for (let u = 0; u <= w + 0.01; u += w / 7) fillR(u - 0.05, -1.68, 0.1, 1.68, '#5E3A28');
+    fillR(6.3, -1.75, 0.12, 1.75, '#5E3A28'); fillR(9.3, -1.75, 0.12, 1.75, '#5E3A28'); strokeL([6.4, -0.3, 9.3, -1.5], '#6E4632', 0.035);
+    fillRR(0.18, -1.32, 0.42, 0.5, 0.04, '#C8302A'); fillR(0.16, -1.34, 0.46, 0.06, '#A82620');
+  });
+  house({ x0: ex(111.6), x1: ex(122.6), d0: F + 8.2, d1: F + 14.2, h: 2.9, wall: '#E9E2CF', wallS: '#D2CBB6', roof: { type: 'gx', hr: 5.4, c: '#7A5040', cs: '#653F31' },
+    deco: w => { for (const u of [1.0, 4.0, 8.4]) win(u, 0.9, 1.0, 1.1, { frame: '#F2F2EC', cross: false, shutter: '#7A5A40' }); fillR(6.2, -2.1, 0.9, 2.1, '#6E4A36'); } });
+  treeRound(ex(118.4), F + 4.2, 7.0, MID, 13406);
+  // two walnut trees on the grass strip between the pavement and the fence
+  treeRound(ex(109.8), F - 0.1, 7.2, ['#4A7A3E', '#3D6B35', '#5C8E4A'], 13407);
+  treeRound(ex(116.6), F - 0.1, 8.0, ['#4E7F40', '#40703A', '#5E9048'], 13408);
+  parkedCars([[ex(103.6), 8.55, Math.PI, 'car', '#1E2024'], [ex(113.0), 8.35, Math.PI, 'car', '#C8302A']]);
+  // pavers under the black car (a parking bay in front of the green house) with a white kerb
+  ground(V1 - 0.05, X0, X1, () => { bandX(E1, V1 - 0.02, 0.026, '#B9A79A', ex(100.3), ex(107)); base(); face([[ex(100.2), E1, 0.03], [ex(100.4), E1, 0.03], [ex(100.4), V1, 0.03], [ex(100.2), V1, 0.03]], '#E9E9E3', true); });
+
+  // =================== 124–151 m: the old shop row ===================
+  // the P sign, a yellow and a grey wheelie bin, the no-entry sign on the grass in front of the ochre part
+  add(9.35, ex(120), ex(121.2), () => { at(ex(120.6), 9.35); fillR(-0.03, -2.6, 0.06, 2.6, '#9AA0A3'); fillRR(-0.25, -2.85, 0.5, 0.5, 0.04, '#FFFFFF'); fillRR(-0.22, -2.82, 0.44, 0.44, 0.03, '#1F5FA8'); ltext('P', 0, -2.59, 0.34, '#FFFFFF', 800, 'Barlow'); });
+  add(9.5, ex(121), ex(123), () => {
+    for (const [u, c] of [[121.6, '#E8C21E'], [122.35, '#5E6366']]) { const x = ex(u), d = 9.5;
+      box(x - 0.28, x + 0.28, d - 0.3, d + 0.3, 0.05, 1.0, { f: c, s: mix(c, '#000000', 0.18), t: mix(c, '#FFFFFF', 0.08) });
+      box(x - 0.31, x + 0.31, d - 0.36, d + 0.33, 1.0, 1.07, { f: mix(c, '#000000', 0.12), s: mix(c, '#000000', 0.25), t: mix(c, '#FFFFFF', 0.12) });
+      at(x, d - 0.3); circle(-0.2, -0.08, 0.09, '#1E2022'); circle(0.2, -0.08, 0.09, '#1E2022'); }
+  });
+  add(9.45, ex(123.4), ex(124.4), () => { at(ex(123.9), 9.45); fillR(-0.03, -2.45, 0.06, 2.45, '#9AA0A3'); circle(0, -2.2, 0.3, '#FFFFFF'); circle(0, -2.2, 0.27, C.red); fillR(-0.19, -2.25, 0.38, 0.1, '#FFFFFF'); });
+  // the ochre part with the two brown gates (red tiles)
+  const gate2 = (u, w, h) => {          // an old brown double door: two leaves of raised panels, a carved top
+    fillR(u - 0.08, -(h + 0.1), w + 0.16, h + 0.1, '#4E3222');
+    for (const [a, b] of [[u, u + w / 2 - 0.02], [u + w / 2 + 0.02, u + w]]) {
+      fillR(a, -h, b - a, h, '#6A4430');
+      fillR(a + 0.08, -(h - 0.12), b - a - 0.16, h * 0.32, '#7A5038'); fillR(a + 0.08, -(h * 0.6), b - a - 0.16, h * 0.42, '#7A5038');
+      fillR(a + 0.12, -(h - 0.18), b - a - 0.24, h * 0.22, '#5A3826');
+    }
+    ctx.beginPath(); ctx.arc(u + w / 2, -(h - 0.02), w * 0.32, Math.PI, 0); ctx.fillStyle = '#3E281C'; ctx.fill();
+    ctx.strokeStyle = '#8A6A4A'; ctx.lineWidth = 0.02; for (let k = 1; k < 6; k++) { const an = Math.PI + k * Math.PI / 6; ctx.beginPath(); ctx.moveTo(u + w / 2, -(h - 0.02)); ctx.lineTo(u + w / 2 + Math.cos(an) * w * 0.3, -(h - 0.02) + Math.sin(an) * w * 0.3); ctx.stroke(); }
+    circle(u + w / 2 - 0.1, -h * 0.48, 0.03, '#C9B57A');
+  };
+  const manneq = (u, dress, skin = '#E9D9C6') => { circle(u, -2.1, 0.1, skin); fillR(u - 0.03, -2.0, 0.06, 0.08, skin); polyL([u - 0.16, -1.92, u + 0.16, -1.92, u + 0.24, -1.2, u - 0.24, -1.2], dress); fillR(u - 0.08, -1.2, 0.05, 0.5, skin); fillR(u + 0.03, -1.2, 0.05, 0.5, skin); fillR(u - 0.12, -0.72, 0.24, 0.03, '#8A8F93'); };
+  // the three houses of the old shop row stand wall to wall: their walls are drawn first (the one farther sideways
+  // from the camera first), then the roofs – the low slate roof in the middle first, the taller tiled ones over it
+  const SR = [{ u0: 123.6, u1: 130.6, d0: F + 0.3, d1: F + 9, h: 3.5, wall: '#D9B370', wallS: '#C29C5C', roof: { t: 'hx', hr: 6.3, c: '#B45A3C', cs: '#984A31', ov: 0.4 }, chimney: [[125.5, F + 5.5, 7.0]],
+    deco: w => { fillR(0, -0.5, w, 0.5, '#9A8E7A'); fillR(0, -3.5, w, 0.18, '#E6C688'); gate2(1.3, 1.9, 2.55); gate2(4.0, 1.9, 2.55); fillR(w - 0.15, -3.4, 0.07, 3.4, '#C9A35E'); },
+    side: (x0) => { wallWins({ o: [x0, F + 9], e: [0, -1], n: [-1, 0] }, [[3.2, 1.1, 1.0, 1.2]], { frame: '#F2E8D0', cross: false }); } }, { u0: 130.6, u1: 140.6, d0: F + 0.3, d1: F + 8.5, h: 3.4, wall: '#EDE6D4', wallS: '#D6CFBC', roof: { t: 'hx', hr: 5.9, c: '#A9A9A2', cs: '#8E8E88', ov: 0.45, lines: false },
+    deco: w => {
+      fillR(0, -0.55, w, 0.55, '#8E3A30'); fillR(0, -0.58, w, 0.04, '#A8584A');
+      for (const u of [1.0, 3.4, 5.8, 8.2]) { win(u, 1.0, 1.25, 1.45, { frame: '#F4F4F0', cross: false }); fillR(u, -2.45, 1.25, 1.42, '#EFEFEA'); ctx.fillStyle = '#CFCFC8'; ctx.beginPath(); for (let v = 1.08; v < 2.45; v += 0.07) ctx.rect(u, -v, 1.25, 0.012); ctx.fill(); }
+      fillR(0.12, -3.3, 0.08, 3.3, '#E2E2DC'); fillR(w - 0.2, -3.3, 0.08, 3.3, '#E2E2DC');
+    },
+    after: (x0, x1) => {    // the corrugation running down the slope
+      const ov = 0.45, d0 = F + 0.3, d1 = F + 8.5, dm = (d0 + d1) / 2, i = (d1 - d0) / 2 + ov, ax = x0 - ov, bx = x1 + ov;
+      for (let x = ax + 0.14; x < bx - 0.05; x += 0.2) {
+        const t = x < ax + i ? (x - ax) / i : x > bx - i ? (bx - x) / i : 1;
+        line3([x, d0 - ov, 3.4], [x, d0 - ov + i * t, 3.4 + (5.9 - 3.4) * t], '#979790', 0.025);
+      }
+    } }, { u0: 140.6, u1: 150.6, d0: F + 0.3, d1: F + 9, h: 3.7, wall: '#F2F1EC', wallS: '#DAD8D0', roof: { t: 'hx', hr: 6.7, c: '#A65A3E', cs: '#8C4A33', ov: 0.45 },
+    deco: w => {
+      fillR(0, -0.45, w, 0.45, '#8A4E3E'); ctx.fillStyle = '#7A4234'; ctx.beginPath(); for (let v = 0.11; v < 0.45; v += 0.11) ctx.rect(0, -v, w, 0.012); ctx.fill();
+      fillR(1.0, -3.42, 7.6, 0.6, '#3A3A3A'); fillR(1.05, -3.37, 7.5, 0.5, '#454545'); ltext('www.sxl-divat.hu', 4.8, -3.1, 0.38, '#F4F4F0', 600, 'Georgia');
+      const ln = lampN(13450);
+      for (const [a, b] of [[0.8, 4.0], [5.6, 9.0]]) {
+        fillR(a - 0.1, -2.65, b - a + 0.2, 2.2, '#F7F7F4');
+        const glass = () => fillR(a, -2.55, b - a, 2.05, ln > 0.05 ? '#F2E2B8' : '#C9D0D2'); if (ln > 0.05) emit(glass); else glass();
+        fillR(a, -2.55, b - a, 0.35, 'rgba(255,255,255,0.35)');
+      }
+      manneq(1.4, '#3E6AA8'); manneq(2.3, '#E9E9E4', '#1E1E1E'); manneq(3.3, '#7A9AC8');
+      manneq(6.2, '#F2F2EE'); manneq(7.2, '#5A7A5A', '#1E1E1E'); manneq(8.3, '#D9C9B4');
+      fillR(5.9, -0.95, 1.2, 0.3, '#E9E9E4'); fillR(6.0, -0.65, 1.0, 0.2, '#D2D2CC');
+      fillR(4.25, -2.62, 1.1, 2.62, '#5A3226'); fillR(4.35, -2.52, 0.9, 2.52, '#6E3E2E'); pane(4.45, -2.42, 0.7, 1.7, '#3A4852', 503); fillR(5.08, -1.3, 0.06, 0.14, '#C9B57A');
+      fillR(w - 0.18, -3.6, 0.08, 3.6, '#D9D9D4');
+    },
+    side: (x0, x1) => { const FS = { o: [x1, F + 0.3], e: [0, 1], n: [1, 0] }; if (facing(FS)) { fq(FS, 0, 0, 8.7, 0.45, '#8A4E3E', 0.01); near(FS, 4.0, 0.012); fillRR(-0.36, -3.1, 0.72, 0.48, 0.03, '#E9E9E4'); circle(-0.16, -2.86, 0.15, '#C9CAC5'); base(); fq(FS, 0.3, 0, 0.38, 3.6, '#D9D9D4', 0.016); } } }];
+  row(123.6, 150.6, () => {
+    const walls = SR.map(o => ({ ...o, roof: { ...o.roof, t: 'none' }, after: null }));
+    // sideways distance of the camera from each footprint (0 in front of it): the farthest goes first
+    const dist = SR.map(o => Math.max(0, ex(o.u0) - cam.x, cam.x - ex(o.u1)));
+    const order = [0, 1, 2].sort((a, b) => dist[b] - dist[a]);
+    // at the shared walls the eaves stop at the wall line (the roof is pulled in by its overhang there)
+    const TRIM = [[0, 1], [1, 1], [1, 0]];
+    // each house whole (walls, then its roof), the one farther sideways from the camera first
+    for (const i of order) { hbD(walls[i]); const o = SR[i], ov = o.roof.ov ?? 0.45, a = ex(o.u0) + TRIM[i][0] * ov, b = ex(o.u1) - TRIM[i][1] * ov; CUR_HOUSE = ex(o.u0); hroof(a, b, o.d0, o.d1, o.h, o.roof, o.wall, o.wallS); if (o.after) o.after(a, b); base(); }
+  }, F + 9);
+  add(F - 0.3, ex(140.6), ex(150.8), () => {
+    box(ex(140.8), ex(150.4), F - 0.55, F + 0.3, 0, 0.12, { f: '#B9B7B0', s: '#A5A39C', t: '#CFCDC6' });
+    for (const [a, b] of [[141.2, 144.6], [146.0, 149.6]]) { const d = F - 0.42; line3([ex(a), d, 0.95], [ex(b), d, 0.95], '#9AA0A3', 0.035); for (const x of [a, b]) line3([ex(x), d, 0.12], [ex(x), d, 0.97], '#9AA0A3', 0.04); line3([ex(a), d, 0.55], [ex(b), d, 0.55], '#9AA0A3', 0.022); }
+  });
+  parkedCars([[ex(146.0), 8.9, Math.PI, 'car', '#2E62C8']]);
+
+  // =================== 151–186 m: the parking, the white Bacchus house, the Bacchus Pub ===================
+  const FP = F + 6.2, PB0 = ex(170.5), PB1 = ex(186.0), PBD = F + 24;
+  ground(F + 25, X0, X1, () => {
+    bandX(F - 0.02, F + 5.5, 0.054, '#B5B3AB', ex(150.6), ex(170.5));          // the apron in front of the parking
+    bandX(F + 5.5, F + 21, 0.01, '#C4BBA9', ex(151.0), ex(157.0));             // the gravel drive to the houses at the back
+    bandX(F - 0.02, FP, 0.056, '#C2B4A2', ex(166.4), MA.r0);                   // the pub's forecourt (warm pavers)
+    base(); const [l, r] = visRange(F, 2), a = Math.max(l, ex(166.4)), b = Math.min(r, MA.r0);
+    if (b > a) for (let d = F + 0.4; d < FP; d += 0.45) face([[a, d, 0.057], [b, d, 0.057], [b, d + 0.02, 0.057], [a, d + 0.02, 0.057]], '#AE9F8C', true);
+    for (let x = ex(151.5); x < ex(166); x += 3.1) face([[x, F + 0.1, 0.055], [x + 0.08, F + 0.1, 0.055], [x + 0.08, F + 5.0, 0.055], [x, F + 5.0, 0.055]], '#F2F1EC', true);
+  });
+  // the houses at the back of the drive; the white Bacchus house behind its row of cypresses
+  house({ x0: ex(149.5), x1: ex(156.5), d0: F + 20.5, d1: F + 27, h: 3.2, wall: '#F2F0EA', wallS: '#D9D6CE', roof: { type: 'hip', hr: 5.9, c: C.roofRed, cs: '#963B2A' }, deco: w => { win(1.2, 1.0, 1.0, 1.1, { cross: false }); win(4.4, 1.0, 1.0, 1.1, { cross: false }); } });
+  house({ x0: ex(155.5), x1: ex(166.0), d0: F + 11.5, d1: F + 19.5, h: 6.0, wall: '#F4F3EF', wallS: '#DCDAD3', roof: { type: 'hip', hr: 8.8, c: '#B65A3C', cs: '#984A31' }, chimney: [ex(158.5), F + 15, 9.8],
+    deco: w => {
+      fillR(0, -0.5, w, 0.5, '#B9B5AA');
+      for (const u of [1.2, 4.3, 7.4]) win(u, 1.0, 1.1, 1.3, { frame: '#5A3A28', cross: false });
+      for (const u of [1.2, 4.3]) win(u, 3.9, 1.1, 1.2, { frame: '#5A3A28', cross: false });
+      // the lettering on the upper floor, right of the windows (no window behind it)
+      ltext('BACCHUS', 8.1, -4.85, 0.6, '#5E3A26', 800, 'Georgia'); ltext('PUB', 8.1, -4.22, 0.42, '#5E3A26', 800, 'Georgia');
+    } });
+  add(F + 7.8, ex(155.5), ex(164.6), () => {
+    for (const [u, hh] of [[156.2, 5.6], [157.6, 6.3], [159.0, 5.9], [160.4, 6.5], [161.8, 6.0], [163.2, 6.4]]) {
+      at(ex(u), F + 7.8); fillR(-0.07, -0.6, 0.14, 0.6, '#5E4A38');
+      ctx.beginPath(); ctx.ellipse(0, -(hh * 0.55), 0.62, hh * 0.47, 0, 0, TAU); ctx.fillStyle = '#2E5A30'; ctx.fill();
+      ctx.beginPath(); ctx.ellipse(-0.16, -(hh * 0.62), 0.28, hh * 0.32, 0, 0, TAU); ctx.fillStyle = '#3E6E3A'; ctx.fill();
+    }
+  });
+  // the low brick wall with the oleanders in pots, the brick pillars and the black iron gate into the pub's garden
+  add(F + 5.3, ex(157), ex(166.8), () => {
+    const d = F + 5.3, brick = { f: '#B8664A', s: '#9E5640', t: '#C9806A' };
+    box(ex(157.2), ex(164.0), d - 0.15, d + 0.15, 0, 0.8, brick); box(ex(157.1), ex(164.1), d - 0.2, d + 0.2, 0.8, 0.88, { f: '#CFC7BA', s: '#B9B1A4', t: '#DDD6CA' });
+    for (const u of [157.2, 164.0, 166.4]) box(ex(u) - 0.22, ex(u) + 0.22, d - 0.22, d + 0.22, 0, 1.62, brick), box(ex(u) - 0.26, ex(u) + 0.26, d - 0.26, d + 0.26, 1.62, 1.7, { f: '#CFC7BA', s: '#B9B1A4', t: '#DDD6CA' });
+    at(ex(157.2), d - 0.15); ctx.fillStyle = '#9E5640'; ctx.beginPath(); for (let v = 0.13, k = 0; v < 0.8; v += 0.13, k++) { ctx.rect(0, -v, 6.8, 0.015); for (let u = (k % 2) * 0.13; u < 6.8; u += 0.26) ctx.rect(u, -v, 0.015, 0.13); } ctx.fill();
+    for (const u of [0.7, 2.1, 3.5, 4.9, 6.2]) {
+      polyL([u - 0.26, -0.88, u + 0.26, -0.88, u + 0.2, -1.32, u - 0.2, -1.32], '#B5553A');
+      for (const [a, b, r] of [[-0.25, 1.55, 0.26], [0.2, 1.65, 0.28], [0, 1.95, 0.3], [-0.12, 2.15, 0.22], [0.22, 2.0, 0.2]]) circle(u + a, -b, r, '#3E6A34');
+      for (const [a, b] of [[-0.2, 1.75], [0.25, 1.85], [0.02, 2.2], [-0.32, 1.55], [0.12, 1.5], [0.3, 2.1]]) circle(u + a, -b, 0.07, '#F08AB2');
+    }
+    at(ex(164.22), d);
+    ctx.fillStyle = '#1E2022'; ctx.beginPath(); for (let u = 0.08; u < 1.98; u += 0.12) { ctx.rect(u, -1.42, 0.025, 1.38); ctx.moveTo(u - 0.02, -1.42); ctx.lineTo(u + 0.0125, -1.52); ctx.lineTo(u + 0.045, -1.42); }
+    ctx.rect(0, -1.32, 1.98, 0.04); ctx.rect(0, -0.15, 1.98, 0.04); ctx.fill();
+    ctx.strokeStyle = '#1E2022'; ctx.lineWidth = 0.028; for (const c of [0.5, 1.48]) { ctx.beginPath(); ctx.arc(c, -1.05, 0.16, 0, TAU); ctx.stroke(); }
+    fillR(0.97, -1.42, 0.04, 1.42, '#1E2022');
+  });
+  // cars in the parking: dark blue Insignia, grey Octavia, the BMW i3; the white Citroën C1 by the garden gate
+  parkedCars([[ex(152.7), F + 2.7, -Math.PI / 2 + 0.12, 'wagon', '#1F2A44'], [ex(155.9), F + 2.62, -Math.PI / 2 + 0.1, 'car', '#5E656C'], [ex(159.1), F + 2.45, -Math.PI / 2 + 0.08, 'car', '#4A4E52'],
+    [ex(163.0), F + 2.55, Math.PI / 2 + 0.06, 'car', '#F0F0EC']]);
+  { const it = STATIC[STATIC.length - 1], k0 = it.k; Object.defineProperty(it, 'k', { get: () => cam.x < ex(151.2) ? F + 0.95 : k0, enumerable: true }); }
+  // ---- the Bacchus Pub: brick, a big hip roof, two timber porches, barrels of flowers, the big tree ----
+  {
+    const h = 3.1, hr = 6.9, ov = 0.5, W = PB1 - PB0;
+    const bricks = []; { const r = mulberry(13460); for (let v = 0.55; v < h - 0.2; v += 0.13) for (let u = (Math.round(v / 0.13) % 2) * 0.13; u < W; u += 0.26) if (r() < 0.22) bricks.push([u, v, r() < 0.5 ? '#B27A58' : '#D4A280']); }
+    const porch = (u0, u1) => {          // a timber porch: two posts, beams, a small tiled gable roof with a carved gable
+      const a = PB0 + u0, b = PB0 + u1, d0 = FP - 1.35, d1 = FP, hp = 2.35, hq = 3.3, xm = (a + b) / 2, WD = { f: '#4A3022', s: '#3A251A', t: '#5A3A28' };
+      for (const x of [a + 0.1, b - 0.1]) box(x - 0.08, x + 0.08, d0, d0 + 0.16, 0, hp, WD);
+      box(a, b, d0, d1, hp - 0.18, hp, WD);
+      base();
+      const cr = [xm, (d0 + d1) / 2, hp + 0.3];
+      faceC([[a - 0.2, d0 - 0.15, hp], [xm, d0 - 0.15, hq], [xm, d1, hq], [a - 0.2, d1, hp]], '#9A5236', cr);
+      faceC([[b + 0.2, d0 - 0.15, hp], [xm, d0 - 0.15, hq], [xm, d1, hq], [b + 0.2, d1, hp]], '#7E4430', cr);
+      face([[a, d0, hp], [b, d0, hp], [xm, d0, hq - 0.12]], '#3E281C', true);
+      line3([a - 0.2, d0 - 0.15, hp - 0.03], [xm, d0 - 0.15, hq], '#2E1E14', 0.12); line3([xm, d0 - 0.15, hq], [b + 0.2, d0 - 0.15, hp - 0.03], '#2E1E14', 0.12);
+      line3([xm, d0, hp], [xm, d0, hq - 0.15], '#5A3A28', 0.06); line3([a + 0.3, d0, hp], [xm, d0, hq - 0.3], '#5A3A28', 0.04); line3([b - 0.3, d0, hp], [xm, d0, hq - 0.3], '#5A3A28', 0.04);
+    };
+    const pub = () => {
+      CUR_HOUSE = PB0;
+      box(PB0, PB1, FP, PBD, 0, h, { f: '#C7906C', s: '#B47E5C' });
+      at(PB0, FP);
+      fillR(0, -0.55, W, 0.55, '#8E8678'); for (const [u, v, c] of bricks) fillR(u, -(v + 0.12), 0.24, 0.11, c);
+      ctx.fillStyle = 'rgba(120,70,50,0.35)'; ctx.beginPath(); for (let v = 0.68; v < h - 0.1; v += 0.13) ctx.rect(0, -v, W, 0.012); ctx.fill();
+      // the left window with white curtains, the Heineken sign, the doors, the little menu board, the right window
+      fillR(0.75, -2.5, 2.0, 1.75, '#3E281C'); pane(0.85, -2.4, 1.8, 1.55, '#3A4852', 601); for (const u of [0.88, 1.95]) { fillR(u, -2.38, 0.72, 1.5, '#F2EEE4'); } fillR(0.85, -2.42, 1.8, 0.12, '#E6E0D2');
+      circle(3.55, -2.45, 0.32, '#F2F2EC'); circle(3.55, -2.45, 0.28, '#1E7A3E'); circle(3.55, -2.45, 0.2, '#F2F2EC'); polyL([3.55, -2.6, 3.6, -2.48, 3.72, -2.47, 3.62, -2.4, 3.66, -2.28, 3.55, -2.35, 3.44, -2.28, 3.48, -2.4, 3.38, -2.47, 3.5, -2.48], '#C8302A');
+      for (const [u0, u1] of [[4.75, 6.45], [10.0, 11.7]]) { fillR(u0 - 0.1, -2.35, u1 - u0 + 0.2, 2.35, '#2E1E14'); for (const [a, b] of [[u0, (u0 + u1) / 2 - 0.02], [(u0 + u1) / 2 + 0.02, u1]]) { fillR(a, -2.25, b - a, 2.25, '#5A3A28'); pane(a + 0.1, -2.1, b - a - 0.2, 0.9, '#3A4852', a * 7); fillR(a + 0.1, -1.05, b - a - 0.2, 0.85, '#6A4430'); } }
+      fillRR(12.25, -1.85, 0.6, 0.45, 0.03, '#2E6A3C'); lines(12.33, -1.75, 0.44, 3, '#E9E7DF', 0.09);
+      fillR(13.3, -2.45, 1.4, 1.6, '#3E281C'); pane(13.4, -2.35, 1.2, 1.4, '#3A4852', 602); fillR(13.98, -2.35, 0.04, 1.4, '#3E281C');
+      fillR(0, -h, W, 0.14, '#A86A4E');
+      base();
+      // the long side to the Márton Áron utca: windows in a row, a door
+      const FSd = { o: [PB1, FP], e: [0, 1], n: [1, 0] };
+      if (facing(FSd)) { fq(FSd, 0, 0, PBD - FP, 0.55, '#8E8678', 0.01); wallWins(FSd, [[1.6, 0.9, 1.0, 1.3], [4.4, 0.9, 1.0, 1.3], [7.2, 0.9, 1.0, 1.3], [10.0, 0.9, 1.0, 1.3], [12.8, 0.9, 1.0, 1.3], [15.6, 0.9, 1.0, 1.3]], { frame: '#3E281C', cross: false }); }
+      // the chimney, the roof (hip end to the street), the wooden BACCHUS PUB letters on the front slope
+      box(ex(182.5) - 0.32, ex(182.5) + 0.32, FP + 9, FP + 9.64, h, hr + 0.8, { f: '#B05B3F', s: '#934A33', t: '#5A3A2E' });
+      hroof(PB0, PB1, FP, PBD, h, { t: 'hd', hr, c: '#9E5A3E', cs: '#86492F', ov }, '#C7906C', '#B47E5C');
+      // the big wooden BACCHUS PUB letters stand on the slope towards the Márton Áron utca
+      const xS = PB1 - 1.6, hS = h + (hr - h) * (PB1 + ov - xS) / (W / 2 + ov), FB = { o: [xS, FP + 2.2], e: [0, 1], n: [1, 0] };
+      if (facing(FB)) {
+        for (const dd of [FP + 2.8, FP + 7.6]) line3([xS, dd, hS - 0.1], [xS, dd, hS + 0.9], '#3A2A20', 0.05);
+        fq(FB, 0, hS + 0.25, 6.2, hS + 1.05, '#4A3022', 0.02); fq(FB, 0.08, hS + 0.31, 6.12, hS + 0.99, '#5E3E2A', 0.025);
+        ftext(FB, 'BACCHUS PUB', 3.1, hS + 0.66, 0.55, '#E2B87A', 800, 'Georgia');
+      }
+      // the small white name plate on the wall by the left porch
+      at(PB0, FP - 0.01); fillRR(2.95, -2.05, 0.95, 0.42, 0.03, '#F2EEE4'); ltext('BACCHUS', 3.42, -1.9, 0.12, '#5E3A26', 800, 'Georgia'); ltext('PUB', 3.42, -1.75, 0.1, '#5E3A26', 800, 'Georgia');
+    };
+    add(FP, PB0 - 1, PB1 + 1, () => { pub(); porch(4.25, 6.95); porch(9.5, 12.2); }, PBD + 1);
+    dynK(F + 21, FP, () => cam.x < PB0);
+  }
+  // in front of the pub: barrels of flowers, little conifers, the round bed round the big tree, the umbrella, the MENU board
+  const barrel = (x, d) => add(d, x - 0.5, x + 0.5, () => {
+    at(x, d);
+    ctx.beginPath(); ctx.moveTo(-0.3, 0); ctx.quadraticCurveTo(-0.38, -0.45, -0.3, -0.88); ctx.lineTo(0.3, -0.88); ctx.quadraticCurveTo(0.38, -0.45, 0.3, 0); ctx.closePath(); ctx.fillStyle = '#7A4A2E'; ctx.fill();
+    for (const y of [0.1, 0.3, 0.6, 0.8]) fillR(-0.35, -y - 0.03, 0.7, 0.05, '#3A3C3E');
+    for (const u of [-0.15, 0.02, 0.18]) fillR(u, -0.86, 0.012, 0.84, '#6A3E24');
+    for (const [a, b, r, c] of [[-0.18, 1.02, 0.18, '#3E6A34'], [0.15, 1.05, 0.2, '#4E7A3E'], [0, 1.2, 0.18, '#3E6A34']]) circle(a, -b, r, c);
+    for (const [a, b] of [[-0.2, 1.1], [0.12, 1.18], [0.24, 1.0], [-0.05, 1.3], [-0.28, 0.98]]) circle(a, -b, 0.06, '#D8283A');
+  });
+  for (const u of [174.2, 178.2, 179.2, 183.6, 184.9]) barrel(ex(u), FP - 0.45);
+  for (const u of [173.5, 177.0, 180.1, 182.9]) add(FP - 0.4, ex(u) - 0.5, ex(u) + 0.5, () => { at(ex(u), FP - 0.4); fillR(-0.2, -0.32, 0.4, 0.32, '#8A8F93'); polyL([-0.3, -0.32, 0.3, -0.32, 0, -1.45], '#2E5A30'); polyL([-0.22, -0.7, 0.22, -0.7, 0, -1.55], '#3E6E3A'); });
+  add(F + 3.0, ex(175.8), ex(179), () => {
+    const x = ex(177.4), d = F + 3.0;
+    base(); const ring = []; for (let i = 0; i < 16; i++) { const a = i / 16 * TAU; ring.push([x + Math.cos(a) * 1.25, d + Math.sin(a) * 0.95, 0.35]); }
+    face(ring, '#B8664A', true); face(ring.map(([a, b]) => [a, b, 0.36]), '#7E5A3A', true);
+    at(x, d - 0.95); fillR(-1.2, -0.35, 2.4, 0.35, '#B8664A');
+    for (const [a, b, c] of [[-0.8, 0.5, '#D8283A'], [-0.4, 0.58, '#E8485A'], [0.45, 0.55, '#F08AB2'], [0.85, 0.48, '#D8283A'], [0.1, 0.6, '#E9E2D2']]) circle(a, -b, 0.12, c);
+  });
+  treeRound(ex(177.4), F + 3.0, 12.5, ['#4A7A3E', '#3D6B35', '#5C8E4A'], 13461);
+  // the white umbrella (0.0 lager) over a wooden table and benches by the garden gate
+  add(F + 4.0, ex(166.8), ex(170.6), () => {
+    const x = ex(168.7), d = F + 4.0, WD = { f: '#8A5E3F', s: '#74503A', t: '#A0714E' };
+    box(x - 0.9, x + 0.9, d - 0.4, d + 0.4, 0.72, 0.78, WD); for (const u of [-0.75, 0.75]) box(x + u - 0.05, x + u + 0.05, d - 0.3, d + 0.3, 0, 0.72, WD);
+    for (const dd of [-0.75, 0.75]) box(x - 0.9, x + 0.9, d + dd - 0.14, d + dd + 0.14, 0.42, 0.47, WD);
+    line3([x, d, 0], [x, d, 2.75], '#D9D9D4', 0.04);
+    base(); const c = [x, d, 2.6], pts = (hh, r) => [[x - r, d - r, hh], [x + r, d - r, hh], [x + r, d + r, hh], [x - r, d + r, hh]];
+    face([[x - 1.35, d - 1.35, 2.25], [x + 1.35, d - 1.35, 2.25], [x, d, 2.95]], '#F4F2EC', true);
+    face([[x - 1.35, d - 1.35, 2.25], [x, d, 2.95], [x - 1.35, d + 1.35, 2.25]], '#E2DFD6', true);
+    face([[x + 1.35, d - 1.35, 2.25], [x + 1.35, d + 1.35, 2.25], [x, d, 2.95]], '#E2DFD6', true);
+    at(x, d - 1.35); fillR(-1.35, -2.25, 2.7, 0.22, '#F4F2EC'); ltext('0.0 · LAGER BEER', 0, -2.14, 0.11, '#6E8EA8', 800);
+  });
+  // the MENU A-board on the edge of the pavement
+  add(V1 + 0.2, ex(171.6), ex(173), () => {
+    at(ex(172.3), V1 + 0.2);
+    polyL([-0.36, 0, -0.26, -1.05, 0.26, -1.05, 0.36, 0, 0.3, 0, 0.21, -0.97, -0.21, -0.97, -0.3, 0], '#8A5A3A');
+    polyL([-0.3, -0.06, -0.22, -0.98, 0.22, -0.98, 0.3, -0.06], '#22262A');
+    ctx.save(); ctx.translate(-0.02, -0.8); ctx.rotate(-0.35); ltext('MENU', 0, 0, 0.13, '#E9E7DF', 700, 'Georgia'); ctx.restore();
+    ltext('A', 0.02, -0.55, 0.12, '#E9E7DF', 700, 'Georgia'); ltext('B', 0.04, -0.32, 0.12, '#E9E7DF', 700, 'Georgia');
+  });
+
+  // =================== 186 m: the Márton Áron utca – the street ends here ===================
+  // the kerbs of the side street, the tree on the corner, the signs on the far corner
+  ground(60.5, X0, X1, () => { for (const x of [MA.r0, MA.r1 - 0.2]) bandX(E1, 60, 0.06, '#C9C7C0', x, x + 0.2); });
+  // the young linden on the corner: a slim trunk and a crown held high (the ghost stops just before it)
+  add(8.9, ex(184), ex(189), () => {
+    at(ex(186.3), 8.9);
+    polyL([-0.12, 0, 0.12, 0, 0.07, -3.4, -0.07, -3.4], C.trunk); strokeL([0, -2.6, -0.8, -3.6], C.trunk, 0.08); strokeL([0, -2.9, 0.75, -3.9], C.trunk, 0.07);
+    for (const [a2, b2, r2, c] of [[-0.9, 3.6, 1.05, C.tree2], [0.85, 3.8, 1.1, C.tree1], [0, 4.5, 1.25, C.tree1], [-0.5, 5.2, 0.95, C.tree3], [0.55, 5.1, 0.9, C.tree2], [0.1, 3.4, 0.95, C.tree2]]) circle(a2, -b2, r2, c);
+    circle(-0.3, -4.9, 0.45, C.tree4);
+  });
+  add(V1 + 0.1, ex(192.6), ex(193.8), () => {
+    at(ex(193.2), V1 + 0.1);
+    fillR(-0.035, -3.2, 0.07, 3.2, '#9AA0A3');
+    fillRR(-0.28, -3.3, 0.56, 0.56, 0.04, '#FFFFFF'); fillRR(-0.25, -3.27, 0.5, 0.5, 0.03, '#1F5FA8');
+    polyL([0.08, -3.2, 0.18, -3.06, 0.11, -3.06, 0.11, -2.82, 0.05, -2.82, 0.05, -3.06, -0.02, -3.06], '#FFFFFF');
+    polyL([-0.09, -2.86, -0.19, -3.0, -0.12, -3.0, -0.12, -3.2, -0.06, -3.2, -0.06, -3.0, 0.01, -3.0], '#D8323A');
+    circle(0, -2.42, 0.27, '#D8323A'); circle(0, -2.42, 0.22, '#1F5FA8'); strokeL([-0.15, -2.57, 0.15, -2.27], '#D8323A', 0.06); strokeL([0.15, -2.57, -0.15, -2.27], '#D8323A', 0.06);
+    circle(0, -1.82, 0.27, '#D8323A'); circle(0, -1.82, 0.22, '#FFFFFF'); ltext('3,5t', 0, -1.81, 0.15, '#1E1E1E', 800, 'Barlow');
+  });
+  // beyond the side street: the Zalakerámia fence with its banner, the pink house, the CSEMPE shed, young trees
+  house({ x0: ex(197.2), x1: ex(207.2), d0: F + 4.2, d1: F + 12, h: 3.2, wall: '#EBC0A8', wallS: '#D4A890', roof: { type: 'hip', hr: 5.9, c: '#5E5652', cs: '#4C4542' }, chimney: [ex(203.5), F + 8, 6.9],
+    deco: w => { fillR(0, -0.5, w, 0.5, '#C9A08A'); for (const u of [1.4, 5.8]) { win(u, 1.0, 1.4, 1.35, { frame: '#F2F0EA', cross: false }); fillR(u, -2.35, 1.4, 0.95, '#4A3A30'); for (let v = 1.45; v < 2.35; v += 0.09) fillR(u, -v, 1.4, 0.012, '#3A2E26'); } } });
+  house({ x0: ex(206.5), x1: ex(213), d0: F + 16, d1: F + 23, h: 5.6, wall: '#C8DCC0', wallS: '#B2C6AA', roof: { type: 'gd', hr: 9.2, c: C.roofRed, cs: '#963B2A' }, deco: w => { win(1.0, 1.0, 1.0, 1.2, { cross: false }); win(4.4, 1.0, 1.0, 1.2, { cross: false }); win(2.7, 3.6, 1.0, 1.2, { cross: false }); } });
+  house({ x0: ex(214), x1: ex(225), d0: F + 12, d1: F + 20, h: 5.8, wall: '#F2EFE8', wallS: '#D9D5CC', roof: { type: 'hip', hr: 8.6, c: C.roofTile, cs: '#7E4930' }, deco: w => { for (const u of [1.2, 4.6, 8.0]) { win(u, 1.0, 1.1, 1.2); win(u, 3.6, 1.1, 1.2); } } });
+  add(F + 2.5, ex(209.3), ex(217.4), () => {
+    const a = ex(209.6), b = ex(217.0), d0 = F + 2.5, d1 = F + 7, h = 2.7;
+    box(a, b, d0, d1, 0, h, { f: '#4E3E32', s: '#42342A' });
+    at(a, d0); ctx.fillStyle = '#3E3028'; ctx.beginPath(); for (let u = 0.2; u < b - a; u += 0.2) ctx.rect(u, -h, 0.02, h); ctx.fill();
+    for (const u of [0.8, 3.0, 5.2]) { fillR(u, -2.2, 1.3, 1.1, '#2A333A'); fillR(u + 0.05, -2.15, 1.2, 0.04, '#5E5048'); }
+    base(); const xm = (a + b) / 2, cr = [xm, (d0 + d1) / 2, h];
+    faceC([[a - 0.3, d0 - 0.3, h], [b + 0.3, d0 - 0.3, h], [b + 0.3, (d0 + d1) / 2, h + 1.1], [a - 0.3, (d0 + d1) / 2, h + 1.1]], '#8E4A3A', cr);
+    // the green tarp awning over the front, the CSEMPE board on the roof edge, tiles leaning in front
+    face([[a + 0.2, d0 - 1.1, 2.05], [b - 0.2, d0 - 1.1, 2.05], [b - 0.2, d0, 2.3], [a + 0.2, d0, 2.3]], '#2E7A5A', true);
+    at(a, d0 - 1.1); fillR(0.2, -2.05, b - a - 0.4, 0.32, '#2A6E50'); for (const u of [0.25, b - a - 0.25]) fillR(u - 0.03, -2.05, 0.06, 2.05, '#3A3A36');
+    at(xm, d0 - 0.32); fillRR(-1.1, -(h + 0.95), 2.2, 0.62, 0.04, '#F4F4F0'); fillRR(-1.05, -(h + 0.9), 2.1, 0.52, 0.03, '#FFFFFF'); ltext('CSEMPE', 0.18, -(h + 0.64), 0.34, '#1E1E1E', 800);
+    circle(-0.8, -(h + 0.66), 0.17, '#D8323A'); circle(-0.8, -(h + 0.66), 0.12, '#FFFFFF');
+    at(a, d0 - 0.5); for (const [u, w, hh, c] of [[0.6, 0.9, 1.0, '#E9E9E4'], [1.0, 0.6, 0.8, '#C9C2B4'], [2.1, 0.8, 0.9, '#F2F2EE'], [5.6, 0.9, 1.1, '#D9D4C8']]) fillR(u, -hh, w, hh, c);
+  });
+  add(F + 0.15, ex(194.4), ex(214.2), () => {
+    const a = ex(194.6), b = ex(214.0), d = F + 0.15, w = b - a;
+    box(a, b, d - 0.1, d + 0.1, 0, 0.55, { f: '#C2AE92', s: '#AE9A80', t: '#D2C0A6' });
+    at(a, d - 0.1);
+    for (const [u, ww] of [[0.8, 1.6], [4.2, 2.4], [9.0, 1.2], [13.5, 2.0]]) fillR(u, -0.42, ww, 0.3, 'rgba(110,90,70,0.25)');
+    ctx.fillStyle = '#8E7464'; ctx.beginPath(); for (let u = 0.05; u < w - 0.04; u += 0.11) ctx.rect(u, -2.15, 0.08, 1.6); ctx.fill();
+    fillR(0, -2.2, w, 0.06, '#7A6252'); fillR(0, -1.0, w, 0.04, '#7A6252');
+    for (let u = 0; u <= w + 0.01; u += w / 8) fillR(u - 0.05, -2.25, 0.1, 1.7, '#6E5848');
+    fillR(0.8, -1.95, 6.0, 1.25, '#F4F4F2'); circle(1.5, -1.32, 0.5, '#D8323A'); circle(1.5, -1.32, 0.38, '#F4F4F2');
+    polyL([1.24, -1.58, 1.78, -1.58, 1.34, -1.12, 1.78, -1.12, 1.76, -1.04, 1.22, -1.04, 1.66, -1.5, 1.22, -1.5], '#D8323A');
+    ltext('Zalakerámia', 4.15, -1.32, 0.5, '#6E7276', 700);
+    fillR(10.4, -1.62, 1.1, 0.68, '#FFFFFF'); fillR(10.45, -1.57, 0.6, 0.12, '#1F5FA8'); lines(10.48, -1.38, 0.5, 3, '#2A4E8A', 0.08); circle(11.25, -1.3, 0.14, '#E2B38C'); fillR(11.12, -1.16, 0.26, 0.2, '#2A3A5A');
+  });
+  for (const u of [196.6, 203.2, 210.0]) add(8.9, ex(u) - 1.2, ex(u) + 1.2, () => {
+    at(ex(u), 8.9);
+    ctx.beginPath(); ctx.moveTo(-0.45, 0); ctx.quadraticCurveTo(-0.35, -0.3, 0, -0.32); ctx.quadraticCurveTo(0.35, -0.3, 0.45, 0); ctx.closePath(); ctx.fillStyle = '#F2F2EE'; ctx.fill();
+    fillR(-0.06, -0.85, 0.12, 0.6, '#E8662A'); strokeL([0, -0.8, 0, -2.6], '#6E5A46', 0.06); strokeL([0, -2.0, -0.35, -2.5], '#6E5A46', 0.03); strokeL([0, -2.2, 0.3, -2.7], '#6E5A46', 0.03);
+    for (const [a, b, r, c] of [[-0.3, 2.6, 0.32, '#5E9A49'], [0.25, 2.75, 0.34, '#4C8640'], [0, 3.0, 0.36, '#6AA855'], [-0.1, 2.35, 0.25, '#4C8640']]) circle(a, -b, r, c);
+  });
+
+  DGY.items = STATIC.splice(s0);
+  DGY.ground = GROUND.splice(g0).sort((a, b) => b.k - a.k);
+})();
+// the street-front houses: among them the one farther from the camera (sideways) is drawn first
+const dgyRowK = (x0, x1, k0) => { const dist = Math.max(0, x0 - cam.x, cam.x - x1), mid = Math.abs((x0 + x1) / 2 - cam.x); return k0 + (dist + mid * 0.001) * 0.001; };
+function renderDozsa() {
+  const visible = it => { if (it.x0 === -INF) return true; const [l, r] = visRange(Math.min(Math.max(it.kv ?? it.k, 1), 600), 3); return !(it.x1 < l || it.x0 > r); };
+  for (const it of DGY.ground) it.draw();
+  const list = [];
+  for (const it of DGY.items) if (visible(it)) list.push(it.row ? { k: dgyRowK(it.x0 + 0.6, it.x1 - 0.6, it.rk), draw: it.draw, x0: it.x0, lk: it.k } : it.house !== undefined ? { k: it.k + Math.min(1.5, Math.abs(it.house - cam.x) * 0.03), draw: it.draw, x0: it.x0, lk: it.k, hb: it.hb } : it);
+  houseFix(list);
+  list.push({ k: ch.key ?? ch.d, draw: drawChar });
+  list.push({ k: (ch.key ?? ch.d) - 0.03, draw: drawParcel });
+  droppedItems(list);
+  list.sort((a, b) => b.k - a.k);
+  for (const it of list) { LAMP_KEY = (it.x0 ?? 0) * 0.913 + (it.lk ?? it.k) * 13.7; CUR_HOUSE = it.x0 ?? 0; it.draw(); }
+  LAMP_KEY = 0;
+}
+function goDozsa(inside) {
+  if (ch.mode !== 'walk') return;
+  AU.unlock(); AU.ui();
+  ch.mode = 'turn'; ch.speed = 0; input.left = input.right = false;
+  fadeIn(inside ? '<b>Be a Dózsa György útra</b>' : '<b>Vissza a Fő útra</b><br>a Telekom sarkához');
+  setTimeout(() => {
+    SCENE.dozsa = inside;
+    if (inside) { ch.lane = 'dozsa'; ch.x = DGY.x0 + 6; ch.facing = 1; }
+    else { ch.lane = 'back'; ch.x = DGY.mouth; ch.facing = -1; }
+    ch.d = LANES[ch.lane].d; ch.g = groundAt(ch.lane, ch.x); ch.key = null;
+    cam.x = inside ? clamp(ch.x + 2, DGY.x0 + 7, DGY.x1 - 7) : ch.x + ch.facing * 2;
+    ch.mode = 'walk';
+    fadeOut();
+  }, 750);
+}
+
 function renderPadok() {
   const visible = it => { if (it.x0 === -INF) return true; const [l, r] = visRange(Math.min(Math.max(it.kv ?? it.k, 1), 600), 3); return !(it.x1 < l || it.x0 > r); };
   for (const it of PADOK.ground) it.draw();
@@ -10143,7 +11106,8 @@ const LANES = {
   back: { d: BD.lane, min: BACK.x0 - 20, max: BACK.x1 - 8 },
   padok: { d: PD.lane, min: PADOK.x0 - 6, max: PADOK.x1 + 6 },
   hid: { d: HD.lane, min: HID.x0 - 6, max: HID.x1 - 1 },
-  erz: { d: ED.lane, min: ERZ.x0 - 6, max: ERZ.x0 + 95.6 },   // the street ends at the borozó's fence
+  erz: { d: ED.lane, min: ERZ.x0 - 6, max: ERZ.x0 + 95.6 },
+  dozsa: { d: DGD.lane, min: DGY.x0 - 6, max: DGY.x0 + DGY.end },   // the street ends at the Márton Áron utca   // the street ends at the borozó's fence
   jokai: { d: JD.lane, min: JOK.x0 - 6, max: JOK.x1 - 2 },   // the other side of the Fő út (turned around)
 };
 const LANE_NAME = { plat: 'a közeli peronra', far: 'a túloldali peronra', kplat: 'a közeli peronra', kfar: 'a túloldali peronra', fside: 'az út túloldalára', mplat: 'a közeli peronra', mfar: 'a túloldali peronra' };
@@ -10153,7 +11117,7 @@ function groundAt(lane, x) {
   if (lane === 'fside' || lane === 'duna') return 0;
   if (lane === 'padok') return 0.1;
   if (lane === 'hid') return 0.02;
-  if (lane === 'jokai' || lane === 'erz') return 0;
+  if (lane === 'jokai' || lane === 'erz' || lane === 'dozsa') return 0;
   for (const [x0, x1, h0, h1] of PLAT_SEGS[lane]) if (x >= x0 && x <= x1) return lerp(h0, h1, (x - x0) / (x1 - x0));
   return 0;
 }
@@ -10341,7 +11305,6 @@ const OBJS = [
     [278.7, 0.8, 'kfc', 'eye', 'Elolvasod a piros táblát', 11.2, 6.3],
     [400.25, 0.8, 'pedbtn', 'hand', 'Megnyomod a gyalogos gombot', 9.1, 1.7],
     [404.2, 0.9, 'jcab', 'hand', 'Kinyitod a forgalomirányító szekrényt', 13.0, 1.9],
-    [412.0, 2.2, 'dozsa', 'eye', 'Benézel a Dózsa György útra', 16.0, 3.2],
   ].map(([u, r, kind, icon, label, d, h]) => ({ lane: 'back', x: BACK.x0 + u, r, kind, icon, label, anchor: [BACK.x0 + u, d, h] })),
   { lane: 'back', x: BACK.x0 + 100.6, r: 1.6, kind: 'kozmetika', icon: 'eye', label: 'Benézel a kozmetika ablakán', anchor: [BACK.x0 + 100.6, 15.6, 2.9] },
   // Dunaharaszti felső
@@ -10374,6 +11337,13 @@ const OBJS = [
   { lane: 'hid', x: HID.x0 + 8.2, r: 2.6, kind: 'hidsit', icon: 'sit', label: 'Leülsz a betonpárkányra', sitD: HD.sitD + 0.5, sitKey: HD.sitD + 0.5, anchor: [HID.x0 + 8.2, HD.sitD, 1.2] },
   { lane: 'hid', x: HID.x0 + 20, r: 3.0, kind: 'graffiti', icon: 'eye', label: 'Megnézed a graffitiket', txt: '<b>Graffitik a hídfőn.</b> Színes tag-ek, egy kék „H6” és valaki szíve egy ismeretlen névvel. A szellem is hagyna egy jelet…', anchor: [HID.x0 + 20, HD.bridge, 2.5] },
   { lane: 'hid', x: HID.x0 + 90, r: 3.0, kind: 'graffiti', icon: 'eye', label: 'Megnézed a graffitiket', txt: '<b>A túlsó hídfő</b> is tele van festve. Az ívek alatt visszhangzik, ha átmegy a HÉV.', anchor: [HID.x0 + 90, HD.bridge, 2.5] },
+  // the Dózsa György út
+  ...[[7.2, 1.0, 'dtelekom', 'eye', 'Benézel a Telekom üzletbe', 3.0], [26.05, 1.1, 'dklima', 'eye', 'Benézel a Royal Klíma irodába', 2.8], [32.55, 0.75, 'dchalk', 'eye', 'Elolvasod a krétatáblát', 2.4],
+    [48.0, 2.0, 'dbus', 'eye', 'Megnézed a fehér kisbuszt', 3.2, 8.1], [52.6, 0.7, 'dmol', 'eye', 'Elolvasod a MOL táblát', 6.4, 8.5], [93.2, 1.4, 'dyield', 'eye', 'Elolvasod az útjelző táblákat', 3.2, 9.3],
+    [103.4, 1.4, 'dbetu', 'eye', 'Benézel a Betűvágás műhelybe', 3.5], [123.9, 0.8, 'noentry', 'eye', 'Elolvasod a táblát', 2.8, 9.45], [145.4, 2.0, 'dsxl', 'eye', 'Benézel az sxl-divat kirakatába', 3.0],
+    [172.3, 0.8, 'dmenu', 'eye', 'Elolvasod a menütáblát', 1.4, DGD.verge1 + 0.2], [176.1, 1.2, 'dbacchus', 'door', 'Bekopogsz a Bacchus Pubba', 3.0, DGD.front + 6.2], [184.2, 0.8, 'dend', 'eye', 'Kinézel a Márton Áron utcára', 3.0, 9.6],
+  ].map(([u, r, kind, icon, label, h, d]) => ({ lane: 'dozsa', x: DGY.x0 + u, r, kind, icon, label, anchor: [DGY.x0 + u, d ?? DGD.front, h] })),
+  { lane: 'dozsa', x: DGY.x0 + 78.3, r: 1.1, kind: 'dsit', front: true, icon: 'sit', label: 'Leülsz a buszmegállóban', sitD: DGD.front + 0.85, sitKey: DGD.front + 0.84, anchor: [DGY.x0 + 78.3, DGD.front + 0.85, 1.7] },
   { lane: 'erz', x: ERZ.x0 + 93.1, r: 1.6, kind: 'gyuri', icon: 'door', label: 'Bemész a Gyuri Borozóba', anchor: [ERZ.x0 + 93.1, ED.front + 6.8, 3.6] },
   ...[[75.0, 2.9], [77.2, 5.3], [81.3, 3.95], [86.1, 3.2]].map(([u, dd], i) => ({ lane: 'erz', x: ERZ.x0 + u, r: i === 4 ? 1.2 : 1.0, kind: 'gsit', front: true, icon: 'sit',
     label: i === 3 ? 'Leülsz a rózsaszín székre' : i === 4 ? 'Leülsz a padra a fal mellett' : 'Leülsz a borozó asztalához', sitD: ED.front + dd, sitKey: ED.front + dd - 0.05, anchor: [ERZ.x0 + u, ED.front + dd, i < 2 ? 0.75 : 1.6] })),   // the two under the big board sit low
@@ -10479,7 +11449,7 @@ function droppedItems(list) {
     list.push({ k: db.d, draw: () => { at(db.x, db.d); ctx.translate(0, -db.g); ctx.scale(db.f, 0.32); ctx.rotate(db.rot); bikeShape(db.c); } });
   }
 }
-function sceneOf(lane) { return lane === 'back' ? 'back' : lane === 'duna' ? 'duna' : lane === 'padok' ? 'padok' : lane === 'hid' ? 'hid' : lane === 'jokai' ? 'jokai' : lane === 'erz' ? 'erz' : 'main'; }
+function sceneOf(lane) { return lane === 'back' ? 'back' : lane === 'duna' ? 'duna' : lane === 'padok' ? 'padok' : lane === 'hid' ? 'hid' : lane === 'jokai' ? 'jokai' : lane === 'erz' ? 'erz' : lane === 'dozsa' ? 'dozsa' : 'main'; }
 // up / down: the ghost can float onto a platform anywhere, not only at the paths
 function vertMoves() {
   if (ch.mode !== 'walk') return [];
@@ -10495,8 +11465,10 @@ function vertMoves() {
       else if (x >= 1438 && x <= 1554) out.push({ dir: 'up', to: 'mfar', over: true, label: 'Fel a túloldali peronra, a sínek fölött' });
       return out;
     }
-    case 'back': return SCENE.erz || Math.abs(x - ERZ.mouth) > 1.6 ? [] : [{ dir: 'up', to: 'erz', erz: true, label: 'Be az Erzsébet utcába' }];
+    case 'back': return SCENE.erz || SCENE.dozsa ? [] : Math.abs(x - ERZ.mouth) <= 1.6 ? [{ dir: 'up', to: 'erz', erz: true, label: 'Be az Erzsébet utcába' }]
+      : Math.abs(x - DGY.mouth) <= 2.4 ? [{ dir: 'up', to: 'dozsa', dozsa: true, label: 'Be a Dózsa György útra' }] : [];
     case 'erz': return [];
+    case 'dozsa': return [];
     case 'duna': return [];
     case 'padok': return [];
     case 'hid': return [];
@@ -10527,6 +11499,7 @@ function doVert(want) {
   AU.unlock(); AU.ui();
   if (v.jokai) { goJokai(true); return; }
   if (v.erz) { goErz(true); return; }
+  if (v.dozsa) { goDozsa(true); return; }
   if (v.zebra) {
     if (zebraDanger()) { AU.nope(); setExpr('scared', 1.5); toast('<b>Vigyázz, jön egy autó!</b> Várd meg, amíg elhalad, aztán menj át a zebrán.'); return; }
     startTrans(v.to, ZEBRA_F.x, 4.2, false); return;
@@ -10685,6 +11658,21 @@ function doAction() {
       break;
     }
     case 'noentry': toast('<b>Behajtani tilos, kivéve kerékpár.</b> Ebbe az utcába autóval nem lehet behajtani, biciklivel igen.'); break;
+    case 'dtelekom': setExpr('curious', 2.2); toast('A <b>Telekom</b> üzlet a sarkon. Bent mindenki a telefonját nézi, a kirakatüvegben te sem látszol. Térerő: teljes.', 5200); break;
+    case 'dklima': setExpr('curious', 2.2); toast('<b>Royal Klíma</b>: klímatechnika, épületüzemeltetés, tervezés, felújítás. A hideg fuvallatot ingyen adod hozzá.', 5600); break;
+    case 'dchalk': setExpr('happy', 2.2); toast('A krétatáblán: <b>„Amit eszel, azzá leszel.”</b> Szellemként nálad ez elég rövid lista.', 5200); break;
+    case 'dbus': setExpr('curious', 2.2); toast('A <b>Feniksbus</b> fehér Ventona kisbusza parkol a ház végénél. Hátul a 100-as és a 80-as matrica: ennyivel mehet. Most épp nullával.', 5600); break;
+    case 'dmol': toast('<b>MOL</b> – 2,1 km. Neked nem kell tankolni, de a hot dog illatát innen is érzed.', 5000); break;
+    case 'dyield': toast('<b>Elsőbbségadás kötelező</b>, alatta <b>STOP 100 m</b>: a Fő útnál meg kell állni. A zöld táblán balra <b>Baja</b>, jobbra <b>Budapest</b>.', 5600); break;
+    case 'dbetu': setExpr('curious', 2.2); toast('<b>Betűvágás · Plakátnyomtatás.</b> Itt készülnek a feliratok és a plakátok. Egy „ITT KÍSÉRT” matricát rendelnél az ajtódra.', 5600); break;
+    case 'dsxl': setExpr('scared', 1.4); toast('Az <b>sxl-divat</b> kirakatában a próbababák mozdulatlanul állnak. Gyanúsan mozdulatlanul. Mintha téged figyelnének.', 5600); break;
+    case 'dmenu': toast('A krétás táblán: <b>MENÜ – A</b> és <b>B</b>. Hogy mi az A és mi a B, azt csak a konyhán tudják.', 5000); break;
+    case 'dbacchus': setExpr('happy', 2.4); AU.thunk(a.x, DGD.front + 6.2, 0.25); addPoints(10, 'Bacchus Pub', 'bacchus', 600); toast('Bekopogtál a <b>Bacchus Pub</b> ajtaján. Bentről halk zene és koccanó poharak, a hordókban virít a muskátli.', 5600); break;
+    case 'dend': toast('Itt ér véget a séta: jobbra a <b>Márton Áron utca</b>, a túlsarkon a Zalakerámia kerítése. Tovább most nem mehetsz, fordulj vissza a Fő út felé!', 6000); break;
+    case 'dsit': ch.mode = 'sit'; ch.sit = a; ch.x = a.x; ch.d = a.sitD; ch.key = a.sitKey; ch.speed = 0; AU.sit(a.x, a.sitD); setExpr('happy', 2);
+      addPoints(5, 'Buszmegálló', 'dsit', 300);
+      toast(LIGHT.night > 0.4 ? 'Leültél a buszmegállóban. Világít a plakát, zümmög az utcai lámpa, busz sehol.' : 'Leültél a buszmegállóban. A busz menetrend szerint jön. Menetrend szerint.', 5200);
+      break;
     case 'slamp': if (SLP.id === a.id) slClose(); else slOpen(a.id, a.x); break;
     case 'lxbox': if (LXP.open && LXMAN !== (a.man || LXMAN_A)) lxSetOpen(false); LXMAN = a.man || LXMAN_A; lxOpenFromWorld(); break;
     case 'turnback': turnAround(false); break;
@@ -11133,7 +12121,8 @@ function updateCamera(dt) {
   // a little look-ahead, capped: at high speed the camera follows tighter, so the ghost stays near the middle
   const sp = Math.abs(ch.speed);
   let target = ch.x + (ch.mode === 'walk' ? ch.facing * (2.0 + Math.min(sp, 4) * 0.5) : 0);
-  if (SCENE.erz) target = clamp(ch.x + ch.facing * 2, ERZ.x0 + 7, ERZ.x1 - 7);
+  if (SCENE.dozsa) target = clamp(ch.x + ch.facing * 2, DGY.x0 + 7, DGY.x1 - 7);
+  else if (SCENE.erz) target = clamp(ch.x + ch.facing * 2, ERZ.x0 + 7, ERZ.x1 - 7);
   else if (SCENE.jokai) target = clamp(ch.x + ch.facing * 2, JOK.x0 + 7, JOK.x1 - 7);
   else if (SCENE.hid) target = clamp(ch.x + ch.facing * 2, HID.x0 + 7, HID.x1 - 6);
   else if (SCENE.padok) target = clamp(ch.x + ch.facing * 2, PADOK.x0 + 6, PADOK.x1 - 4);
@@ -11154,6 +12143,7 @@ function render(time) {
   ctx.clearRect(0, 0, cam.W, cam.H);
   drawSky(time);
   base(); ctx.fillStyle = C.grass2; ctx.fillRect(0, Math.floor(cam.hz), cam.W, cam.H);
+  if (SCENE.dozsa) { renderDozsa(); drawMap(time); tcRender(); base(); return; }
   if (SCENE.erz) { renderErz(); drawMap(time); tcRender(); base(); return; }
   if (SCENE.jokai) { renderJokai(); drawMap(time); tcRender(); base(); return; }
   if (SCENE.hid) { renderHid(); drawMap(time); tcRender(); base(); return; }
@@ -11213,6 +12203,7 @@ function frame(nowMs) {
   if (SCENE.hid && ch.lane === 'hid' && atEdge(-1, HID.x0 - 5)) goHid(false);
   if (SCENE.jokai && ch.lane === 'jokai' && atEdge(-1, JOK.x0 - 5)) goJokai(false);
   if (SCENE.erz && ch.lane === 'erz' && atEdge(-1, ERZ.x0 - 5)) goErz(false);
+  if (SCENE.dozsa && ch.lane === 'dozsa' && atEdge(-1, DGY.x0 - 5)) goDozsa(false);
   // past Dunaharaszti külső the Fő út goes on to the bench corner (from there, left: over the zebra to the tobacco shop)
   if (!SCENE.back && !SCENE.duna && ch.lane === 'street' && atEdge(-1, WORLD.minX + 1)) goPadokFromKulso();
   zcUpdate(dt);
@@ -11232,10 +12223,11 @@ function start(saved) {
     if (saved.lane === 'padok') { SCENE.padok = true; SCENE.back = true; }
     if (saved.lane === 'jokai') SCENE.jokai = true;
     if (saved.lane === 'erz') { SCENE.erz = true; SCENE.back = true; }
+    if (saved.lane === 'dozsa') { SCENE.dozsa = true; SCENE.back = true; }
     if (saved.lane === 'hid') { SCENE.hid = true; SCENE.padok = true; SCENE.back = true; }
     ch.facing = saved.facing || 1; timeOffset = saved.timeOffset || 0; ch.trash = saved.trash || 0;
   }
-  cam.x = SCENE.duna || SCENE.padok || SCENE.hid || SCENE.jokai || SCENE.erz ? ch.x : SCENE.back ? clamp(ch.x + ch.facing * 2, BACK.x0 - 16, BACK.x1 - 6) : clamp(ch.x + ch.facing * 2, WORLD.minX + 6, WORLD.maxX - 6);
+  cam.x = SCENE.dozsa ? clamp(ch.x + ch.facing * 2, DGY.x0 + 7, DGY.x1 - 7) : SCENE.duna || SCENE.padok || SCENE.hid || SCENE.jokai || SCENE.erz ? ch.x : SCENE.back ? clamp(ch.x + ch.facing * 2, BACK.x0 - 16, BACK.x1 - 6) : clamp(ch.x + ch.facing * 2, WORLD.minX + 6, WORLD.maxX - 6);
   resize();
   window.addEventListener('resize', resize);
   LIGHT.update(0, new Date(gameNow() * 1000), true); LIGHT.ready = true;
