@@ -2158,73 +2158,315 @@ add(D.walk1 + 0.6, -52, -42, () => {
   ltext('strand · stég · csónak', 2.2, -3.45, 0.36, '#FFFFFF', 600, 'Barlow', 'left', 'alphabetic');
 });
 treeRound(-60, 49, 14, MID, 501); treeRound(-50, 51, 13, MID, 502); treeRound(-41, 47.5, 11, MID, 503);
-// small cottage with a steep brown roof
-house({ x0: -36, x1: -27, d0: 47, d1: 54, h: 2.7, wall: '#EFE9DA', wallS: '#D7CFBC', roof: { type: 'gd', hr: 6.3, c: C.roofTile, cs: '#7E4930' },
-  deco: w => { win(1.0, 0.9, 1.1, 1.2, { shutter: '#5E7E58' }); win(6.6, 0.9, 1.1, 1.2, { shutter: '#5E7E58' }); fillR(3.9, -2.1, 1.0, 2.1, '#6F5442'); win(3.95, 3.1, 0.9, 0.8, { cross: false }); } });
-// 1.5-storey house with grey roof and chimney
-treeConifer(-3, 50, 11, 601); treeConifer(2.5, 52, 9, 602); hedge(-6, 7, 44, 1.6, C.hedge);
-// white house, grey roof, gable to the street
-house({ x0: 8, x1: 20, d0: 47, d1: 56, h: 3.3, wall: C.wallWhite, wallS: C.wallWhiteS, roof: { type: 'gd', hr: 7.0, c: C.roofGrey, cs: '#4C5254' },
-  deco: w => { win(1.3, 1.0, 1.4, 1.3); win(5.2, 1.0, 1.4, 1.3); win(9.3, 1.0, 1.4, 1.3); win(5.4, 3.7, 1.0, 1.0, { cross: false }); } });
-treeRound(24, 49, 12, MID, 701);
-// parking sign
-add(D.walk1 - 0.6, 28, 30, () => {
-  at(29, D.walk1 - 0.6);
-  fillR(-0.04, -2.6, 0.08, 2.6, '#8A8F93'); fillRR(-0.33, -2.95, 0.66, 0.66, 0.06, C.blue);
-  ltext('P', 0, -2.6, 0.5, '#FFFFFF', 700, 'Barlow');
+// the south corner of the Duna utca (Street View): an overgrown plot, a wall of bushes and ivy-covered trees all
+// along the left side of the street, a row of grey wooden posts at the corner, more trees closing the far end
+{
+  const IVY = ['#2E5A2A', '#3B6B33', '#4C7E3E', '#5E9048', '#71A252'];
+  // the front of the thicket along the Soroksári út
+  hedgeWall(-40, -17.6, 43.4, 2.6, 6620, () => 0, ['#2E5A2A', '#3B6B33', '#4E8040', '#6A9A4E']);
+  // the side of the thicket along the Duna utca: leafy mounds one behind the other, each at its own depth
+  { const r = mulberry(6621);
+    for (let d = 44.4; d < 84; d += 1.3 + r() * 0.8) {
+      const hh = 2.6 + r() * 2.6, w = 1.6 + r() * 1.2, x = -18.4 - r() * 0.6, bl = [];
+      for (let i = 0; i < 6; i++) bl.push([(r() - 0.5) * w * 1.6, hh * (0.35 + r() * 0.6), w * (0.35 + r() * 0.3), Math.floor(r() * 4)]);
+      bl.sort((p, q) => p[1] - q[1]);
+      add(d, x - w * 1.4, x + w * 1.4, () => {
+        at(x, d);
+        ctx.beginPath(); ctx.ellipse(0, -hh * 0.42, w * 1.05, hh * 0.46, 0, 0, TAU); ctx.fillStyle = IVY[1]; ctx.fill();
+        fillR(-w * 1.05, -hh * 0.42, w * 2.1, hh * 0.42, IVY[1]);
+        for (const [u, v, rad, c] of bl) circle(u, -v, rad, IVY[c]);
+        for (const [u, v, rad, c] of bl) if (c > 1) circle(u - rad * 0.3, -(v + rad * 0.25), rad * 0.42, IVY[4]);
+      });
+    }
+  }
+  // ivy-covered trees and a few tall ones rising out of it
+  // (the ivy-covered trees are added after the tree species, see DUNA_CORNER_TREES)
+  for (const [x, d, h, sd] of [[-29.5, 64, 11, 6640], [-36, 62, 12, 6641], [-30, 76, 12.5, 6642], [-14.5, 92, 11, 6643], [-6, 96, 12, 6644], [-22, 90, 13, 6645], [3, 99, 11, 6646]])
+    treeRound(x, d, h, ['#3D6B35', '#4A7A3E', '#5C8E4A'], sd);
+  // the grey wooden posts at the corner, along the edge of the Duna utca
+  add(43.3, -18.6, -16.6, () => { for (const d of [43.4, 44.3, 45.2, 46.1, 47.0]) { const x = -17.4; at(x, d); fillR(-0.06, -0.95, 0.12, 0.95, '#8E8A80'); fillR(-0.06, -0.95, 0.12, 0.08, '#A9A59A'); } });
+}
+// ---- the far side of the Soroksári út, from the Duna utca corner to the GENEZIS billboard (Street View 2024,
+// Soroksári út 1–7, south to north = left to right) ----
+// red petunia baskets hanging on the concrete poles at the edge of the pavement
+add(D.walk1 - 0.3, 5, 83, () => {
+  for (const x of [9, 44, 79]) {
+    at(x, D.walk1 - 0.3);
+    strokeL([0.0, -3.95, 0.0, -3.6], '#2A2C2E', 0.02);
+    ctx.beginPath(); ctx.ellipse(0, -3.45, 0.38, 0.26, 0, 0, TAU); ctx.fillStyle = '#3E6A30'; ctx.fill();
+    for (const [a, b, r] of [[-0.32, 0.04, 0.14], [-0.17, 0.17, 0.13], [0.02, 0.21, 0.14], [0.21, 0.15, 0.13], [0.34, 0.02, 0.12], [-0.08, -0.07, 0.13], [0.13, -0.09, 0.12], [-0.27, -0.13, 0.1], [0.3, -0.15, 0.1], [0.0, -0.24, 0.11], [-0.12, 0.3, 0.09], [0.16, 0.32, 0.08]])
+      circle(a, -(3.45 + b), r, (Math.round((a + 1) * 50 + b * 31) % 3) ? '#D8283A' : '#EE5466');
+    for (const [a, b] of [[-0.26, -0.4], [0.28, -0.44], [0.05, -0.5], [-0.38, -0.18]]) strokeL([a * 0.5, -3.4, a, -(3.45 + b)], '#3E6A30', 0.03);
+  }
 });
-// beige single-storey building with arched windows, under renovation
-house({ x0: 30, x1: 52, d0: 44.5, d1: 52, h: 3.7, wall: C.wallBeige, wallS: C.wallBeigeS, roof: { type: 'hip', hr: 6.2, c: '#6E5146', cs: '#5B4239', inset: 3 },
+// the round "Fő út 102 · NON-STOP" sign high up on the pole in front of the furniture showroom (photo)
+add(D.walk1 - 0.32, 78, 80.4, () => {
+  at(79, D.walk1 - 0.32);
+  fillR(0.08, -6.05, 0.3, 0.05, '#8E9396'); fillR(0.08, -5.0, 0.3, 0.05, '#8E9396');
+  fillRR(0.2, -6.25, 1.0, 1.42, 0.04, '#FFFFFF'); fillRR(0.24, -6.21, 0.92, 1.34, 0.03, '#F4F2EC');
+  circle(0.7, -5.8, 0.33, '#3A2A22'); circle(0.7, -5.8, 0.27, '#F4F2EC'); circle(0.7, -5.8, 0.2, '#C8302A'); circle(0.7, -5.8, 0.12, '#F4F2EC');
+  polyL([0.56, -5.72, 0.7, -5.86, 0.84, -5.72, 0.8, -5.72, 0.8, -5.6, 0.6, -5.6, 0.6, -5.72], '#3A2A22');
+  ltext('Fő út 102.', 0.7, -5.33, 0.13, '#3A2A22', 800);
+  fillR(0.24, -5.15, 0.92, 0.22, '#C8302A'); ltext('NON-STOP', 0.7, -5.04, 0.12, '#FFFFFF', 800);
+});
+// 1 Soroksári út: an old low house with a hipped tile roof set back in its garden, the teal privacy mesh on the
+// wire fence, a rusty iron gate, an acacia on the verge, little junipers, a clipped hedge on the corner
+house({ x0: -10.5, x1: 0.5, d0: 49, d1: 56, h: 2.8, wall: '#E7DECB', wallS: '#CFC6B2', roof: { type: 'hip', hr: 5.4, c: '#A0644A', cs: '#86523C', inset: 2.6 }, chimney: [-3.5, 52, 6.3],
+  deco: w => { fillR(0, -0.45, w, 0.45, '#BDB19A'); win(1.2, 0.9, 1.0, 1.1, { shutter: '#7A5A40' }); win(4.4, 0.9, 1.0, 1.1, { shutter: '#7A5A40' }); win(8.0, 0.9, 1.0, 1.1, { shutter: '#7A5A40' }); } });
+treeRound(-6, 51, 7.5, MID, 7801); treeRound(3.0, 50.5, 8.5, ['#4E7F40', '#40703A', '#5E9048'], 7802);
+add(43.6, -11.8, 1.4, () => {
+  const a = -11.6, b = 1.2, w = b - a;
+  at(a, 43.6);
+  fillR(0, -0.25, w, 0.25, '#A9A69E');
+  fillR(0, -1.75, w, 1.5, '#2E5E5E'); ctx.fillStyle = '#264E4E'; ctx.beginPath(); for (let u = 0.1; u < w; u += 0.16) ctx.rect(u, -1.75, 0.012, 1.5); ctx.fill();
+  ctx.fillStyle = 'rgba(160,190,185,0.35)'; ctx.beginPath(); for (let v = 0.32; v < 1.75; v += 0.16) ctx.rect(0, -v, w, 0.01); ctx.fill();
+  for (let u = 0; u <= w + 0.01; u += w / 5) fillR(u - 0.05, -1.85, 0.1, 1.85, '#4A4E50');
+  // the rusty gate with its square pattern
+  fillR(7.2, -1.8, 1.3, 1.8, '#5A3A2A'); ctx.fillStyle = '#7A4A30'; ctx.beginPath(); for (let u = 7.28; u < 8.45; u += 0.13) ctx.rect(u, -1.72, 0.03, 1.64); ctx.rect(7.25, -1.0, 1.2, 0.04); ctx.fill();
+  fillRR(7.55, -1.3, 0.3, 0.2, 0.02, '#C8302A');
+});
+hedge(-11.8, -8.6, 43.1, 1.0, '#3F6E36');
+for (const [x, h] of [[-7.6, 1.2], [-6.4, 0.9], [-1.4, 1.1]]) add(43.0, x - 0.8, x + 0.8, () => { at(x, 43.0); polyL([-0.55, 0, 0.55, 0, 0.3, -h * 0.7, 0, -h, -0.3, -h * 0.7], '#5E8A4A'); polyL([-0.3, -0.1, 0.25, -0.1, 0, -h * 0.8], '#6E9A54'); });
+treeRound(-3.4, 43.0, 9.0, ['#4F7D3A', '#5C8A44', '#46703A'], 7803, '#6E9B52');
+// the LOTTO kiosk: a tiny plastered house with a steep shingle gable, barred windows, the green iron fence
+house({ x0: 1.6, x1: 5.4, d0: 44.6, d1: 48.2, h: 2.55, wall: '#E2DED6', wallS: '#C9C5BC', roof: { type: 'gd', hr: 5.4, c: '#7E5A4E', cs: '#6A4A40', e: '#4E362E' },
   deco: w => {
-    fillR(0, -0.5, w, 0.5, '#C9B794');
-    for (let u = 1.3; u < w - 1.5; u += 2.6) archWin(u, 0.9, 1.15, 1.9, '#F3EBDA', '#7B2E2E');
-    fillR(0, -3.55, w, 0.18, '#EFE4CC');
+    fillR(0, -0.35, w, 0.35, '#B9B4AA'); fillR(0, -2.55, w, 0.3, '#D2CEC4');
+    ltext('TOTÓ', 0.9, -2.4, 0.14, '#9A968C', 700); ltext('LOTTO', 2.75, -2.4, 0.15, '#4E5A4E', 800);
+    fillR(0.25, -2.15, 1.45, 1.5, '#3A4446'); fillR(0.32, -2.08, 1.31, 1.36, '#B8C2C4'); ctx.fillStyle = '#3E4A42'; ctx.beginPath(); for (let u = 0.32; u < 1.63; u += 0.18) ctx.rect(u, -2.08, 0.025, 1.36); for (let v = 0.75; v < 2.1; v += 0.22) ctx.rect(0.32, -v, 1.31, 0.025); ctx.fill();
+    fillR(2.0, -2.15, 1.5, 2.15, '#3A4446'); fillR(2.07, -2.08, 1.36, 2.08, '#4E5A5E'); ctx.fillStyle = '#2E3A34'; ctx.beginPath(); for (let u = 2.07; u < 3.43; u += 0.17) ctx.rect(u, -2.08, 0.025, 2.0); for (let v = 0.3; v < 2.1; v += 0.25) ctx.rect(2.07, -v, 1.36, 0.025); ctx.fill();
+    fillR(3.55, -1.95, 0.18, 0.5, '#8A8F93');
   },
-  after: () => {   // sand pile + mixer in front (renovation)
-    base();
-    face([[33, 43.6, 0], [36.5, 43.6, 0], [35.2, 44.2, 0.9], [34.0, 44.2, 0.9]], '#D9C79C', true);
-    at(39, 43.8); circle(0, -0.7, 0.5, '#E86F2C'); fillR(-0.05, -0.7, 0.1, 0.7, '#555');
-  } });
-// furniture showroom (Bútor bemutatóterem)
-house({ x0: 54, x1: 74, d0: 44, d1: 56, h: 4.1, wall: '#F4F3EF', wallS: '#DAD8D2', roof: { type: 'hip', hr: 8.2, c: '#5A5350', cs: '#48423F', inset: 4, skylights: [0.15, 0.35, 0.55, 0.75] },
+  chimney: [3.6, 46.5, 5.35], chimneyC: '#2A2E30' });   // the dark vent: drawn before the roof, so the slopes hide its foot
+add(43.7, 0.6, 9.4, () => {
+  const a = 0.8, b = 9.0, G = '#2E6A42', GL = '#3E7E52';
+  at(a, 43.7);
+  box(a - 0.15, a + 0.15, 43.55, 43.85, 0, 1.55, { f: '#E2DED6', s: '#CFCBC2', t: '#ECE8E0' }); at(a, 43.7);
+  ctx.fillStyle = G; ctx.beginPath();
+  for (let u = 0.2; u < b - a; u += 0.12) ctx.rect(u, -1.32, 0.022, 1.3);
+  for (const v of [0.08, 0.5, 0.92, 1.32]) ctx.rect(0.15, -v, b - a - 0.15, 0.04);
+  ctx.fill();
+  ctx.strokeStyle = GL; ctx.lineWidth = 0.03; for (let u = 0.4; u < b - a - 0.2; u += 0.62) { ctx.beginPath(); ctx.rect(u, -1.1, 0.4, 0.4); ctx.stroke(); }
+  fillR(4.9, -1.45, 0.08, 1.45, G); fillR(6.5, -1.45, 0.06, 1.45, G); fillR(b - a - 0.06, -1.45, 0.1, 1.45, G);
+  fillR(4.95, -1.38, 3.2, 0.32, GL);
+  strokeL([1.9, 0, 1.9, -0.9, 2.5, -0.9, 2.5, -0.1], '#6E4A32', 0.045);   // the rusty handrail by the step
+});
+// three tall thujas behind the gate
+add(45.2, 5.0, 10.0, () => {
+  for (const [x, hh] of [[6.0, 6.2], [7.2, 7.0], [8.5, 6.4]]) {
+    at(x, 45.2);
+    ctx.beginPath(); ctx.moveTo(-0.75, 0); ctx.quadraticCurveTo(-0.95, -hh * 0.5, 0, -hh); ctx.quadraticCurveTo(0.95, -hh * 0.5, 0.75, 0); ctx.closePath(); ctx.fillStyle = '#2F5A2C'; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-0.35, -0.4); ctx.quadraticCurveTo(-0.5, -hh * 0.55, 0.05, -hh * 0.93); ctx.quadraticCurveTo(0.1, -hh * 0.5, 0.05, -0.4); ctx.closePath(); ctx.fillStyle = '#3F6E38'; ctx.fill();
+  }
+});
+// 2–3: the orange-brown plank fence with a bushy tree, an old grey-roofed house in the garden behind
+house({ x0: 12, x1: 26, d0: 49.5, d1: 57, h: 3.1, wall: '#EDE7DA', wallS: '#D5CFC2', roof: { type: 'gx', hr: 6.0, c: '#6E7274', cs: '#5A5E60' }, chimney: [21, 53, 7.0] });
+woodFence(9.4, 29.4, 43.6, 1.8, '#A0623E', '#86502F');
+treeRound(17.5, 44.6, 9.5, ['#4E7F40', '#40703A', '#5E9048'], 7804);
+treeRound(24.0, 46.0, 8.2, MID, 7805);
+// 3 Soroksári út: the light grey house right by the pavement, roller shutters, a clipped hedge and three acacias
+house({ x0: 29.4, x1: 43.4, d0: 44.6, d1: 53, h: 3.4, wall: '#E3E1DC', wallS: '#CBC9C3', roof: { type: 'gx', hr: 6.6, c: '#7A7E80', cs: '#64686A' }, chimney: [34, 49, 7.4],
   deco: w => {
-    fillR(0, -4.1, w, 0.75, C.woodL); fillR(0, -3.42, w, 0.06, C.woodD);
-    ltext('BÚTOR BEMUTATÓTEREM', w / 2, -3.74, 0.42, '#2C3B57');
-    for (const u of [1.0, 4.6, 8.2, 12.8, 16.4]) { if (lampN() > 0.3) emit(() => fillR(u, -3.0, 2.7, 2.6, '#F1E3C0')); else fillR(u, -3.0, 2.7, 2.6, '#3F4C54'); fillR(u + 1.32, -3.0, 0.06, 2.6, '#D9D9D4'); fillR(u, -1.0, 2.7, 0.05, '#D9D9D4'); }
-    fillR(11.2, -2.6, 1.3, 2.6, '#55636B');
+    fillR(0, -0.45, w, 0.45, '#BAB7B0');
+    for (const u of [1.6, 5.4, 9.2]) { fillR(u - 0.18, -2.55, 1.46, 1.75, '#F4F3F0'); win(u, 1.0, 1.1, 1.35, { frame: '#F4F3F0', cross: false }); fillR(u, -2.35, 1.1, 1.1, '#EDEDE9'); ctx.fillStyle = '#D2D2CC'; ctx.beginPath(); for (let v = 1.3; v < 2.35; v += 0.09) ctx.rect(u, -v, 1.1, 0.012); ctx.fill(); }
+    fillR(0, -3.4, w, 0.14, '#F0EFEB'); fillR(w - 0.2, -3.3, 0.08, 3.3, '#B9BCBE'); fillR(w - 0.34, -3.3, 0.08, 3.3, '#B9BCBE');
   } });
-// dark modern gate
-add(D.yard, 74.5, 79, () => { at(74.5, D.yard); fillR(0, -1.8, 4.3, 1.8, '#4A4F55'); for (let u = 0.2; u < 4.3; u += 0.25) fillR(u, -1.8, 0.05, 1.8, '#3B4045'); });
-// white flat-roof two-storey cube house
-house({ x0: 79.5, x1: 90, d0: 45, d1: 53, h: 6.3, wall: '#F6F5F2', wallS: '#DCDBD6', roof: { type: 'flat', c: '#E9E8E3', cs: '#CFCDC7' },
-  deco: w => { win(1.6, 3.6, 1.3, 1.1, { cross: false, frame: '#E0DFDA' }); win(7.4, 3.6, 1.3, 1.1, { cross: false, frame: '#E0DFDA' }); fillR(4.8, -2.5, 1.0, 2.5, '#3E4449'); win(1.6, 1.0, 1.3, 1.1, { cross: false, frame: '#E0DFDA' }); fillR(4.75, -4.2, 1.1, 0.35, '#3E4449'); },
-  after: () => { box(81, 81.6, 47, 47.6, 6.7, 7.3, { f: '#CFCDC7', s: '#B9B7B1', t: '#E2E0DA' }); box(87.5, 88.1, 47, 47.6, 6.7, 7.3, { f: '#CFCDC7', s: '#B9B7B1', t: '#E2E0DA' }); } });
-// long wooden plank fence, conical gazebo roof behind it, solar-panel house
-woodFence(90, 124, D.yard, 2.05, C.wood, C.woodD);
-treeConifer(95.5, 47.5, 10, 801);
-house({ x0: 100, x1: 106, d0: 46, d1: 52, h: 2.2, wall: '#9C6C48', wallS: '#875B3C', roof: { type: 'pyr', hr: 6.6, c: '#7A4A33', cs: '#683E2A', ov: 0.3 } });
-house({ x0: 112, x1: 126, d0: 50, d1: 60, h: 3.9, wall: C.wallWhite, wallS: C.wallWhiteS, roof: { type: 'gd', hr: 8.6, c: '#B9483A', cs: '#9A3A2E', e: '#7E2E24', panels: true },
-  deco: w => { win(2.0, 1.1, 1.5, 1.4); win(10.5, 1.1, 1.5, 1.4); win(6.3, 4.4, 1.4, 1.2, { cross: false }); } });
-treeRound(131, 48, 12, MID, 901);
-// pedestrian-crossing sign beyond the far side, near the crossing
-add(D.verge1 - 3.5, 122, 125, () => {
-  at(123.6, D.verge1 - 3.5);
-  fillR(-0.04, -2.7, 0.08, 2.7, '#8A8F93'); fillRR(-0.33, -3.05, 0.66, 0.66, 0.05, C.blue);
-  polyL([-0.24, -2.48, 0.24, -2.48, 0, -2.95], '#FFFFFF');
-  pedPict(0, -2.48, 0.47);
+add(43.9, 29.6, 43.2, () => {
+  const a = 29.8, b = 43.0, h = 1.05;
+  at(a, 43.9);
+  fillRR(0, -h, b - a, h, 0.25, '#3E6E30');
+  for (let u = 0.3; u < b - a; u += 0.42) circle(u, -h + 0.06, 0.2, (u * 7) % 2 > 1 ? '#4C7E3A' : '#467634');
+  fillR(0, -0.15, b - a, 0.15, '#2E5226');
 });
-// second billboard + white house with red roof
-add(D.walk1 + 0.5, 138, 147, () => {
-  at(139, D.walk1 + 0.5);
-  fillR(0.8, -2.4, 0.14, 2.4, '#55595C'); fillR(5.3, -2.4, 0.14, 2.4, '#55595C');
-  fillR(0, -4.9, 6.2, 2.6, '#F2F0E8'); fillR(0.1, -4.8, 6.0, 2.4, '#E9E4D6');
-  fillR(0.1, -4.8, 2.4, 2.4, '#7FB069'); circle(1.3, -3.6, 0.7, '#F2C14E');
-  ltext('KERTÉSZET', 2.75, -3.9, 0.5, '#2B4A3A', 700, 'Barlow Condensed', 'left', 'alphabetic');
-  ltext('palánták · virágföld', 2.75, -3.4, 0.32, '#2B4A3A', 600, 'Barlow', 'left', 'alphabetic');
+for (const [x, h, sd] of [[31.6, 6.2, 7806], [36.6, 6.8, 7807], [41.4, 6.0, 7808]]) treeRound(x, 44.2, h, ['#4F7D3A', '#5C8A44', '#46703A'], sd, '#6E9B52');
+// the double gate of woven wooden panels between the two houses
+add(44.5, 43.2, 46.8, () => {
+  box(43.4, 43.6, 44.4, 44.7, 0, 1.95, { f: '#8E9294', s: '#7A7E80', t: '#A2A6A8' }); box(46.4, 46.6, 44.4, 44.7, 0, 1.95, { f: '#8E9294', s: '#7A7E80', t: '#A2A6A8' });
+  at(43.6, 44.5);
+  for (const [u0, u1] of [[0.02, 1.38], [1.42, 2.78]]) {
+    fillR(u0, -1.85, u1 - u0, 1.85, '#7A8084'); fillR(u0 + 0.06, -1.78, u1 - u0 - 0.12, 1.5, '#A0703E');
+    ctx.strokeStyle = '#7E5430'; ctx.lineWidth = 0.025; ctx.beginPath(); for (let k = -6; k < 12; k++) { ctx.moveTo(u0 + 0.06 + k * 0.14, -0.28); ctx.lineTo(u0 + 0.06 + k * 0.14 + 0.75, -1.78); } ctx.stroke();
+    ctx.beginPath(); ctx.arc((u0 + u1) / 2, -1.78, (u1 - u0) / 2 - 0.06, Math.PI, 0); ctx.fillStyle = '#A0703E'; ctx.fill();
+  }
 });
-house({ x0: 140, x1: 152, d0: 47, d1: 57, h: 4.0, wall: C.wallWhite, wallS: C.wallWhiteS, roof: { type: 'gd', hr: 8.0, c: C.roofRed, cs: '#963B2A' }, chimney: [149, 52, 9.0],
-  deco: w => { win(1.6, 1.1, 1.4, 1.4); win(5.3, 1.1, 1.4, 1.4); win(9.0, 1.1, 1.4, 1.4); win(5.4, 4.5, 1.2, 1.1, { cross: false }); } });
-treeRound(157, 46.5, 14, MID, 1001);
+// 3: the peach-ochre house with the five arched windows; building materials piled on the verge in front of it
+house({ x0: 46.8, x1: 65.2, d0: 44.6, d1: 53, h: 3.5, wall: '#E7B98C', wallS: '#CDA076', roof: { type: 'gx', hr: 6.5, c: '#5E5A58', cs: '#4C4846' }, chimney: [58, 49, 7.4],
+  deco: w => {
+    fillR(0, -0.55, w, 0.55, '#A9A196'); fillR(0, -0.58, w, 0.04, '#C2BAAE');
+    for (const u of [1.2, 4.3, 7.4, 10.5, 13.6]) {
+      archWin(u - 0.16, 0.95, 1.5, 1.95, '#F4EFE6', '#F4EFE6'); archWin(u, 1.05, 1.18, 1.72, '#7A2E24', '#3A4446');
+      fillR(u + 0.56, -2.4, 0.06, 1.35, '#7A2E24'); fillR(u + 0.08, -2.2, 0.38, 1.0, '#E9E4DA');
+    }
+    ctx.save(); ctx.translate(w - 1.4, -2.1); ctx.rotate(Math.PI / 4); fillR(-0.36, -0.36, 0.72, 0.72, '#F4EFE6'); fillR(-0.26, -0.26, 0.52, 0.52, '#3A4446'); ctx.restore();
+    fillR(0, -3.5, w, 0.16, '#F0D2B0');
+  } });
+// the gravel heap, the concrete mixer, black sacks, grey blocks and the pallet of pavers
+groundOver(D.walk1 + 0.2, 46, 56, () => {
+  base(); const P = []; for (let i = 0; i <= 16; i++) { const t = i / 16, x = lerp(47.2, 55.6, t); P.push([x, 41.0 + Math.sin(t * Math.PI) * 0.4, 0.015]); }
+  for (let i = 16; i >= 0; i--) { const t = i / 16, x = lerp(47.2, 55.6, t); P.push([x, 43.4 - Math.sin(t * Math.PI) * 0.1, 0.015]); }
+  face(P, '#D2CCBE', true);
+});
+add(42.2, 47.4, 56, () => {
+  // the heap rising in the middle
+  at(51.4, 42.2); ctx.beginPath(); ctx.moveTo(-4.2, 0); ctx.quadraticCurveTo(-2.0, -0.9, 0, -0.95); ctx.quadraticCurveTo(2.2, -0.9, 4.2, 0); ctx.closePath(); ctx.fillStyle = '#DAD4C6'; ctx.fill();
+  ctx.fillStyle = '#C6BFB0'; for (let k = 0; k < 18; k++) { const u = -3.6 + k * 0.42, v = 0.1 + ((k * 37) % 7) * 0.08; if (Math.abs(u) < 3.9) ctx.fillRect(u, -v, 0.06, 0.035); }
+});
+add(43.2, 47.5, 54.6, () => {
+  const d = 43.2;
+  // the grey concrete blocks and the pallet of red-grey pavers (shrink-wrapped)
+  box(49.0, 49.9, d - 0.45, d + 0.1, 0, 1.15, { f: '#B9B8B2', s: '#A3A29C', t: '#CBCAC4' }); at(49.0, d - 0.45); for (let v = 0.2; v < 1.15; v += 0.19) fillR(0, -v, 0.9, 0.02, '#8E8D88');
+  box(50.1, 52.6, d - 0.55, d + 0.25, 0, 1.05, { f: '#C47E68', s: '#A86A58', t: '#D2A08C' }); at(50.1, d - 0.55);
+  ctx.fillStyle = '#B0B2AE'; ctx.beginPath(); for (let v = 0.12, k = 0; v < 1.0; v += 0.12, k++) for (let u = (k % 2) * 0.12; u < 2.5; u += 0.48) ctx.rect(u, -(v + 0.1), 0.22, 0.1); ctx.fill();
+  fillR(0, -0.12, 2.5, 0.12, '#8A6A4A');
+  // the black tarp sacks and the mixer on its red frame
+  at(48.0, d); ctx.beginPath(); ctx.ellipse(-0.35, -0.42, 0.42, 0.42, 0, 0, TAU); ctx.fillStyle = '#1E2022'; ctx.fill(); ctx.beginPath(); ctx.ellipse(0.55, -0.3, 0.36, 0.3, 0, 0, TAU); ctx.fill();
+  strokeL([-0.1, 0, 0.25, -0.75, 0.6, 0], '#B8302A', 0.06); circle(0.5, -0.12, 0.12, '#2A2C2E');
+  ctx.save(); ctx.translate(0.25, -1.05); ctx.rotate(-0.5); ctx.beginPath(); ctx.ellipse(0, 0, 0.42, 0.36, 0, 0, TAU); ctx.fillStyle = '#A9AAA6'; ctx.fill(); ctx.beginPath(); ctx.ellipse(0.32, 0, 0.12, 0.28, 0, 0, TAU); ctx.fillStyle = '#5E605E'; ctx.fill(); ctx.restore();
+  fillR(-0.5, -0.25, 0.3, 0.25, '#F2F2EE');
+});
+// the Tesco expressz sign on the pole, and the level-crossing warning sign (seen from the road, as on the photo)
+add(D.walk1 - 0.3, 43, 46, () => {
+  at(44, D.walk1 - 0.3);
+  fillR(-0.05, -6.6, 0.32, 0.06, '#8E9396'); fillR(-0.05, -4.3, 0.32, 0.06, '#8E9396');
+  fillRR(0.18, -6.7, 1.12, 2.5, 0.04, '#FFFFFF'); fillR(0.24, -6.3, 1.0, 2.0, '#1F5FA8');
+  ltext('TESCO', 0.74, -6.53, 0.2, '#D8283A', 800); ltext('expressz', 0.74, -6.36, 0.12, '#1F5FA8', 700, 'Georgia');
+  polyL([0.62, -4.95, 0.62, -5.55, 0.48, -5.55, 0.74, -5.85, 1.0, -5.55, 0.86, -5.55, 0.86, -4.95], '#FFFFFF');
+  ltext('550 m', 0.74, -4.7, 0.17, '#FFFFFF', 800);
+  fillR(0.24, -4.5, 1.0, 0.24, '#FFFFFF'); ltext('Fő út 56.', 0.74, -4.38, 0.12, '#1F5FA8', 800);
+});
+add(41.6, 45.4, 47.2, () => {
+  at(46.3, 41.6);
+  fillR(-0.035, -2.65, 0.07, 2.65, '#9AA0A3');
+  polyL([0, -2.95, 0.32, -2.42, -0.32, -2.42], '#D8323A'); polyL([0, -2.86, 0.25, -2.47, -0.25, -2.47], '#FFFFFF');
+  fillR(-0.14, -2.6, 0.24, 0.1, '#1E2022'); fillR(-0.12, -2.68, 0.06, 0.08, '#1E2022'); circle(-0.08, -2.5, 0.03, '#1E2022'); circle(0.06, -2.5, 0.03, '#1E2022');
+  circle(0, -2.22, 0.15, '#D8323A'); circle(0, -2.22, 0.11, '#FFFFFF'); fillR(-0.07, -2.24, 0.14, 0.04, '#D8323A');
+  fillR(-0.13, -1.98, 0.26, 0.85, '#FFFFFF'); ctx.save(); ctx.beginPath(); ctx.rect(-0.13, -1.98, 0.26, 0.85); ctx.clip();
+  for (let k = 0; k < 4; k++) polyL([-0.13, -1.98 + k * 0.24 + 0.1, 0.13, -1.98 + k * 0.24 - 0.02, 0.13, -1.98 + k * 0.24 + 0.08, -0.13, -1.98 + k * 0.24 + 0.2], '#D8323A');
+  ctx.restore();
+});
+// 5 Soroksári út: the furniture showroom (Bútor bemutató terem, tbm.hu): white walls, a timber band under the
+// eaves with the rafter ends showing, a dark tiled hip roof with skylights, four big windows, the logo
+{
+  const x0 = 67, x1 = 85, d0 = 44.3, d1 = 56, h = 4.2;
+  house({ x0, x1, d0, d1, h, wall: '#F4F4F0', wallS: '#DCDCD6', roof: { type: 'hip', hr: 7.3, c: '#4E4A48', cs: '#3E3A38', inset: 4.2, skylights: [0.14, 0.32, 0.56] },
+    deco: w => {
+      fillR(0, -0.5, w, 0.5, '#3A3D40');
+      fillR(0, -h, w, 1.0, '#A0683C'); ctx.fillStyle = '#8A5830'; ctx.beginPath(); for (let v = 3.32; v < h; v += 0.13) ctx.rect(0, -v, w, 0.015); ctx.fill();
+      for (let u = 0.3; u < w; u += 0.9) fillR(u, -h, 0.12, 0.22, '#5A3A22');
+      fillR(0, -3.22, w, 0.05, '#7A4A2A');
+      for (const u of [1.0, 5.2, 9.4, 13.6]) {
+        fillR(u - 0.1, -2.85, 3.4, 2.2, '#3A3D40'); pane(u, -2.75, 3.2, 2.0, '#3A464E', u * 3.1);
+        fillR(u + 0.3, -1.25, 0.9, 0.5, '#8A5A3A'); fillR(u + 1.6, -1.5, 1.2, 0.7, '#E9E2D2'); fillR(u + 1.7, -1.95, 0.1, 0.45, '#C8302A');
+        ltext('www.tbm.hu', u + 1.6, -2.62, 0.13, '#5A7AC8', 800);
+      }
+      ctx.beginPath(); ctx.ellipse(2.4, -3.0, 0.42, 0.26, 0, 0, TAU); ctx.strokeStyle = '#2C3E7A'; ctx.lineWidth = 0.05; ctx.stroke(); ltext('TBM', 2.42, -3.0, 0.2, '#2C3E7A', 800, 'Georgia');
+      ltext('Bútor bemutató terem', 9.6, -3.0, 0.42, '#1E1E1E', 800, 'Barlow');
+    },
+    after: () => {      // the side wall to the drive: the timber band, a glass door with steps, two windows
+      if (cam.x <= x1) return;
+      const q = (da, db, h0, h1, c) => face([[x1 + 0.01, da, h0], [x1 + 0.01, db, h0], [x1 + 0.01, db, h1], [x1 + 0.01, da, h1]], c, true);
+      q(d0, d1, 3.2, h, '#A0683C'); q(d0, d1, 0, 0.5, '#3A3D40');
+      for (const [a, b] of [[d0 + 1.0, d0 + 3.6], [d0 + 7.2, d0 + 9.8]]) { q(a - 0.1, b + 0.1, 0.65, 2.85, '#3A3D40'); q(a, b, 0.75, 2.75, '#4A5862'); }
+      q(d0 + 4.4, d0 + 6.4, 0, 2.85, '#3A3D40'); q(d0 + 4.5, d0 + 6.3, 0.05, 2.75, '#55636D');
+      box(x1, x1 + 1.2, d0 + 4.0, d0 + 6.8, 0, 0.18, { f: '#9A9890', s: '#86847C', t: '#B0AEA6' });
+    } });
+}
+// the paved drive and parking beside it, the dark block wall at the back, the white Dacia Duster
+groundOver(D.walk1 + 0.15, 84.5, 98, () => {
+  base(); face([[85.2, D.walk1, 0.012], [97.2, D.walk1, 0.012], [97.2, 53, 0.012], [85.2, 53, 0.012]], '#B9B3A8', true);
+  for (let d = 41; d < 53; d += 0.6) face([[85.2, d, 0.013], [97.2, d, 0.013], [97.2, d + 0.025, 0.013], [85.2, d + 0.025, 0.013]], '#A59E92', true);
+});
+add(53, 84.5, 97.6, () => { box(85.2, 97.2, 52.9, 53.3, 0, 1.6, { f: '#4A4E52', s: '#3E4246', t: '#5A5E62' }); at(85.2, 52.9); for (let v = 0.25; v < 1.6; v += 0.25) fillR(0, -v, 12, 0.02, '#3A3E42'); });
+// the P · BÚTORBOLT sign and the bus stop (Dunaharaszti felső H) on the verge by the drive
+add(41.4, 86.6, 88.6, () => {
+  at(87.6, 41.4);
+  fillR(-0.04, -2.7, 0.08, 2.7, '#9AA0A3');
+  fillRR(-0.36, -3.2, 0.72, 0.72, 0.05, '#FFFFFF'); fillRR(-0.32, -3.16, 0.64, 0.64, 0.04, C.blue); ltext('P', 0, -2.84, 0.5, '#FFFFFF', 800, 'Barlow');
+  fillRR(-0.42, -2.42, 0.84, 0.24, 0.03, '#1E2022'); fillRR(-0.4, -2.4, 0.8, 0.2, 0.025, '#FFFFFF'); ltext('BÚTORBOLT', -0.04, -2.31, 0.09, '#1E2022', 800);
+  strokeL([-0.3, -2.23, 0.3, -2.23], '#1E2022', 0.012); polyL([0.3, -2.26, 0.36, -2.23, 0.3, -2.2], '#1E2022');
+});
+// the dark grey slatted sliding gate between white pillars, the ELADÓ banner, the hedge over it
+add(44.6, 94.4, 97.2, () => { at(95.7, 44.9); for (const [a, b, r] of [[-0.6, 2.4, 0.5], [0, 2.7, 0.55], [0.55, 2.35, 0.42]]) circle(a, -b, r, '#3E6E34'); });   // kept clear of the white house's wall
+add(43.6, 91.6, 97.4, () => {
+  box(91.7, 92.2, 43.4, 43.9, 0, 2.05, { f: '#F2F1EC', s: '#DAD8D2', t: '#FAFAF6' }); box(96.8, 97.3, 43.4, 43.9, 0, 2.05, { f: '#F2F1EC', s: '#DAD8D2', t: '#FAFAF6' });
+  at(92.2, 43.6);
+  for (let v = 0.12; v < 1.85; v += 0.23) fillR(0, -(v + 0.16), 4.6, 0.16, '#4E5458');
+  fillR(0, -1.9, 4.6, 0.06, '#3E4448');
+  fillRR(1.4, -1.55, 1.3, 0.85, 0.03, '#FFFFFF'); fillR(1.45, -1.5, 1.2, 0.18, '#8CC63E'); ltext('otp ingatlanpont', 2.05, -1.41, 0.07, '#FFFFFF', 800);
+  ltext('ELADÓ', 2.05, -1.18, 0.22, '#3E8A2E', 800); ltext('+36 70 609 3007', 2.05, -0.95, 0.08, '#1E1E1E', 700);
+});
+// 4–6 Soroksári út: the white flat-roofed house right at the pavement (two chimneys, basement windows)
+house({ x0: 97.3, x1: 107.5, d0: 43.5, d1: 51.5, h: 5.0, wall: '#F7F7F4', wallS: '#DEDED8', roof: { type: 'flat', c: '#E4E4E0', cs: '#CDCDC8' },
+  deco: w => {
+    fillR(0, -0.3, w, 0.3, '#D8D8D2');
+    win(1.6, 3.15, 0.75, 0.75, { frame: '#F7F7F4', cross: false, sill: false }); fillR(1.52, -3.98, 0.91, 0.91, '#E2E2DC'); win(1.6, 3.15, 0.75, 0.75, { frame: '#F2F2EE', cross: false, sill: false });
+    for (const u of [3.4, 6.2]) { fillR(u - 0.12, -3.6, 2.3, 1.6, '#E6E6E0'); win(u, 2.15, 2.06, 1.3, { frame: '#F4F4F0', cross: false }); fillR(u + 1.0, -3.45, 0.06, 1.3, '#F4F4F0'); }
+    fillR(1.5, -2.6, 0.95, 2.6, '#E2E2DC'); fillR(1.62, -2.5, 0.72, 2.5, '#5A6870'); fillR(1.95, -2.5, 0.05, 2.5, '#F2F2EE');
+    for (const u of [3.5, 6.4]) { fillR(u, -0.95, 1.0, 0.55, '#E2E2DC'); fillR(u + 0.08, -0.88, 0.84, 0.42, '#3A464E'); }
+    fillR(0.3, -5.0, 0.07, 5.0, '#C9CBCC');
+  },
+  after: () => { for (const x of [100.6, 104.6]) box(x - 0.35, x + 0.35, 45.6, 46.3, 5.3, 6.2, { f: '#3E4246', s: '#32363A', t: '#4A4E52' }); } });
+groundOver(D.walk1 + 0.1, 96.6, 108, () => { base(); face([[97.0, 42.6, 0.03], [107.8, 42.6, 0.03], [107.8, 43.5, 0.03], [97.0, 43.5, 0.03]], '#C9C7C0', true); });
+// 6 Soroksári út: the long dark rustic slab fence; behind it a purple-leaved tree, the cone-roofed garden house,
+// the white house with solar panels on its red roof
+{
+  const r = mulberry(7810), SL = []; for (let u = 0; u < 28.6; u += 0.17 + r() * 0.12) SL.push([u, 1.85 + r() * 0.3, r() < 0.5 ? '#4A3628' : '#57402F', r() * 0.08]);
+  add(43.6, 107.4, 136.2, () => {
+    const [l, rr] = visRange(43.6, 1);
+    at(107.5, 43.6);
+    for (let i = 0; i < SL.length - 1; i++) {
+      const [u, hh, c, lean] = SL[i], u2 = SL[i + 1][0] - 0.02;
+      if (107.5 + u2 < l || 107.5 + u > rr) continue;
+      polyL([u, 0, u2, 0, u2 + lean * 0.3, -hh + 0.06, (u + u2) / 2 + lean, -hh, u + lean * 0.4, -hh + 0.04], c);
+      fillR(u + (u2 - u) * 0.5, -hh + 0.25, 0.012, hh - 0.35, 'rgba(30,20,14,0.35)');
+      if ((i * 7) % 5 === 0) for (let k = 0; k < 3; k++) circle(u + 0.06, -(0.5 + k * 0.4 + (i % 3) * 0.1), 0.035, '#7E9A4A');
+    }
+    fillR(0, -1.35, 28.6, 0.05, '#2E2018'); fillR(0, -0.45, 28.6, 0.05, '#2E2018');
+  });
+}
+treeRound(113.2, 46.5, 6.8, ['#4E2E3A', '#6A3A4A', '#3E2430'], 7811, '#7A4656');   // clear of the white house; a purple highlight
+house({ x0: 114.8, x1: 119.8, d0: 46.4, d1: 51.4, h: 1.8, wall: '#8A6A4E', wallS: '#765A40', roof: { type: 'pyr', hr: 7.4, c: '#6E4436', cs: '#5A382C', ov: 0.4 } });
+add(46.3, 116.8, 117.8, () => { at(117.3, 46.3); fillR(-0.012, -9.3, 0.024, 1.9, '#9AA0A3'); circle(0, -7.45, 0.12, '#8A9496'); });
+house({ x0: 121, x1: 133, d0: 50, d1: 60, h: 3.9, wall: C.wallWhite, wallS: C.wallWhiteS, roof: { type: 'gd', hr: 8.6, c: '#B9483A', cs: '#9A3A2E', e: '#7E2E24', panels: true },
+  deco: w => { win(2.0, 1.1, 1.5, 1.4); win(8.5, 1.1, 1.5, 1.4); win(5.3, 4.4, 1.4, 1.2, { cross: false }); } });
+treeRound(129.6, 47.0, 9.0, MID, 7812); treeRound(134.6, 48.5, 10.5, ['#4E7F40', '#40703A', '#5E9048'], 7813);
+// 7 Soroksári út: a brown plank fence, the white two-storey house behind it, the brick gate pillar, the low
+// concrete wall with the green wire mesh, the GENEZIS billboard on its legs, the big horse chestnut, an old house
+woodFence(136.4, 148.2, 43.6, 1.75, '#6E4A32', '#5A3A26');
+house({ x0: 136.5, x1: 147.5, d0: 46.5, d1: 55, h: 5.6, wall: '#F2F1EC', wallS: '#DAD8D2', roof: { type: 'gd', hr: 9.4, c: '#A44A35', cs: '#8E3E2C' }, chimney: [144.5, 51, 10.2],
+  deco: w => { fillR(0, -0.5, w, 0.5, '#CFCCC4'); fillR(4.2, -4.4, 2.6, 1.3, '#F7F7F4'); shutterLike(4.35, 3.2, 2.3, 1.1); win(1.4, 1.0, 1.2, 1.3); win(8.4, 1.0, 1.2, 1.3); } });
+function shutterLike(u, h0, w, h) { fillR(u, -(h0 + h), w, h, '#E9E9E4'); for (let v = 0.1; v < h; v += 0.1) fillR(u, -(h0 + v), w, 0.012, '#CFCFC8'); }
+house({ x0: 152, x1: 166, d0: 48.5, d1: 56, h: 3.2, wall: '#E9E6E0', wallS: '#D0CDC6', roof: { type: 'gx', hr: 6.0, c: '#8A8E90', cs: '#74787A' },
+  deco: w => { fillR(0, -0.6, w, 0.6, '#BFBAB0'); for (const u of [2.0, 5.4, 9.6]) win(u, 1.0, 1.1, 1.3, { frame: '#F2F0EA', cross: false }); } });
+add(47.8, 149.2, 157.4, () => {
+  at(149.4, 47.8);
+  for (const u of [1.6, 6.2]) fillR(u, -3.3, 0.16, 3.3, '#3A3E42');
+  fillR(0, -6.05, 7.9, 2.9, '#E9E9E4'); fillR(0.1, -5.95, 7.7, 2.7, '#8EC0E8');
+  // the picture: sky, rows of green field, two people looking out, the white jugs, the green GENEZIS box
+  fillR(0.1, -4.75, 7.7, 1.5, '#6EA046'); for (let k = 0; k < 6; k++) polyL([0.1 + k * 1.4, -3.25, 0.9 + k * 1.4, -4.75, 1.1 + k * 1.4, -4.75, 0.5 + k * 1.4, -3.25], '#4E8A34');
+  polyL([0.1, -4.75, 2.6, -5.2, 5.4, -4.9, 7.8, -5.15, 7.8, -4.75], '#8EA85E');
+  circle(1.3, -4.4, 0.24, '#E2B38C'); fillRR(1.0, -4.15, 0.6, 0.9, 0.12, '#C9A06E'); circle(2.0, -4.5, 0.22, '#C9926A'); fillRR(1.72, -4.27, 0.56, 1.0, 0.12, '#6E7A8E');
+  for (const [u, hh] of [[5.7, 1.3], [6.4, 1.5], [7.1, 1.2]]) { fillRR(u, -(3.3 + hh), 0.55, hh, 0.06, '#F7F7F4'); fillR(u + 0.06, -(3.3 + hh * 0.55), 0.43, 0.25, '#3E8A2E'); }
+  fillR(0.25, -3.75, 1.4, 0.38, '#2E7A3C'); ltext('GENEZIS', 0.95, -3.56, 0.2, '#F2E8C8', 800, 'Georgia');
+  ltext('TE HASZNÁLSZ GENEZIS NPK MŰTRÁGYÁT?', 4.6, -5.72, 0.22, '#FFFFFF', 800);
+  fillR(0, -6.15, 7.9, 0.1, '#C9C9C4'); fillRR(3.3, -6.4, 1.3, 0.24, 0.03, '#FFFFFF');
+});
+add(43.6, 147.8, 161.2, () => {
+  const brick = { f: '#C9A06A', s: '#B08A58', t: '#D8B47E' };
+  box(148.2, 148.8, 43.3, 43.9, 0, 2.25, brick); box(148.15, 148.85, 43.25, 43.95, 2.25, 2.35, { f: '#B9B4AA', s: '#A5A096', t: '#CCC7BD' });
+  at(148.2, 43.3); ctx.fillStyle = '#A07A48'; ctx.beginPath(); for (let v = 0.14; v < 2.25; v += 0.14) ctx.rect(0, -v, 0.6, 0.012); ctx.fill();
+  box(148.8, 160.0, 43.45, 43.75, 0, 0.55, { f: '#B9B6AE', s: '#A5A29A', t: '#CCC9C1' });
+  at(148.8, 43.6);
+  ctx.strokeStyle = 'rgba(60,96,70,0.55)'; ctx.lineWidth = 0.012; ctx.beginPath();
+  for (let u = 0; u < 11.2; u += 0.16) { ctx.moveTo(u, -0.55); ctx.lineTo(u + 0.6, -1.95); ctx.moveTo(u + 0.6, -0.55); ctx.lineTo(u, -1.95); }
+  ctx.stroke();
+  for (let u = 0.6; u < 11.2; u += 2.2) fillR(u - 0.03, -2.0, 0.06, 1.45, '#3E5E46');
+  fillR(0, -1.98, 11.2, 0.04, '#3E5E46');
+  box(160.0, 160.6, 43.3, 43.9, 0, 2.25, brick);
+  at(160.6, 43.6); fillR(0, -1.7, 2.4, 1.7, '#4E6A8A'); for (let u = 0.12; u < 2.4; u += 0.15) fillR(u, -1.65, 0.03, 1.6, '#3E5A78');
+});
+treeRound(161.0, 43.1, 11, ['#5E7A34', '#6E8A3E', '#4E6A2E'], 7814, '#8EA454');
+treeRound(144.0, 49.5, 9.5, MID, 7815);
 
 // car sizes (shared with the traffic code)
 const CAR_KINDS_S = { car: 4.3, wagon: 4.65, van: 4.9, truck: 6.6, trailer: 4.3 };
@@ -2235,6 +2477,8 @@ const PARKED = [
   // far verge beyond the tracks
   [-33.85, 27.08, 0, 'car', '#C9CCCF'], [-27.25, 27.28, 0, 'car', '#2B2E33'], [-20.27, 26.99, Math.PI, 'wagon', '#E8C13A'],
   [136.65, 27.18, 0, 'car', '#B33A33'], [143.32, 27.09, 0, 'wagon', '#3A4C66'],
+  // the white Dacia Duster in the drive beside the furniture showroom (far side of the Soroksári út)
+  [88.8, 49.2, Math.PI, 'wagon', '#F2F2EE'],
   // near side, on the gravel by Las Torres utca
   [-30.85, 11.18, 0, 'car', '#2F3236'], [-23.87, 11.24, 0, 'wagon', '#9EA3A8'],
   // parked at an angle in the grass along Las Torres utca (photos 18–22 Las Torres u.)
@@ -2336,10 +2580,10 @@ function shrubs(x0, x1, d, h, seed, cols = ['#5E9A49', '#4C8640', '#76AE57']) {
 // THE RIGHT END OF FELSŐ (towards Közvágóhíd) – after the far platform the street starts to climb
 // =====================================================================
 // white patterned concrete fence along the yards
-add(D.yard, 160, 232, () => {
+add(D.yard, 166, 232, () => {
   const [l, r] = visRange(D.yard, 3);
   at(0, D.yard);
-  for (let x = 160; x < 232; x += 2.4) {
+  for (let x = 166.4; x < 232; x += 2.4) {
     if (x + 2.4 < l || x > r) continue;
     fillR(x, -1.85, 2.4, 1.85, '#EEEDE8');
     for (const v of [0.5, 1.3]) {
@@ -2648,6 +2892,10 @@ function treeX(x, d, hgt, kind, seed) {
     for (const [sxx, syy, c] of seeds) { ctx.beginPath(); ctx.ellipse(sxx, -syy, 0.28, 0.42, 0.3, 0, TAU); ctx.fillStyle = c; ctx.fill(); }
   });
 }
+// the ivy-covered trees on the south corner of the Duna utca (the thicket is built with the far side)
+for (const [x, d, h, sd, kind] of [[-20.5, 46.0, 9.5, 6630, 'creeper'], [-25.5, 48.5, 11.5, 6631, 'creeper'], [-33.0, 46.5, 9.0, 6632, 'creeper'], [-21.0, 55.0, 12.0, 6633, 'acacia'],
+  [-27.5, 58.5, 13.0, 6634, 'creeper'], [-20.8, 64.0, 10.5, 6635, 'creeper'], [-24.0, 71.0, 12.5, 6636, 'acacia'], [-20.5, 78.0, 11.0, 6637, 'creeper'], [-37.0, 53.0, 12.0, 6638, 'acacia']])
+  treeX(x, d, h, kind, sd);
 // low, dense undergrowth (bushes, acacia shoots, hop) – lifted with the verge
 // a messy shrub: a ragged leafy outline (many uneven leaf points), darker hollows inside, a few bare twigs
 // sticking out; precomputed once, in metres, origin at the foot of the shrub
@@ -5772,6 +6020,126 @@ function ledUpdate() {
   ledPreview(false);
   if (!(ch.mode === 'walk' && SCENE.back && !SCENE.padok && !SCENE.erz && ch.lane === 'back' && Math.abs(ch.x - LEDW.x) < 3.2)) ledClose();
 }
+
+// ---------- the LOTTÓ kiosk's scratch card: three covered fields, one hides the prize (1:3) ----------
+const LOT = { open: false, el: null, x: 3.5, ticket: null, played: 0, won: 0 };
+function lotBuild() {
+  const st = document.createElement('style');
+  st.textContent = `
+.lotp { position: absolute; z-index: 7; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 70px); transform: translateX(-50%);
+  width: 340px; max-width: calc(100% - 20px); max-height: calc(100% - 190px); overflow-y: auto; overscroll-behavior: contain;
+  background: #1E5A3A; color: #F4F1E6; border-radius: 22px; box-shadow: 0 10px 30px rgba(0,0,0,.35); font: 600 14px/1.3 "Barlow", system-ui, sans-serif;
+  animation: lx-in .3s cubic-bezier(.3,1.4,.5,1); }
+.lotp.closing { animation: lx-out .22s ease-in forwards; }
+@media (min-width: 760px) { .lotp { left: calc(100% - 200px); } }
+@media (max-height: 560px) { .lotp { top: calc(env(safe-area-inset-top, 0px) + 10px); max-height: calc(100% - 96px); } .lot-card { height: 96px !important; } }
+.lot-head { display: flex; align-items: center; gap: 10px; padding: 12px 10px 4px 16px; }
+.lot-title { flex: 1; font: 800 22px/1 var(--display); letter-spacing: .04em; }
+.lot-title small { display: block; margin-top: 4px; font: 700 11px/1 var(--display); letter-spacing: .14em; text-transform: uppercase; color: #F2C94C; }
+.lot-x { width: 32px; height: 32px; border: 0; border-radius: 50%; background: #2A6E48; color: #F4F1E6; font: 800 14px/1 sans-serif; cursor: pointer; }
+.lot-body { padding: 6px 14px 14px; display: grid; gap: 10px; }
+.lot-ticket { background: #F4F1E6; border-radius: 16px; padding: 10px; display: grid; gap: 8px; color: #1E3A2A; }
+.lot-ticket-top { display: flex; justify-content: space-between; align-items: baseline; font: 800 13px/1 var(--display); letter-spacing: .08em; text-transform: uppercase; }
+.lot-ticket-top b { color: #C8302A; }
+.lot-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.lot-card { position: relative; height: 118px; border-radius: 12px; background: #E9E2CC; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
+.lot-card .face { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: 4px; text-align: center; font: 800 13px/1.1 var(--display); letter-spacing: .04em; text-transform: uppercase; }
+.lot-card .face svg { width: 46px; height: 46px; }
+.lot-card.win .face { background: #F2C94C; color: #6A4A10; }
+.lot-card.lose .face { color: #8A8470; }
+.lot-card canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: grab; }
+.lot-card.locked canvas { cursor: not-allowed; opacity: .55; }
+.lot-card.dim { opacity: .55; }
+.lot-msg { min-height: 20px; text-align: center; font: 800 16px/1.2 var(--display); letter-spacing: .03em; }
+.lot-msg.win { color: #F2C94C; }
+.lot-btns { display: flex; gap: 8px; }
+.lot-btns button { flex: 1; border: 0; border-radius: 14px; padding: 12px 8px; cursor: pointer; font: 800 14px/1 var(--display); letter-spacing: .08em; text-transform: uppercase; }
+#lotNew { background: #F2C94C; color: #1E3A2A; box-shadow: 0 3px 0 #B8901C; } #lotNew:active { transform: translateY(2px); box-shadow: none; }
+#lotNew:disabled { opacity: .45; cursor: default; }
+#lotAll { background: #2A6E48; color: #F4F1E6; }
+.lot-stats { display: flex; justify-content: space-between; font: 700 12px/1 var(--display); letter-spacing: .06em; text-transform: uppercase; color: #BFD8C8; }`;
+  document.head.appendChild(st);
+  const el = document.createElement('section');
+  el.className = 'lotp'; el.hidden = true; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Kaparós sorsjegy');
+  el.innerHTML = `<div class="lot-head"><span class="lot-title">Kaparós sorsjegy<small>Totó · Lottó · Soroksári út 2.</small></span><button class="lot-x" type="button" aria-label="Bezárás">✕</button></div>
+    <div class="lot-body">
+      <div class="lot-ticket"><div class="lot-ticket-top"><span>Kapard le az egyiket!</span><b>Esély 1 : 3</b></div><div class="lot-cards" id="lotCards"></div></div>
+      <div class="lot-msg" id="lotMsg"></div>
+      <div class="lot-btns"><button id="lotAll" type="button">Felfed</button><button id="lotNew" type="button">Új szelvény</button></div>
+      <div class="lot-stats"><span id="lotPlayed">Szelvény: 0</span><span id="lotWon">Nyert: 0</span><span>Nyeremény: +25</span></div>
+    </div>`;
+  document.getElementById('app').appendChild(el);
+  LOT.el = el;
+  el.querySelector('.lot-x').addEventListener('click', () => { AU.ui(); lotClose(); });
+  el.querySelector('#lotNew').addEventListener('click', () => { AU.unlock(); AU.clickPair(LOT.x, 44.6, 0.2); lotNewTicket(); });
+  el.querySelector('#lotAll').addEventListener('click', () => { const t = LOT.ticket; if (!t || t.done) return; lotReveal(t.pick ?? Math.floor(Math.random() * 3)); });
+  window.addEventListener('keydown', e => { if (e.code === 'Escape' && LOT.open) lotClose(); });
+}
+const LOT_ICON = {
+  win: '<svg viewBox="0 0 48 48"><path d="M24 4l5.6 12.4L43 18l-10 9.2 2.8 13.4L24 34l-11.8 6.6L15 27.2 5 18l13.4-1.6z" fill="#C8302A"/></svg>',
+  lose: '<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="17" fill="none" stroke="#C9C2AA" stroke-width="4"/><path d="M16 16l16 16M32 16L16 32" stroke="#C9C2AA" stroke-width="4" stroke-linecap="round"/></svg>',
+};
+function lotNewTicket() {
+  const t = { win: Math.floor(Math.random() * 3), pick: null, done: false, cleared: [0, 0, 0] };
+  LOT.ticket = t; LOT.played++;
+  const box = LOT.el.querySelector('#lotCards'); box.innerHTML = '';
+  for (let i = 0; i < 3; i++) {
+    const c = document.createElement('div'); c.className = 'lot-card';
+    const win = i === t.win;
+    c.innerHTML = `<div class="face">${win ? LOT_ICON.win + '<span>Nyeremény<br>+25 pont</span>' : LOT_ICON.lose + '<span>Nem nyert</span>'}</div><canvas width="200" height="236"></canvas>`;
+    box.appendChild(c);
+    const cv = c.querySelector('canvas'), g = cv.getContext('2d');
+    // the silver scratch layer with a little pattern and the clover mark
+    g.fillStyle = '#B9BCBE'; g.fillRect(0, 0, 200, 236);
+    g.fillStyle = '#A9ACAE'; for (let y = 6; y < 236; y += 12) for (let x = (y / 12 % 2) * 10; x < 200; x += 20) g.fillRect(x, y, 6, 3);
+    g.fillStyle = '#8E9294'; g.font = '800 30px "Barlow Condensed", sans-serif'; g.textAlign = 'center'; g.fillText('KAPARD!', 100, 128);
+    g.globalCompositeOperation = 'destination-out';
+    let down = false, last = null;
+    const scratch = e => {
+      const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) * 200 / r.width, y = (e.clientY - r.top) * 236 / r.height;
+      g.lineCap = 'round'; g.lineWidth = 34; g.beginPath(); g.moveTo(last ? last[0] : x, last ? last[1] : y); g.lineTo(x, y); g.stroke();
+      g.beginPath(); g.arc(x, y, 17, 0, TAU); g.fill(); last = [x, y];
+      t.cleared[i] += 1;
+      if (Math.random() < 0.25 && AU.ready()) AU.burst(LOT.x, 44.6, 0.04, 0.05, 'highpass', 3000, 1.2);
+      if (t.cleared[i] > 26) lotReveal(i);
+    };
+    cv.addEventListener('pointerdown', e => {
+      if (t.done || t !== LOT.ticket) return;
+      if (t.pick !== null && t.pick !== i) { AU.nope(); lotMsg('Csak egy mezőt kaparhatsz le!', ''); return; }
+      AU.unlock(); t.pick = i; down = true; last = null;
+      box.querySelectorAll('.lot-card').forEach((cc, k) => cc.classList.toggle('locked', k !== i));
+      try { cv.setPointerCapture(e.pointerId); } catch (err) { /* optional */ }
+      scratch(e);
+    });
+    cv.addEventListener('pointermove', e => { if (down && !t.done) scratch(e); });
+    const up = () => { down = false; last = null; };
+    cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+  }
+  lotMsg('Válassz egy mezőt, és kapard le!', '');
+  LOT.el.querySelector('#lotNew').disabled = true;
+  lotStats();
+}
+function lotReveal(i) {
+  const t = LOT.ticket; if (!t || t.done) return;
+  t.done = true; t.pick = i;
+  const cards = [...LOT.el.querySelectorAll('.lot-card')];
+  cards.forEach((c, k) => {
+    c.querySelector('canvas').style.transition = 'opacity .35s'; c.querySelector('canvas').style.opacity = '0';
+    c.classList.add(k === t.win ? 'win' : 'lose'); if (k !== i) c.classList.add('dim'); c.classList.remove('locked');
+  });
+  if (i === t.win) {
+    LOT.won++; addPoints(25, 'Nyertes sorsjegy'); setExpr('happy', 2.6);
+    AU.tone(LOT.x, 44.6, 880, 0.12, 0.08); setTimeout(() => AU.tone(LOT.x, 44.6, 1320, 0.2, 0.08), 120); setTimeout(() => AU.tone(LOT.x, 44.6, 1760, 0.25, 0.07), 260);
+    lotMsg('Gratulálunk, nyert a szelvény! +25 pont', 'win');
+  } else { AU.nope(); setExpr('curious', 1.6); lotMsg('Sajnos nem nyert. A nyertes ' + ['az első', 'a második', 'a harmadik'][t.win] + ' mező volt.', ''); }
+  LOT.el.querySelector('#lotNew').disabled = false;
+  lotStats();
+}
+function lotMsg(text, cls) { const m = LOT.el.querySelector('#lotMsg'); m.className = 'lot-msg ' + cls; m.textContent = text; }
+function lotStats() { LOT.el.querySelector('#lotPlayed').textContent = 'Szelvény: ' + LOT.played; LOT.el.querySelector('#lotWon').textContent = 'Nyert: ' + LOT.won; }
+function lotOpen() { if (!LOT.el) lotBuild(); LOT.open = true; LOT.el.classList.remove('closing'); LOT.el.hidden = false; input.left = input.right = false; if (!LOT.ticket || LOT.ticket.done) lotNewTicket(); }
+function lotClose() { if (!LOT.open) return; LOT.open = false; smoothHide(LOT.el); }
+function lotUpdate() { if (LOT.open && !(ch.mode === 'walk' && !anySideScene() && ch.lane === 'fside' && Math.abs(ch.x - LOT.x) < 2.6)) lotClose(); }
 
 // the panel closes when the ghost walks away from what it belongs to
 function questUpdate() {
@@ -10708,15 +11076,15 @@ for (const [x, d] of [[DUNA_MOUTH.x - 3.6, 41.0], [DUNA_MOUTH.x - 3.1, 42.2]]) a
   at(x, d); fillR(-0.07, -0.85, 0.14, 0.85, '#F2F1EC'); fillR(-0.07, -0.62, 0.14, 0.2, '#1E2022');
 });
 hedgeWall(DUNA_MOUTH.x - 12, DUNA_MOUTH.x - 4.2, 43.0, 1.6, 6611, () => 0, ['#3E6A34', '#4C7A3E', '#5C8A44', '#6E9B52']);
-add(48, DUNA_MOUTH.x - 9, DUNA_MOUTH.x - 5, () => {      // the lattice pylon on the corner
-  at(DUNA_MOUTH.x - 7, 48);
+add(53, DUNA_MOUTH.x + 4, DUNA_MOUTH.x + 9, () => {      // the lattice pylon on the north corner, behind the garden of no. 1
+  at(DUNA_MOUTH.x + 6.5, 53);
   strokeL([-1.0, 0, -0.3, -16, 0.3, -16, 1.0, 0], '#8E9599', 0.12);
   for (let h = 2; h < 16; h += 2) { const w = 1.0 - h * 0.044; strokeL([-w, -h, w - 0.09, -(h + 2)], '#9AA0A3', 0.05); strokeL([w, -h, -w + 0.09, -(h + 2)], '#9AA0A3', 0.05); }
   fillR(-2.4, -14.2, 4.8, 0.18, '#8E9599'); fillR(-1.6, -16.2, 3.2, 0.18, '#8E9599');
 });
 // bus stop of the Soroksári út (blue square, bus pictogram, the stop name plate)
-add(40.7, 127, 130, () => {
-  at(128.4, 40.7);
+add(41.2, 88.6, 91, () => {
+  at(89.8, 41.2);
   fillR(-0.04, -2.9, 0.08, 2.9, '#9AA0A3');
   fillRR(-0.36, -3.4, 0.72, 0.72, 0.05, '#FFFFFF'); fillRR(-0.32, -3.36, 0.64, 0.64, 0.04, C.blue);
   fillRR(-0.22, -3.2, 0.44, 0.24, 0.04, '#FFFFFF'); fillR(-0.18, -3.16, 0.36, 0.09, C.blue); circle(-0.12, -2.95, 0.04, '#FFFFFF'); circle(0.12, -2.95, 0.04, '#FFFFFF');
@@ -10741,18 +11109,10 @@ add(D.walk1 - 0.25, 112, 115, () => {
   for (const u of [0.05, 0.8]) { fillR(u, -5.05, 0.7, 1.0, '#FFFFFF'); fillR(u + 0.03, -5.02, 0.64, 0.3, '#3FA34D'); fillR(u + 0.06, -4.6, 0.58, 0.05, '#2E7A3C'); fillR(u + 0.06, -4.48, 0.4, 0.05, '#2E7A3C'); ltext('VÁROSI NAP', u + 0.35, -4.2, 0.1, '#2E7A3C', 800); }
 });
 // Soroksári út 5: a blue van on the gravel verge, the no-stopping sign; 3: orange plank fence, direction sign
-parkedCars([[66.5, 41.7, 0, 'van', '#2F4FA8']]);
-add(43.0, 73, 75, () => {
-  at(74, 43.0); fillR(-0.04, -2.6, 0.08, 2.6, '#8A8F93');
+add(43.0, 65.4, 67.2, () => {
+  at(66.3, 43.0); fillR(-0.04, -2.6, 0.08, 2.6, '#8A8F93');
   circle(0, -2.3, 0.3, C.red); circle(0, -2.3, 0.24, C.blue);
   ctx.save(); ctx.translate(0, -2.3); for (const a of [0.785, -0.785]) { ctx.save(); ctx.rotate(a); fillR(-0.27, -0.035, 0.54, 0.07, C.red); ctx.restore(); } ctx.restore();
-});
-woodFence(28, 53, 43.7, 1.55, '#B8693A', '#9A5530');
-add(43.2, 55, 58, () => {
-  at(56.5, 43.2); fillR(-0.06, -4.2, 0.12, 4.2, '#B9B6AE');
-  fillRR(-0.55, -4.0, 1.1, 1.5, 0.04, '#FFFFFF'); fillR(-0.5, -3.66, 1.0, 0.85, C.blue);
-  strokeL([0.18, -2.95, 0.18, -3.4, -0.02, -3.52, -0.2, -3.4, -0.2, -3.05], '#FFFFFF', 0.08); polyL([-0.32, -3.1, -0.08, -3.1, -0.2, -2.92], '#FFFFFF');
-  ltext('ÁRUHÁZ', 0, -3.83, 0.15, C.red, 800); ltext('550 m', 0, -2.65, 0.14, '#1A1A1A', 800);
 });
 
 // =====================================================================
@@ -11356,6 +11716,10 @@ const OBJS = [
   { lane: 'back', x: LEDW.x + 0.6, r: 1.3, kind: 'ledwall', icon: 'hand', label: 'LED-fal vezérlőpult', anchor: [LEDW.x + 1.4, LEDW.d, 4.1] },
   { lane: 'back', x: CKG.x, r: 0.8, kind: 'ckgate', icon: 'hand', get label() { return CKG.pos > 0.5 ? 'Kapuvezérlő · a kapu nyitva' : 'Kinyitod a kapu vezérlőszekrényét'; }, anchor: [CKG.x, CKG.d, 2.0] },
   { lane: 'back', x: ZCAB.x, r: 1.0, kind: 'zcab', icon: 'hand', label: 'Felnyitod a zebra vezérlőszekrényét', anchor: [ZCAB.x, ZCAB.d, 1.6] },
+  // the far side of the Soroksári út
+  ...[[3.5, 1.4, 'flotto', 'hand', 'Veszel egy kaparós sorsjegyet', 44.6, 2.6], [44.4, 0.8, 'ftesco', 'eye', 'Elolvasod a Tesco táblát', 40.0, 5.6], [51.0, 2.0, 'fbuild', 'eye', 'Megnézed az építőanyag-kupacot', 42.6, 1.6],
+    [76.0, 2.4, 'fbutor', 'eye', 'Benézel a bútorbolt kirakatába', 44.3, 3.2], [94.4, 1.4, 'felado', 'eye', 'Elolvasod az ELADÓ táblát', 43.6, 2.0], [117.3, 1.4, 'fcone', 'eye', 'Megnézed a kúpos tetős kerti házat', 46.4, 6.0],
+    [153.3, 2.2, 'fgenezis', 'eye', 'Elolvasod az óriásplakátot', 47.8, 6.4]].map(([x, r, kind, icon, label, d, h]) => ({ lane: 'fside', x, r, kind, icon, label, anchor: [x, d, h] })),
   { lane: 'fside', x: ZEBRA_F.x, r: 1.2, kind: 'zebraF', to: 'far', icon: 'cross', label: 'Átmész a zebrán, vissza a peronhoz', anchor: [ZEBRA_F.x, 38.4, 1.0] },
   // the Fő út level crossing and the road towards Ráckeve
   { lane: 'street', x: LXMAN.x, r: 1.1, man: LXMAN_A, kind: 'lxbox', icon: 'hand', label: 'Kinyitod a sorompó-kezelő szekrényt', anchor: [LXMAN.x, LXMAN.d, 2.1] },
@@ -11420,7 +11784,7 @@ function currentAction() {
   if (ch.mode !== 'walk') return null;
   let best = null, bd = 1e9;
   for (const o of OBJS) {
-    if (o.lane !== ch.lane) continue;
+    if (o.lane !== ch.lane || DIR_KINDS.has(o.kind)) continue;
     const dx = Math.abs(o.x - ch.x);
     if (dx <= o.r && dx < bd) { best = o; bd = dx; }
   }
@@ -11451,7 +11815,22 @@ function droppedItems(list) {
 }
 function sceneOf(lane) { return lane === 'back' ? 'back' : lane === 'duna' ? 'duna' : lane === 'padok' ? 'padok' : lane === 'hid' ? 'hid' : lane === 'jokai' ? 'jokai' : lane === 'erz' ? 'erz' : lane === 'dozsa' ? 'dozsa' : 'main'; }
 // up / down: the ghost can float onto a platform anywhere, not only at the paths
+// the steps that go "into" or "out of" the picture (a zebra, the tracks, a side street) are up / down moves too,
+// so the up / down buttons and keys do them directly; the action button is left for the other things
+const DIR_KINDS = new Set(['lane', 'zebraF', 'cross', 'duna', 'dunaOut', 'padok']);
+const dirOf = o => o.kind === 'duna' || o.kind === 'padok' ? 'up' : o.kind === 'dunaOut' || o.kind === 'zebraF' ? 'down' : o.kind === 'lane' ? (o.icon === 'down' ? 'down' : 'up') : isFarLane(o.to) ? 'up' : 'down';
 function vertMoves() {
+  const base = vertMovesBase();
+  if (ch.mode !== 'walk') return base;
+  let best = null, bd = 1e9;
+  for (const o of OBJS) { if (o.lane !== ch.lane || !DIR_KINDS.has(o.kind)) continue; const dx = Math.abs(o.x - ch.x); if (dx <= o.r && dx < bd) { best = o; bd = dx; } }
+  if (!best) return base;
+  const key = best.kind === 'duna' ? 'duna' : best.kind === 'dunaOut' ? 'fside' : best.kind === 'padok' ? 'padok' : best.to;
+  if (base.some(v => v.to === key || (best.kind === 'zebraF' && v.zebra))) return base;
+  const v = { dir: dirOf(best), to: key, label: best.label, obj: best };
+  return v.dir === 'up' ? [v, ...base] : [...base, v];
+}
+function vertMovesBase() {
   if (ch.mode !== 'walk') return [];
   const x = ch.x, inL = l => x >= LANES[l].min && x <= LANES[l].max;
   switch (ch.lane) {
@@ -11494,6 +11873,7 @@ function tracksBusyAt(x) {
 function doVert(want) {
   const opts = vertMoves(), v = typeof want === 'object' && want ? want : want ? opts.find(o => o.dir === want) : opts[0];
   if (!v) return;
+  if (v.obj) { UI.action = v.obj; doAction(); return; }
   if (v.to === 'back') { turnAround(true); return; }
   if (v.turn) { turnAround(false); return; }
   AU.unlock(); AU.ui();
@@ -11657,6 +12037,13 @@ function doAction() {
       toast(`<b>${STATIONS[a.st].name}</b> · H6 Ráckevei HÉV. Balra Ráckeve, jobbra Közvágóhíd felé. ${far ? 'Erről a peronról Ráckevére' : 'Erről a peronról Közvágóhídra'} indulnak a vonatok. ${a.st === 'felso' ? 'A szomszéd megállók' : a.st === 'millen' ? 'Balra a szomszéd megálló' : 'Jobbra a szomszéd megálló'}: ${other}.`);
       break;
     }
+    case 'flotto': AU.ui(); if (LOT.open) lotClose(); else lotOpen(); break;
+    case 'ftesco': toast('<b>TESCO expressz</b> – 550 m, Fő út 56. Egy szellemnek a hűtőpult a kedvenc része.', 5000); break;
+    case 'fbuild': setExpr('curious', 2); toast('Sóderkupac, betonkeverő, raklapnyi térkő: itt <b>felújítanak</b>. A keverő dobjában visszhangzik a hangod.', 5200); break;
+    case 'fbutor': setExpr('happy', 2.2); toast('A <b>Bútor bemutató terem</b> kirakatában konyhabútorok és egy hívogató kanapé. Szellemként csak átlebegnél rajta.', 5600); break;
+    case 'felado': toast('A szürke kapun zöld tábla: <b>ELADÓ</b>. Kísértettel együtt olcsóbb.', 5000); break;
+    case 'fcone': setExpr('curious', 2); toast('A sötét deszkakerítés mögül egy <b>kúpos zsindelytetejű kerti ház</b> kandikál ki. Tökéletes szellemkunyhó lenne.', 5600); break;
+    case 'fgenezis': toast('Az óriásplakáton: <b>„Te használsz GENEZIS NPK műtrágyát?”</b> Te csak ködöt használsz.', 5200); break;
     case 'noentry': toast('<b>Behajtani tilos, kivéve kerékpár.</b> Ebbe az utcába autóval nem lehet behajtani, biciklivel igen.'); break;
     case 'dtelekom': setExpr('curious', 2.2); toast('A <b>Telekom</b> üzlet a sarkon. Bent mindenki a telefonját nézi, a kirakatüvegben te sem látszol. Térerő: teljes.', 5200); break;
     case 'dklima': setExpr('curious', 2.2); toast('<b>Royal Klíma</b>: klímatechnika, épületüzemeltetés, tervezés, felújítás. A hideg fuvallatot ingyen adod hozzá.', 5600); break;
@@ -11846,6 +12233,7 @@ function toast(html, ms = 4600) {
   clearTimeout(UI.toastTimer); UI.toastTimer = setTimeout(() => { el.hidden = true; }, ms);
 }
 function vertShort(o) {
+  if (o.obj) return o.obj.kind === 'cross' ? 'Sínek' : o.obj.kind === 'duna' ? 'Duna u.' : o.obj.kind === 'dunaOut' ? 'Soroksári út' : o.obj.kind === 'padok' ? 'Padok' : o.dir === 'up' ? 'Fel' : 'Le';
   if (o.jokai) return 'Jókai u.';
   if (o.erz) return 'Erzsébet u.';
   if (o.zebra) return o.to === 'fside' ? 'Zebra' : 'Vissza a zebrán';
@@ -12209,6 +12597,7 @@ function frame(nowMs) {
   zcUpdate(dt);
   ckgUpdate(dt);
   ledUpdate();
+  lotUpdate();
   AU.listener.x = ch.x; AU.listener.d = ch.mode === 'aboard' ? (TRAINS.find(q => q.id === ch.ride.id)?.td ?? D.trackN) : ch.d;
   AU.update(dt, TRAINS, ROAD.cars.filter(c => Math.abs(c.x - AU.listener.x) < 120));
   requestAnimationFrame(frame);
