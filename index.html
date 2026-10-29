@@ -12,8 +12,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="DH Szimulátor">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=4">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=4">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=4">
 <link rel="preconnect" href="https://fonts.googleapis.com/">
 <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700;800&display=swap">
@@ -643,11 +644,11 @@ body {
       <svg class="lx-mimic" id="lxMimic" viewBox="0 0 220 92" aria-hidden="true">
         <rect x="0" y="0" width="220" height="92" rx="6" fill="#E9E5D6"></rect>
         <path d="M40 92 L92 0 H128 L76 92 Z" fill="#B9B6AA"></path>
-        <g stroke="#3A3D3F" stroke-width="2.4"><path d="M6 36H214M6 58H214"></path></g>
-        <g stroke="#3A3D3F" stroke-width="1" opacity=".55"><path d="M10 31v10M22 31v10M34 31v10M150 31v10M162 31v10M174 31v10M186 31v10M198 31v10M10 53v10M22 53v10M34 53v10M150 53v10M162 53v10M174 53v10M186 53v10M198 53v10"></path></g>
+        <g stroke="#3A3D3F" stroke-width="2.4"><path d="M6 36H214"></path><path id="lxTrack2" d="M6 58H214"></path></g>
+        <g stroke="#3A3D3F" stroke-width="1" opacity=".55"><path d="M10 31v10M22 31v10M34 31v10M150 31v10M162 31v10M174 31v10M186 31v10M198 31v10"></path><path id="lxTies2" d="M10 53v10M22 53v10M34 53v10M150 53v10M162 53v10M174 53v10M186 53v10M198 53v10"></path></g>
         <g class="lx-head" transform="translate(40 80)"><path d="M-14 -9 H14 L0 9 Z" fill="#1C1E20"></path><circle class="r1" cx="-6" cy="-4" r="3.6"></circle><circle class="r2" cx="6" cy="-4" r="3.6"></circle><circle class="w" cx="0" cy="3" r="3"></circle></g>
         <g class="lx-head" transform="translate(150 12)"><path d="M-14 -9 H14 L0 9 Z" fill="#1C1E20"></path><circle class="r1" cx="-6" cy="-4" r="3.6"></circle><circle class="r2" cx="6" cy="-4" r="3.6"></circle><circle class="w" cx="0" cy="3" r="3"></circle></g>
-        <text x="214" y="88" text-anchor="end">FŐ ÚT · H6</text>
+        <text id="lxMimicTxt" x="214" y="88" text-anchor="end">FŐ ÚT · H6</text>
       </svg>
       <div class="lx-leds">
         <span><i class="led r" id="lxLedRed"></i>Piros</span><span><i class="led w" id="lxLedWhite"></i>Fehér</span><span><i class="led y" id="lxLedMan"></i>Kézi zárás</span><span><i class="led r" id="lxLedErr"></i>Zavar</span>
@@ -1107,6 +1108,8 @@ function pruneTrees() {
     if (H.some(h => tx > h.hb[0] + 0.5 && tx < h.hb[1] - 0.5 && td > h.hb[2] + 0.3 && td < h.hb[3] - 0.3)) STATIC.splice(i, 1);
   }
 }
+// frontTree(): the tree just added draws in front of every house it overlaps, from any camera position
+function frontTree() { STATIC[STATIC.length - 1].front = true; }
 function treeFix(list) {
   const H = list.filter(it => it.hb);
   if (!H.length) return;
@@ -1116,9 +1119,10 @@ function treeFix(list) {
     let k = it.k;
     for (const h of H) {
       const [x0, x1, d0, d1] = h.hb;
-      if (td < d0 - 0.3 || td > d1 + 1.5) continue;
+      if (!it.front && (td < d0 - 0.3 || td > d1 + 1.5)) continue;
       const ov = Math.min(it.x1, x1) - Math.max(it.x0, x0);
       if (ov <= 0) continue;
+      if (it.front) { k = Math.min(k, h.k - 0.003); continue; }   // marked trees: the foliage always in front of the houses
       // one fixed order, whatever the camera does: a tree standing behind the house front stays behind the house
       if (td >= d0) k = Math.max(k, h.k + 0.003); else k = Math.min(k, h.k - 0.003);
     }
@@ -2521,7 +2525,7 @@ house({ x0: 114.8, x1: 119.8, d0: 46.4, d1: 51.4, h: 1.8, wall: '#8A6A4E', wallS
 add(46.3, 116.8, 117.8, () => { at(117.3, 46.3); fillR(-0.012, -9.3, 0.024, 1.9, '#9AA0A3'); circle(0, -7.45, 0.12, '#8A9496'); });
 house({ x0: 121, x1: 133, d0: 50, d1: 60, h: 3.9, wall: C.wallWhite, wallS: C.wallWhiteS, roof: { type: 'gd', hr: 8.6, c: '#B9483A', cs: '#9A3A2E', e: '#7E2E24', panels: true },
   deco: w => { win(2.0, 1.1, 1.5, 1.4); win(8.5, 1.1, 1.5, 1.4); win(5.3, 4.4, 1.4, 1.2, { cross: false }); } });
-treeRound(129.6, 47.0, 9.0, MID, 7812); treeRound(134.6, 48.5, 10.5, ['#4E7F40', '#40703A', '#5E9048'], 7813);
+treeRound(129.6, 47.0, 9.0, MID, 7812); frontTree(); treeRound(134.6, 48.5, 10.5, ['#4E7F40', '#40703A', '#5E9048'], 7813); frontTree();
 // the gap between no. 6 and no. 7: a thick hedge and a shed at the back, so the yard does not open onto the bare horizon
 hedgeWall(132.4, 137.4, 57.5, 3.6, 7814, () => 0, ['#3E6A34', '#4C7A3E', '#5C8A44', '#6E9B52'], true);
 add(55.5, 133, 136.6, () => { box(133.2, 136.4, 54.2, 56.8, 0, 2.3, { f: '#8A7A66', s: '#76685A', t: '#6A5E52' }); at(133.2, 54.2); fillR(1.0, -1.9, 0.9, 1.9, '#5E5246'); });
@@ -6608,6 +6612,7 @@ const SND_FILES = {
 };
 const SND_RAW = 'https://raw.githubusercontent.com/csovestom/dunaharaszti-szimulator/main/sounds/';
 const SND = { buf: {}, loading: false, pa: null };
+const SND_VOL = 0.4;   // Beni's recordings all play at 40 %
 function sndLoad() {
   if (SND.loading || !AU.ctx) return; SND.loading = true;
   for (const [k, f] of Object.entries(SND_FILES)) {
@@ -6622,12 +6627,13 @@ function playAnnounce(st, type) {
   const b = SND.buf[st + '-' + type]; if (!b || !AU.ready()) return;
   try { if (SND.pa) SND.pa.stop(); } catch (e) { /* already ended */ }
   const c = AU.ctx, s = c.createBufferSource(), g = c.createGain();
-  s.buffer = b; g.gain.value = 0.5; s.connect(g).connect(AU.out); s.start(); SND.pa = s;
+  s.buffer = b; g.gain.value = SND_VOL; s.connect(g).connect(AU.out); s.start(); SND.pa = s;
 }
 // the door alarm at a car door, positioned like the other train sounds; returns false if not loaded
-function playDoorSound(x, d, vol = 0.9) {
+// (AU.chain gives 1.5 × vol right at the listener, so vol = SND_VOL / 1.5 is 40 % up close, quieter further away)
+function playDoorSound(x, d) {
   const b = SND.buf.door; if (!b || !AU.ready()) return false;
-  const s = AU.ctx.createBufferSource(); s.buffer = b; s.connect(AU.chain(x, d, vol)); s.start(); return true;
+  const s = AU.ctx.createBufferSource(); s.buffer = b; s.connect(AU.chain(x, d, SND_VOL / 1.5)); s.start(); return true;
 }
 const doorSndLen = () => (SND.buf.door ? SND.buf.door.duration : 0);
 
@@ -6819,7 +6825,7 @@ const AU = {
       if (dl) {
         if (!forced && cross(DOOR_T.close1 - dl)) {
           const mine = ch.mode === 'aboard' && ch.ride && ch.ride.id === tr.id;
-          playDoorSound(mine ? L.x : dx, mine ? L.d : d - 1.4, mine ? 0.55 : 0.9);
+          playDoorSound(mine ? L.x : dx, mine ? L.d : d - 1.4);
         }
       } else {
         if (cross(DOOR_T.warn)) this.doorBeeps(dx, d - 1.4);
@@ -8978,12 +8984,17 @@ const LXP = {
   gate: $p('lxGate'), board: $p('lxBoard'), go: $p('lxGo'), gateTxt: $p('lxGateTxt'), steps: [...document.querySelectorAll('#lxGate .lx-steps li')], step: 0,
   open: false, key: '',
 };
-const lxNear = () => ch.mode === 'walk' && ch.lane === 'street' && Math.abs(ch.x - LXMAN.x) < 2.6;
+const lxNear = () => ch.mode === 'walk' && ch.lane === (LXMAN.lane || 'street') && Math.abs(ch.x - LXMAN.x) < 2.6;
 const LX_TITLE = document.querySelector('#lxp .cp-title');
 function lxSetOpen(open) {
   if (open === LXP.open) return;
   LXP.open = open; LXP.key = '';
-  if (open) { LX_TITLE.textContent = (LXMAN === LXMAN_C ? 'Félsorompó · ' : 'Fénysorompó · ') + LXMAN.name; LXP.root.classList.remove('closing'); LXP.root.hidden = false; lxGateStep(0); }
+  if (open) {   // the mimic: the crossing's own name, one track and line 150 at the Kőrösi Csoma crossing
+    const k = LXMAN === LXMAN_K;
+    $p('lxMimicTxt').textContent = (k ? 'KŐRÖSI CS. S. U. · 150' : LXMAN.name.toUpperCase() + ' · H6');
+    for (const id of ['lxTrack2', 'lxTies2']) $p(id).style.display = k ? 'none' : '';
+  }
+  if (open) { LX_TITLE.textContent = (LXMAN === LXMAN_C || LXMAN === LXMAN_K ? 'Félsorompó · ' : 'Fénysorompó · ') + LXMAN.name; LXP.root.classList.remove('closing'); LXP.root.hidden = false; lxGateStep(0); }
   else { LXMAN.key = false; smoothHide(LXP.root); LXMAN.test = false; LXP.test.setAttribute('aria-pressed', 'false'); }
 }
 // getting in takes three steps: key in, turn it, open the door (no key animation, just the steps)
@@ -9011,7 +9022,7 @@ LXP.close.addEventListener('click', () => { AU.ui(); lxSetOpen(false); });
 LXP.closeBtn.addEventListener('click', () => {
   AU.unlock(); AU.clickPair(LXMAN.x, LXMAN.d, 0.25);
   if (BLACKOUT.on) { AU.nope(); toast('<b>Nincs áram.</b> Áramszünetben a fénysorompó nem működik, nem tudod lezárni.'); return; }
-  if (!LXMAN.closed) { LXMAN.closed = true; addPoints(20, 'Kézzel lezárt sorompó', 'lx-' + LXMAN.name, 60); toast('<b>Kézi lezárás.</b> A fénysorompó pirosat villog' + (LXMAN === LXMAN_A ? ', az autók megállnak.' : LXMAN === LXMAN_C ? ', szól a csengő, és leereszkednek a sorompókarok.' : '.') + ' Addig marad zárva, amíg fel nem oldod.'); }
+  if (!LXMAN.closed) { LXMAN.closed = true; addPoints(20, 'Kézzel lezárt sorompó', 'lx-' + LXMAN.name, 60); toast('<b>Kézi lezárás.</b> A fénysorompó pirosat villog' + (LXMAN === LXMAN_A ? ', az autók megállnak.' : LXMAN === LXMAN_C || LXMAN === LXMAN_K ? ', és leereszkednek a sorompókarok.' : '.') + ' Addig marad zárva, amíg fel nem oldod.'); }
 });
 LXP.openBtn.addEventListener('click', () => {
   AU.unlock(); AU.clickPair(LXMAN.x, LXMAN.d, 0.25);
@@ -9027,7 +9038,7 @@ LXP.test.addEventListener('keyup', e => { if (e.code === 'Space' || e.code === '
 function lxOpenFromWorld() { AU.unlock(); lxSetOpen(true); }
 // every frame: the door of the cabinet in the world, the panel closes when the ghost walks away, lamps follow the state
 function lxUpdate(dt) {
-  for (const M of [LXMAN_A, LXMAN_B, LXMAN_C, LXMAN_D]) M.open = clamp(M.open + (LXP.open && LXP.step >= 3 && M === LXMAN ? dt : -dt) * 2.5, 0, 1);
+  for (const M of [LXMAN_A, LXMAN_B, LXMAN_C, LXMAN_D, LXMAN_K]) M.open = clamp(M.open + (LXP.open && LXP.step >= 3 && M === LXMAN ? dt : -dt) * 2.5, 0, 1);
   if (LXP.open && !lxNear()) lxSetOpen(false);
   if (!LXP.open || LXP.step < 3) return;
   const dark = BLACKOUT.on, red = LXMAN.cr.active && !dark;
@@ -13164,7 +13175,9 @@ function goDozsa(inside) {
 const KCS = { x0: 15000, x1: 15140, items: [], ground: [] };
 const KD = { lane: 8.1, near1: 5.6, walk1: 10.4, ball0: 14.0, track: 16.0, ball1: 18.0, mast: 20.2, nearPost: 12.6, farPost: 19.4 };
 // the crossing state: a HÉV passes every 2 minutes (alternating directions), the fénysorompó turns red, the arms come down
-const KCR = { active: false, blink: 0, arm: 0, t: 95, n: 0, ring: 0 }, KLX = { test: false, cr: KCR };
+const KCR = { active: false, blink: 0, arm: 0, t: 95, n: 0, ring: 0, auto: false };
+// the grey cabinet at the near post opens the same crossing panel as the HÉV crossings (close by hand, release, lamp test)
+const LXMAN_K = { key: false, open: 0, closed: false, bell: false, test: false, x: KCS.x0 + 68.6, d: KD.nearPost - 0.5, cr: KCR, name: 'Kőrösi Csoma Sándor utca', lane: 'korosi' }, KLX = LXMAN_K;
 SCENE.korosi = false;
 (function buildKorosi() {
   const s0 = STATIC.length, g0 = GROUND.length, X0 = KCS.x0 - 80, X1 = KCS.x1 + 80, ex = u => KCS.x0 + u;
@@ -13417,11 +13430,12 @@ function korosiUpdate(dt) {
     const lo = Math.min(a.front, a.tail), hi = Math.max(a.front, a.tail), ahead = a.tr.dir > 0 ? KRX.x0 - a.front : a.front - KRX.x1;
     if ((hi > KRX.x0 - 3 && lo < KRX.x1 + 3) || (ahead > 0 && ahead < a.tr.v * 26)) { on = true; break; }
   }
+  KCR.auto = on;
+  if (LXMAN_K.closed) on = true;   // closed by hand at the cabinet
   if (on !== KCR.active) { KCR.active = on; KCR.blink = 0; }
   const want = KCR.active && !BLACKOUT.on && KCR.blink > 4 ? 1 : 0;
   KCR.arm = clamp(KCR.arm + (want > KCR.arm ? dt / 6 : -dt / 5), 0, 1);
-  // the bell rings while the arms come down
-  if (KCR.active && !BLACKOUT.on && KCR.arm < 0.99) { KCR.ring -= dt; if (KCR.ring <= 0) { AU.bell(KXM, 13.5); KCR.ring = 0.42; } }
+  // Hungarian crossings are silent: no bell, only the lamps and the arms
 }
 // ---- MÁV vehicles, side on (blue MÁV-START livery) ----
 const R150C = { blue: '#3470BC', blueS: '#2A5E9F', roof: '#A9ABAD', roofS: '#8E9093', door: '#C9CCCE', win: '#3B4650', frame: '#B9BDC0', yellow: '#E8C640', under: '#2A2D30', panto: '#D8322A' };
@@ -14267,9 +14281,7 @@ const OBJS = [
     [78.0, 2.6, 'kbakter', 'eye', 'Megnézed a bakterházat', 3.0, 21.0, 'Bakterház',
       'A régi <b>bakterház</b> a Baross utcában: kerek ablak az oromzaton, zöld ajtó, a hosszú szárnyon lepattogzott vakolat alól kilátszik a tégla. A léckerítés mögött sárga és narancs liliomok nyílnak.'],
     [67.0, 1.0, 'klight', 'eye', 'Megnézed a sorompót', 2.4, KD.nearPost, 'Fénysorompó',
-      'Ha lassan villog a <b>fehér fény</b>, szabad az áthaladás. Ha HÉV jön, a két piros lámpa felváltva villog, megszólal a csengő, és lemennek a félsorompó karjai.'],
-    [68.6, 0.8, 'krelay', 'eye', 'Megnézed a kezelőszekrényt', 1.6, KD.nearPost - 0.5, 'Kezelőszekrény',
-      'Szürke <b>kezelőszekrény</b> a sorompóoszlop tövében, sárga villámjel az ajtaján. Zárva van. Túloldalt egy telefirkált relészekrény áll.'],
+      'Ha lassan villog a <b>fehér fény</b>, szabad az áthaladás. Ha HÉV jön, a két piros lámpa felváltva villog, és lemennek a félsorompó karjai.'],
     [50.5, 2.0, 'kcar', 'eye', 'Megnézed a fehér autót', 1.8, 8.9, 'Móra Ferenc utca',
       'Egy fehér autó parkol a <b>Móra Ferenc utca</b> elején, ahol az utca a sínek mellől befordul a kertek közé.'],
     [32.0, 2.4, 'kfield', 'eye', 'Kinézel a mezőre', 2.0, 30.0, 'Határ menti mező',
@@ -14281,6 +14293,7 @@ const OBJS = [
     [4.0, 2.0, 'kendw', 'eye', 'Körülnézel', 1.6, KD.lane + 0.6, 'Sínek mentén',
       'Erre már csak a sínek és a fű. Az átjáró visszafelé van, jobbra.'],
   ].map(([u, r, id, icon, label, h, d, pts, txt]) => ({ lane: 'korosi', x: KCS.x0 + u, r, kind: 'klook', id, pts, txt, icon, label, anchor: [KCS.x0 + u, d, h] })),
+  { lane: 'korosi', x: LXMAN_K.x, r: 1.1, man: LXMAN_K, kind: 'lxbox', icon: 'hand', label: 'Kinyitod a sorompó-kezelő szekrényt', anchor: [LXMAN_K.x, LXMAN_K.d, 1.6] },
   { lane: 'erz', x: ERZ.x0 + 93.1, r: 1.6, kind: 'gyuri', icon: 'door', label: 'Bemész a Gyuri Borozóba', anchor: [ERZ.x0 + 93.1, ED.front + 6.8, 3.6] },
   ...[[75.0, 2.9], [77.2, 5.3], [81.3, 3.95], [86.1, 3.2]].map(([u, dd], i) => ({ lane: 'erz', x: ERZ.x0 + u, r: i === 4 ? 1.2 : 1.0, kind: 'gsit', front: true, icon: 'sit',
     label: i === 3 ? 'Leülsz a rózsaszín székre' : i === 4 ? 'Leülsz a padra a fal mellett' : 'Leülsz a borozó asztalához', sitD: ED.front + dd, sitKey: ED.front + dd - 0.05, anchor: [ERZ.x0 + u, ED.front + dd, i < 2 ? 0.75 : 1.6] })),   // the two under the big board sit low
@@ -14693,7 +14706,7 @@ function doAction() {
       break;
     }
     case 'hbsign': toast(CROSSING_H.active
-      ? '<b>Félsorompó: piros!</b> Villog a két piros lámpa, szól a csengő, és leereszkednek a piros-fehér sorompókarok. Mindkét oldalon csak a jobb sávot zárják le.'
+      ? '<b>Félsorompó: piros!</b> Villog a két piros lámpa, és leereszkednek a piros-fehér sorompókarok. Mindkét oldalon csak a jobb sávot zárják le.'
       : '<b>Félsorompó</b> a Hunyadi utcánál. Fehér fény villog lassan: szabad az átjáró. Ha HÉV jön, pirosra vált, és a sorompókarok lezárják a jobb oldali sávot.', 6200); break;
     case 'hdir': toast('Az útirányjelző táblán: egyenesen a <b>bevásárlóközpont</b>, balra <b>Dunaharaszti</b> (510-es út), jobbra a <b>Centrum</b>. Egy szellemnek mindegyik irány jó.', 5600); break;
     case 'scoach': setExpr('curious', 2.2); toast('Egy fekete <b>Cityliner</b> emeletes busz áll a fák alatt, a kölcsönző tábla mögött. Ajtaja zárva, bent sötét. Ide senki nem fog felszállni.', 5600); break;
@@ -15233,7 +15246,7 @@ function updateWorldState(dt, t) {
     const H = CROSSING_H, want = H.active && !BLACKOUT.on && H.blink > 4 ? 1 : 0;
     H.arm = clamp(H.arm + (want > H.arm ? dt / 6 : -dt / 5), 0, 1);
     // the bell rings while the arms come down
-    if (H.active && !BLACKOUT.on && LXMAN_C.bell && H.arm < 0.99 && Math.abs(AU.listener.x - HLX.x) < 160) { H.ring -= dt; if (H.ring <= 0) { AU.bell(HLX.x, 13.5); H.ring = 0.42; } }
+    // (no bell: Hungarian crossings are silent)
   }
   SIGNAL.green = TRAINS.some(tr => tr.key === 'R' && tr.front > -40 && tr.front < 160 && (tr.v > 0.3 || (tr.rel > 0 && SCH.dwell - tr.rel < 6)) && tr.rel > -5);
 }
