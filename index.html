@@ -6597,36 +6597,39 @@ function roadItems(list) {
 // =====================================================================
 // AUDIO – everything synthesised with Web Audio, positioned around the player
 // =====================================================================
-// HÉV announcement and door sounds from GitHub
-const SOUNDS = {
-  'dh_ulso-next': 'https://raw.githubusercontent.com/csovestom/dunaharaszti-szimulator/main/sounds/announce-dh_ulso-next.mp3',
-  'dh_ulso-arrive': 'https://raw.githubusercontent.com/csovestom/dunaharaszti-szimulator/main/sounds/announce-dh_ulso-arrive.mp3',
-  'dh_felso-next': 'https://raw.githubusercontent.com/csovestom/dunaharaszti-szimulator/main/sounds/announce-dh_felso-next.mp3',
-  'dh_felso-arrive': 'https://raw.githubusercontent.com/csovestom/dunaharaszti-szimulator/main/sounds/announce-dh_felso-arrive.mp3',
-  'milleniumtelep-next': 'https://raw.githubusercontent.com/csovestom/dunaharaszti-szimulator/main/sounds/announce-milleniumtelep-next.mp3',
-  'milleniumtelep-arrive': 'https://raw.githubusercontent.com/csovestom/dunaharaszti-szimulator/main/sounds/announce-milleniumtelep-arrive.mp3',
-  'szentistvan_utca-next': 'https://raw.githubusercontent.com/csovestom/dunaharaszti-szimulator/main/sounds/announce-szentistvan_utca-next.mp3',
-  'szentistvan_utca-arrive': 'https://raw.githubusercontent.com/csovestom/dunaharaszti-szimulator/main/sounds/announce-szentistvan_utca-arrive.mp3',
-  'door-close': 'https://raw.githubusercontent.com/csovestom/dunaharaszti-szimulator/main/sounds/alarm_and_close.mp3',
+// recorded HÉV sounds (Beni's MP3s in sounds/ next to index.html): station announcements and the door alarm.
+// Loaded into the Web Audio context (so the mute button and iOS unlocking work), falling back to the raw GitHub copy.
+const SND_FILES = {
+  'kulso-next': 'announce-dh_ulso-next.mp3', 'kulso-arrive': 'announce-dh_ulso-arrive.mp3',
+  'felso-next': 'announce-dh_felso-next.mp3', 'felso-arrive': 'announce-dh_felso-arrive.mp3',
+  'millen-next': 'announce-milleniumtelep-next.mp3', 'millen-arrive': 'announce-milleniumtelep-arrive.mp3',
+  'szent-next': 'announce-szentistvan_utca-next.mp3', 'szent-arrive': 'announce-szentistvan_utca-arrive.mp3',
+  'door': 'alarm_and_close.mp3',
 };
-
-// Play announcement: 'next' or 'arrive'
-function playAnnounce(stationKey, type) {
-  if (!AU.on) return;
-  const key = stationKey + '-' + type;
-  if (!SOUNDS[key]) return;
-  const audio = new Audio(SOUNDS[key]);
-  audio.volume = 0.7;
-  audio.play().catch(() => {});
+const SND_RAW = 'https://raw.githubusercontent.com/csovestom/dunaharaszti-szimulator/main/sounds/';
+const SND = { buf: {}, loading: false, pa: null };
+function sndLoad() {
+  if (SND.loading || !AU.ctx) return; SND.loading = true;
+  for (const [k, f] of Object.entries(SND_FILES)) {
+    const get = url => fetch(url).then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); });
+    get('sounds/' + f).catch(() => get(SND_RAW + f))
+      .then(ab => new Promise((res, rej) => AU.ctx.decodeAudioData(ab, res, rej)))
+      .then(b => { SND.buf[k] = b; }).catch(() => {});
+  }
 }
-
-// Play door close sound and schedule door closing
-function playDoorClose() {
-  if (!AU.on) return;
-  const audio = new Audio(SOUNDS['door-close']);
-  audio.volume = 0.8;
-  audio.play().catch(() => {});
+// on-board PA: not positioned, a new announcement cuts the previous one
+function playAnnounce(st, type) {
+  const b = SND.buf[st + '-' + type]; if (!b || !AU.ready()) return;
+  try { if (SND.pa) SND.pa.stop(); } catch (e) { /* already ended */ }
+  const c = AU.ctx, s = c.createBufferSource(), g = c.createGain();
+  s.buffer = b; g.gain.value = 1.0; s.connect(g).connect(AU.out); s.start(); SND.pa = s;
 }
+// the door alarm at a car door, positioned like the other train sounds; returns false if not loaded
+function playDoorSound(x, d, vol = 0.9) {
+  const b = SND.buf.door; if (!b || !AU.ready()) return false;
+  const s = AU.ctx.createBufferSource(); s.buffer = b; s.connect(AU.chain(x, d, vol)); s.start(); return true;
+}
+const doorSndLen = () => (SND.buf.door ? SND.buf.door.duration : 0);
 
 const AU = {
   ctx: null, out: null, on: true, noise: null, brown: null,
@@ -6656,6 +6659,7 @@ const AU = {
   unlock() {
     if (!this.ctx) this.init();
     if (this.ctx && this.ctx.state !== 'running') this.ctx.resume();
+    sndLoad();
   },
   setOn(v) {
     this.on = v;
@@ -6809,7 +6813,9 @@ const AU = {
       const dx = clamp(L.x, tr.lo, tr.hi);
       if (cross(0.25)) this.hiss(dx, d, 0.3);
       if (cross(DOOR_T.open0)) { this.hiss(dx, d - 1.4, 0.32); this.thunk(dx, d - 1.4, 0.25); }
-      if (cross(DOOR_T.warn)) this.doorBeeps(dx, d - 1.4);
+      const dl = doorSndLen();
+      if (dl) { if (cross(Math.max(DOOR_T.open1 + 0.5, DOOR_T.close1 - dl)) && !CTRL.get(tr.id)?.doors) playDoorSound(dx, d - 1.4); }
+      else if (cross(DOOR_T.warn)) this.doorBeeps(dx, d - 1.4);
       if (cross(DOOR_T.close0)) this.airHiss(dx, d - 1.4, DOOR_T.close1 - DOOR_T.close0, 0.3);
       if (cross(DOOR_T.close1)) { this.thunk(dx, d - 1.4, 0.4); this.hiss(dx, d - 1.4, 0.22); }
       v.rel = r1;
@@ -8282,14 +8288,13 @@ CP.doorOpen.addEventListener('click', () => panelCmd((c, tr) => {
   c.doors = 'open'; c.wrong = false; c.only = null; addPoints(15, 'Kényszernyitás', 'do-' + tr.id, 600);
   toast(Math.abs(tr.sv) > 0.05 ? '<b>Kényszernyitás:</b> a vonat megáll, utána nyílnak az ajtók.' : '<b>Kényszernyitás:</b> az összes ajtó kinyílik.');
   // Play door closing sound: schedule close after audio finishes (~2.5-3 sec)
-  playDoorClose();
-  setTimeout(() => {
-    c.doors = 'closed';
-  }, 3000);
 }));
 CP.doorClose.addEventListener('click', () => panelCmd((c, tr) => {
-  c.doors = 'closed'; DOORV.set(tr.id, tr.door);
-  toast('<b>Kényszerzárás:</b> az összes ajtó becsukódik és reteszelődik.');
+  const shut = () => { c.doors = 'closed'; DOORV.set(tr.id, tr.door); };
+  const dl = doorSndLen(), x = clamp(ch.x, tr.lo, tr.hi);
+  if (dl && tr.door > 0.05 && playDoorSound(x, tr.side - 1.4)) { clearTimeout(c.closeT); c.closeT = setTimeout(shut, Math.max(0, dl - (DOOR_T.close1 - DOOR_T.close0)) * 1000); }
+  else shut();
+  toast('<b>Kényszerzárás:</b> szól a jelzés, aztán az összes ajtó becsukódik és reteszelődik.');
 }));
 // the wrong-side doors: only for a train on the far track (its platform is on the far side), the doors facing the
 // tracks and the camera open instead
@@ -8298,10 +8303,6 @@ CP.doorWrong.addEventListener('click', () => panelCmd((c, tr) => {
   DOORV.set(tr.id, 0); c.doors = 'open'; c.wrong = true; c.only = null;
   addPoints(20, 'Rossz oldali ajtónyitás', 'dw-' + tr.id, 600);
   toast(Math.abs(tr.sv) > 0.05 ? '<b>Rossz oldali ajtók:</b> a vonat megáll, aztán a sínek felőli ajtók nyílnak ki.' : '<b>Rossz oldali ajtók!</b> A peronnal szemközti, sínek felőli ajtók nyílnak ki. Leszállni itt életveszélyes.', 5200);
-  playDoorClose();
-  setTimeout(() => {
-    c.doors = 'closed';
-  }, 3000);
 }));
 // only the door nearest to the ghost (on the side that opens now)
 CP.doorOne.addEventListener('click', () => panelCmd((c, tr) => {
@@ -8311,10 +8312,6 @@ CP.doorOne.addEventListener('click', () => panelCmd((c, tr) => {
   DOORV.set(tr.id, 0); c.doors = 'open'; c.only = best;
   addPoints(10, 'Egy ajtó nyitás', 'd1-' + tr.id, 600);
   toast(tr.dir < 0 && !c.wrong ? '<b>Egy ajtó:</b> a peron felőli (túlsó) oldalon csak a hozzád legközelebbi ajtó nyílik. Ha a látható oldalon akarod, előbb nyomd meg a <b>Rossz oldal</b> gombot.' : '<b>Egy ajtó:</b> csak a hozzád legközelebbi ajtó nyílik ki.', 5200);
-  playDoorClose();
-  setTimeout(() => {
-    c.doors = 'closed';
-  }, 3000);
 }));
 // the door warning: the lamps over the doors blink and the beeper sounds, as before the doors close
 CP.warn.addEventListener('click', () => panelCmd((c, tr) => {
@@ -14555,7 +14552,15 @@ function pidText() {
 function updatePid() {
   // the display only pops up for an announcement (arrival / next stop), then hides again
   const ann = pidText(), el = UI.pid, tnow = performance.now() / 1000;
-  if (ann !== PID.ann) { PID.ann = ann; PID.until = ann ? tnow + 6 : 0; }
+  if (ann !== PID.ann) {
+    // the recorded announcement goes with the display: "… következik" after departure, "… érkeztünk" on arrival
+    // (only after a run, so boarding at a stop does not announce the stop you are standing at)
+    const nx = ann.startsWith('Következő megálló: '), nm = nx ? ann.slice(19) : ann;
+    const st = Object.keys(STATIONS).find(k => STATIONS[k].name === nm);
+    if (st && nx) playAnnounce(st, 'next');
+    else if (st && PID.ann.startsWith('Következő megálló: ')) playAnnounce(st, 'arrive');
+    PID.ann = ann; PID.until = ann ? tnow + 6 : 0;
+  }
   const text = tnow < PID.until ? ann : '';
   if (!!text !== PID.on) { PID.on = !!text; el.classList.toggle('on', PID.on); }
   if (!text) return;
@@ -14886,17 +14891,6 @@ function finishRide() {
   ch.mode = 'alight'; ch.alpha = 0;
   cam.x = COMMUTE.on ? ch.x : clamp(ch.x, WORLD.minX + 6, WORLD.maxX - 6);
   TRAINS = activeTrains(gameNow());
-
-  // Station key mapping for announcements
-  const stKeyMap = { 'kulso': 'dh_ulso', 'felso': 'dh_felso', 'millen': 'milleniumtelep', 'szent': 'szentistvan_utca' };
-  const stKey = stKeyMap[S.st] || S.st;
-
-  // Play announcements before arrival and at arrival
-  const announceT = arrivalAt(o, k, 0) - 5;  // 5 sec before arrival
-  if (COMMUTE.on) {
-    // In commute mode: next station announcement on arrival
-    setTimeout(() => playAnnounce(stKey, 'arrive'), Math.max(0, (announceT + 5 - t) * 1000));
-  }
 
   if (COMMUTE.on) {   // commuting: on board, the train still moving; the arrival at the stop is announced as usual
     ch.mode = 'aboard'; ch.alpha = 0; ch.ride.stop = -1; ch.ride.leaving = true; ch.ride.leaveT = 0; ch.ride.faded = false;
