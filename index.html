@@ -8904,6 +8904,57 @@ MAP.btn.addEventListener('click', () => {
   MAP.open = !MAP.open; MAP.btn.setAttribute('aria-pressed', String(MAP.open));
   if (MAP.open) { MAP.root.classList.remove('closing'); MAP.root.hidden = false; } else smoothHide(MAP.root);
 });
+// the track monitor at the Kőrösi Csoma crossing: line 150, one track, the whole walkable stretch
+// (Móra Ferenc u. → the crossing → the keeper's house → Eötvös u. footpath crossing), the trains of the day
+function drawMapKorosi(c, Wc, Hc, time) {
+  const U0 = -70, U1 = 390, pad = 10, X = u => pad + (u - U0) / (U1 - U0) * (Wc - 2 * pad), dark = BLACKOUT.on;
+  const yT = Hc * 0.5, yB = Hc * 0.66, yF = Hc * 0.38, t = gameNow();
+  c.strokeStyle = 'rgba(255,255,255,0.04)'; c.lineWidth = 1;
+  for (let u = Math.ceil(U0 / 20) * 20; u < U1; u += 20) { c.beginPath(); c.moveTo(X(u), 0); c.lineTo(X(u), Hc); c.stroke(); }
+  c.font = '700 9px "Barlow Condensed", "Arial Narrow", sans-serif'; c.textBaseline = 'middle';
+  c.fillStyle = '#E0E0C8'; c.textAlign = 'left'; c.fillText('150 · KŐRÖSI CSOMA ÁTJÁRÓ · DUNAHARASZTI', 8, 9);
+  c.fillStyle = '#919F98'; c.textAlign = 'right'; c.fillText(dark ? 'ÁRAMSZÜNET' : fmtClock(t, true), Wc - 8, 9);
+  // streets: Baross u. along the near side, the dirt road on the far side, Móra Ferenc u., Eötvös u.
+  const road = (pts, col, w, dash) => { c.beginPath(); pts.forEach(([u, y], i) => i ? c.lineTo(X(u), y) : c.moveTo(X(u), y)); c.strokeStyle = col; c.lineWidth = w; c.setLineDash(dash || []); c.stroke(); c.setLineDash([]); };
+  road([[65, yB], [U1 + 20, yB]], '#6E6A5C', 4); road([[65, yB], [100, yB]], '#8C887C', 4);
+  road([[92, yF], [U1 + 20, yF]], '#5E5A4E', 3, [4, 3]);
+  road([[38, yB], [30, yB + 6], [22, Hc - 4]], '#7A7E80', 4);
+  road([[KPC - 2, yB], [KPC - 2, Hc + 4]], '#6E6A5C', 4);
+  c.fillStyle = '#919F98'; c.textAlign = 'left'; c.fillText('BAROSS U.', X(110), yB + 9); c.fillText('FÖLDÚT', X(200), yF + 8); c.fillText('EÖTVÖS U.', X(KPC + 3), Hc - 8); c.fillText('MÓRA F. U.', X(-20), Hc - 8);
+  // the houses along the far side (small grey blocks), the keeper's house
+  c.fillStyle = 'rgba(160,170,160,0.22)';
+  for (const [a, b] of [[74, 86], [94, 108], [116, 128], [128, 141], [165, 187], [178, 191], [KPC + 16, KPC + 29], [KPC + 36, KPC + 50]]) c.fillRect(X(a), yF - 14, X(b) - X(a), 8);
+  c.fillStyle = '#C9C2A8'; c.fillRect(X(68.6), yF - 4, X(89.6) - X(68.6), 6);
+  c.fillStyle = '#EBE5C7'; c.textAlign = 'center'; c.fillText('BAKTERHÁZ', X(84), yF - 20);
+  // the track
+  c.beginPath(); c.moveTo(0, yT); c.lineTo(Wc, yT); c.strokeStyle = '#101617'; c.lineWidth = 5.2; c.stroke(); c.strokeStyle = dark ? '#5C625E' : '#BBC4B7'; c.lineWidth = 2.2; c.stroke();
+  // the level crossing with its state, the road through it
+  road([[62.5, 27], [62.5, Hc + 4]], '#7A7E80', 6);
+  const on = KCR.active && !dark, bl = Math.floor(time * 2.5) % 2 === 0, w = Math.max(8, X(65.4) - X(59.6));
+  c.fillStyle = dark ? 'rgba(90,90,90,0.25)' : on ? (bl ? 'rgba(229,85,65,0.55)' : 'rgba(229,85,65,0.25)') : 'rgba(82,201,119,0.22)';
+  c.fillRect(X(62.5) - w / 2, yT - 9, w, 18); c.strokeStyle = dark ? '#555' : on ? '#E55541' : '#52C977'; c.lineWidth = 1; c.strokeRect(X(62.5) - w / 2, yT - 9, w, 18);
+  c.fillStyle = dark ? '#777' : on ? '#FF8A78' : '#8FE0A8'; c.textAlign = 'center'; c.fillText('KŐRÖSI CS. S. U. · HATÁR ÚT', X(62.5), 21);
+  // the footpath crossing and the km stone
+  c.fillStyle = '#E6E2D2'; for (let k = -1; k <= 1; k++) c.fillRect(X(KPC) - 3, yT + k * 4 - 1, 6, 2);
+  c.fillStyle = '#EBE5C7'; c.fillText('GYALOGOS ÁTKELŐ', X(KPC), yF - 20);
+  c.fillStyle = '#919F98'; c.fillText('142', X(KPC + 9), yT + 11);
+  // the trains of line 150 near the crossing
+  for (const a of r150Active(t)) {
+    const lo = Math.min(a.front, a.tail) - KCS.x0, hi = Math.max(a.front, a.tail) - KCS.x0;
+    if (hi < U0 - 50 || lo > U1 + 50) continue;
+    const frt = a.tr.kind === 'T', col = frt ? '#9A7A5A' : '#4E86C8';
+    c.fillStyle = '#101617'; c.fillRect(X(lo) - 1, yT - 5, X(hi) - X(lo) + 2, 10);
+    c.fillStyle = col; c.fillRect(X(lo), yT - 4, X(hi) - X(lo), 8);
+    const fu = a.front - KCS.x0; c.fillStyle = '#2A5A92'; c.fillRect(a.tr.dir > 0 ? X(fu) - 6 : X(fu), yT - 4, 6, 8);
+    c.fillStyle = '#FFF6D0'; c.beginPath(); c.arc(X(fu), yT, 1.6, 0, TAU); c.fill();
+  }
+  // the ghost
+  const gu = ch.x - KCS.x0; c.fillStyle = '#FFFFFF'; c.beginPath(); c.arc(X(clamp(gu, U0, U1)), yB, 3, 0, TAU); c.fill();
+  // ends of the line, the next train
+  c.textAlign = 'left'; c.fillStyle = '#919F98'; c.fillText('◀ BUDAPEST', 8, Hc - 8 - 12); c.textAlign = 'right'; c.fillText('KELEBIA ▶', Wc - 8, Hc - 8 - 12);
+  const D0 = r150Day(t), nx = R150[D0.dow].find(q => D0.start + q.min * 60 > t);
+  if (nx) { c.fillStyle = '#E0E0C8'; c.textAlign = 'center'; c.fillText('Következő vonat: ' + fmtClock(D0.start + nx.min * 60) + ' · ' + (nx.dir > 0 ? 'Kelebia' : 'Budapest') + ' felé · ' + R150_TXT[nx.code], Wc / 2, Hc - 8 - 12); }
+}
 function drawMap(time) {
   if (!MAP.open) return;
   const cv = MAP.cv, dpr = Math.min(2, window.devicePixelRatio || 1), Wc = cv.clientWidth, Hc = cv.clientHeight;
@@ -8918,6 +8969,7 @@ function drawMap(time) {
   const dark = BLACKOUT.on, pad = 10, X = x => pad + (x - X0) / (X1 - X0) * (Wc - 2 * pad);
   const yF = Hc * 0.5, yN = Hc * 0.68, ySide = [Hc * 0.4, Hc * 0.31, Hc * 0.22];
   c.fillStyle = '#1F2526'; c.fillRect(0, 0, Wc, Hc);
+  if (SCENE.korosi) { drawMapKorosi(c, Wc, Hc, time); return; }
   c.strokeStyle = 'rgba(255,255,255,0.04)'; c.lineWidth = 1;
   const g0 = ((X(0) % 24) + 24) % 24;   // the grid moves with the line (a line every 25 m … about)
   for (let gx = g0 - 24; gx < Wc; gx += 12) { c.beginPath(); c.moveTo(gx, 0); c.lineTo(gx, Hc); c.stroke(); }
@@ -13172,7 +13224,8 @@ function goDozsa(inside) {
 // Baross u. along the tracks, beyond the tracks the long noise wall and the Kandó Kálmán u. houses.
 // The old crossing keeper's house is gone. Fénysorompó on both sides, white light blinking slowly.
 // =====================================================================
-const KCS = { x0: 15000, x1: 15140, items: [], ground: [] };
+const KCS = { x0: 15000, x1: 15330, items: [], ground: [] };
+const KPC = 252;   // the footpath crossing at the end of Eötvös u. (u along the scene)
 const KD = { lane: 8.1, near1: 5.6, walk1: 10.4, ball0: 14.0, track: 16.0, ball1: 18.0, mast: 20.2, nearPost: 12.6, farPost: 19.4 };
 // the crossing state: a HÉV passes every 2 minutes (alternating directions), the fénysorompó turns red, the arms come down
 const KCR = { active: false, blink: 0, arm: 0, t: 95, n: 0, ring: 0, auto: false };
@@ -13200,9 +13253,11 @@ SCENE.korosi = false;
   ground(KD.ball0 - 0.3, X0, X1, () => { band(KD.walk1, KD.ball0 - 0.3, 0, C.grass); band(KD.walk1, KD.walk1 + 0.5, 0.01, '#BDB6A6'); });
   ground(KD.walk1, X0, X1, () => {
     // Baross u.: pale concrete along the tracks, joints across every 5 m
-    bandX(KD.near1, KD.walk1, 0.04, '#C9C4B8', RX1, X1 + 200);
+    bandX(KD.near1, KD.walk1, 0.04, '#C9C4B8', RX1, ex(100));
+    bandX(KD.near1, KD.walk1, 0.03, '#D9CFB6', ex(100), X1 + 200);                 // further on a sandy dirt road
+    for (const dd of [6.9, 8.9]) bandX(dd, dd + 0.45, 0.032, '#C9BDA0', ex(104), X1 + 200);   // the wheel ruts
     base(); const [l, r] = visRange(KD.near1, 2);
-    for (let x = Math.ceil(Math.max(l, RX1) / 5) * 5; x < r; x += 5) face([[x, KD.near1, 0.042], [x + 0.04, KD.near1, 0.042], [x + 0.04, KD.walk1, 0.042], [x, KD.walk1, 0.042]], '#AFAA9E', true);
+    for (let x = Math.ceil(Math.max(l, RX1) / 5) * 5; x < Math.min(r, ex(100)); x += 5) face([[x, KD.near1, 0.042], [x + 0.04, KD.near1, 0.042], [x + 0.04, KD.walk1, 0.042], [x, KD.walk1, 0.042]], '#AFAA9E', true);
     // west of the road: grass, the Móra Ferenc u. comes in and curves away towards the camera
     bandX(KD.near1, KD.walk1, 0, C.grass2, X0 - 200, RX0);
     bandX(6.8, 9.8, 0.012, C.asphalt, ex(38), RX0);
@@ -13225,7 +13280,7 @@ SCENE.korosi = false;
   });
 
   // ---------- far background: tree tops, the Kandó Kálmán u. houses ----------
-  for (let u = -70; u < 210; u += 9) treeRound(ex(u), 70 + (Math.abs(u) % 4) * 5, 11 + (Math.abs(u) % 3), FAR, 15900 + u);
+  for (let u = -70; u < 400; u += 9) treeRound(ex(u), 70 + (Math.abs(u) % 4) * 5, 11 + (Math.abs(u) % 3), FAR, 15900 + u);
   for (const [u, d, h, s] of [[16, 31, 10, 1], [23, 34, 12, 2], [30, 30.5, 11, 3], [37, 33, 13, 4], [44, 31.5, 9, 5], [27, 37, 12, 6]]) treeRound(ex(u), d, h, MID, 15950 + s);
   house({ x0: ex(74), x1: ex(86), d0: 31, d1: 39, h: 3.4, wall: '#EFEBE2', wallS: '#D6D2C8', roof: { type: 'hip', hr: 6.6, c: C.roofRed, cs: '#963B2A', inset: 3 }, deco: w => { win(1.6, 1.0, 1.3, 1.3); win(5.2, 1.0, 1.3, 1.3); win(9.0, 1.0, 1.3, 1.3); } });
   house({ x0: ex(94), x1: ex(108), d0: 33, d1: 41, h: 3.0, wall: '#E2DDD3', wallS: '#C9C4BA', roof: { type: 'gx', hr: 5.8, c: '#6A7074', cs: '#565C60' }, deco: w => { win(2.0, 0.9, 1.4, 1.2); win(7.0, 0.9, 1.4, 1.2); win(11.0, 0.9, 1.4, 1.2); } });
@@ -13234,7 +13289,7 @@ SCENE.korosi = false;
   bushX(ex(-30), ex(54), 23.4, 1.4, 15990);
 
   // (no noise walls here: the tracks lie open between the verges)
-  bushX(ex(92), ex(150), 24.2, 1.2, 15991);
+  bushX(ex(92), ex(124), 24.2, 1.2, 15991);
 
   // ---------- the crossing keeper's house (bakterház, 31 Baross u., Street View 2013) ----------
   // left: the gable to the tracks with the round window, then the recessed porch with the green door,
@@ -13300,7 +13355,7 @@ SCENE.korosi = false;
   }
 
   // ---------- catenary over the double track ----------
-  const mastX = [6, 42, 96, 132].map(ex);
+  const mastX = [6, 42, 96, 132, 168, 204, 240, 276, 312].map(ex);
   for (const x of mastX) {
     const dm = KD.mast;
     add(dm, x - 2, x + 2, () => {
@@ -13353,13 +13408,100 @@ SCENE.korosi = false;
   // ---------- grass tufts along the walk ----------
   {
     const r = mulberry(15999);
-    for (let u = -10; u < 150; u += 2 + r() * 5) {
-      const x = ex(u); if (x > RX0 - 1 && x < RX1 + 1) continue;
+    for (let u = -10; u < 326; u += 2 + r() * 5) {
+      const x = ex(u); if ((x > RX0 - 1 && x < RX1 + 1) || Math.abs(u - KPC) < 2) continue;
       const d = KD.walk1 + 0.15 + r() * 0.6, h = 0.15 + r() * 0.25, light = r() < 0.5;
       add(d, x - 0.3, x + 0.3, () => { at(x, d); polyL([-0.2, 0, -0.1, -h, 0, -h * 0.4, 0.08, -h * 1.1, 0.2, 0], light ? C.grass : C.grass2); });
     }
   }
 
+
+  // =====================================================================================================
+  // the line on towards Taksony (Street View 2013, 31 → 30 Baross u.): on the far side a light dirt road
+  // along the tracks, bushes on the bank, the red house behind its grey sheet fence, gardens with fruit
+  // trees, the long white house on its brick plinth, a shed; the footpath crossing with its yellow-black
+  // pipe railings at the end of Eötvös u. (wooden pole, A-frame concrete poles, km stone 142); beyond it the
+  // corrugated fence and the newer houses
+  // =====================================================================================================
+  ground(26, X0, X1, () => { bandX(21.6, 25.2, 0.012, '#D8D0BC', ex(92), X1 + 200); bandX(22.6, 23.0, 0.014, '#C8BEA6', ex(96), X1 + 200); bandX(24.0, 24.4, 0.014, '#C8BEA6', ex(96), X1 + 200); });
+  const sheet = (u0, u1, d, h, col, rib) => add(d, ex(u0), ex(u1), () => {
+    const [l, r] = visRange(d, 1), a = Math.max(ex(u0), l), b = Math.min(ex(u1), r); if (b <= a) return;
+    at(0, d); fillR(a, -h, b - a, h, col); ctx.fillStyle = rib; for (let x = Math.ceil(a / 0.22) * 0.22; x < b; x += 0.22) ctx.fillRect(x, -h, 0.05, h);
+    fillR(a, -h, b - a, 0.06, rib); for (let x = Math.ceil(a / 2.5) * 2.5; x < b; x += 2.5) fillR(x - 0.04, -h - 0.1, 0.08, h + 0.1, '#6E7477');
+  });
+  const mesh = (u0, u1, d, h) => add(d, ex(u0), ex(u1), () => {
+    const [l, r] = visRange(d, 1), a = Math.max(ex(u0), l), b = Math.min(ex(u1), r); if (b <= a) return;
+    at(0, d); ctx.strokeStyle = 'rgba(70,86,72,0.45)'; ctx.lineWidth = 0.012; ctx.beginPath();
+    for (let x = Math.floor(a / 0.18) * 0.18; x < b; x += 0.18) { ctx.moveTo(x, 0); ctx.lineTo(x + 0.5, -h); ctx.moveTo(x + 0.5, 0); ctx.lineTo(x, -h); }
+    ctx.stroke(); for (let x = Math.ceil(a / 2.4) * 2.4; x < b; x += 2.4) fillR(x - 0.03, -h - 0.05, 0.06, h + 0.05, '#5E6A60'); fillR(a, -h, b - a, 0.025, '#5E6A60');
+  });
+  // bushes and young trees on the bank right after the keeper's garden
+  for (const [u, d, h, sd] of [[98, 26.5, 7.5, 1], [107, 27.5, 9, 2], [117, 26.8, 8, 3], [121, 31, 11, 4]]) treeRound(ex(u), d, h, MID, 16010 + sd);
+  // the red house behind the grey sheet fence (a dark car parked inside)
+  house({ x0: ex(128), x1: ex(141), d0: 28.5, d1: 36, h: 3.5, wall: '#C9604E', wallS: '#AE4E3E', roof: { type: 'gd', hr: 6.4, c: '#7A5644', cs: '#664636', e: '#5A3C2E' }, chimney: [ex(137), 32, 7.4],
+    deco: w => { fillR(0, -0.5, w, 0.5, '#9E4A3C'); win(2.0, 1.2, 1.3, 1.25); win(6.0, 1.2, 1.3, 1.25); win(10.0, 1.2, 1.3, 1.25); fillR(8.4, -0.4, 0.06, 0.4, '#7A3A2E'); } });
+  add(27.0, ex(130), ex(135), () => { const x = ex(132.4), d = 27.0; box(x - 2.0, x + 2.0, d, d + 1.7, 0.3, 0.95, { f: '#3A4048', s: '#30363C', t: '#454B53' }); box(x - 1.0, x + 1.1, d + 0.1, d + 1.6, 0.95, 1.5, { f: '#2A3036', s: '#252A30', t: '#3A4048' }); });
+  sheet(124, 151, 25.6, 1.9, '#A2A8AB', '#8C9295');
+  // gardens with fruit trees, the long white house on its brick plinth, a second house behind
+  for (const [u, d, h, sd] of [[153, 28, 6, 5], [159, 31.5, 7.5, 6], [191, 28.5, 6.5, 7]]) treeRound(ex(u), d, h, ['#5E8A44', '#4E7A3A', '#6E9A4E'], 16020 + sd);
+  house({ x0: ex(178), x1: ex(191), d0: 37, d1: 44, h: 3.3, wall: '#EAE6DC', wallS: '#D2CEC4', roof: { type: 'gd', hr: 6.6, c: '#7E5E4A', cs: '#6A4E3C' }, chimney: [ex(186), 40, 7.6], deco: w => { win(2.2, 1.1, 1.2, 1.2); win(8.0, 1.1, 1.2, 1.2); } });
+  house({ x0: ex(165), x1: ex(187), d0: 27.6, d1: 34, h: 2.9, wall: '#E9E7E0', wallS: '#D0CEC6', roof: { type: 'hip', hr: 5.2, c: '#7A5A48', cs: '#664A3A', inset: 2.4 }, chimney: [ex(171), 30.5, 6.0],
+    deco: w => {
+      fillR(0, -1.05, w, 1.05, '#A88C70');                                         // the brick and stone plinth
+      ctx.fillStyle = '#937A60'; for (let v = 0.16; v < 1.05; v += 0.17) ctx.fillRect(0, -v, w, 0.025);
+      for (let u = 0; u < w; u += 0.55) fillR(u, -1.05, 0.02, 1.05, 'rgba(120,96,74,0.5)');
+      for (const u of [2.6, 9.2, 15.4]) { fillR(u - 0.05, -2.45, 1.1, 1.05, '#F2F0EA'); fillR(u, -2.4, 1.0, 0.95, '#4A5450'); fillR(u + 0.48, -2.4, 0.04, 0.95, '#E8E6E0'); }
+      fillR(20.2, -2.25, 0.08, 2.25, '#B9B6AE');
+    } });
+  mesh(151, 200, 25.8, 1.5);
+  // the shed with its corrugated roof
+  add(29.5, ex(194), ex(202), () => { box(ex(195), ex(201), 29.5, 32.5, 0, 2.2, { f: '#9A8E7A', s: '#847966', t: '#7E7468' }); box(ex(194.6), ex(201.4), 29.3, 32.7, 2.2, 2.4, { f: '#A9AEB0', s: '#93989A', t: '#B9BEC0' }); at(ex(195), 29.5); fillR(2.0, -1.9, 1.2, 1.9, '#6E6252'); });
+  bushX(ex(203), ex(240), 25.0, 1.6, 16030);
+  for (const [u, d, h, sd] of [[211, 28, 10, 8], [224, 30, 12, 9], [236, 27.5, 8, 10]]) treeRound(ex(u), d, h, MID, 16030 + sd);
+  // beyond the footpath crossing: the long corrugated fence, the newer houses
+  sheet(KPC + 3, 335, 24.6, 2.0, '#A9AFB2', '#929A9D');
+  house({ x0: ex(KPC + 16), x1: ex(KPC + 29), d0: 29, d1: 37, h: 5.6, wall: '#F0EDE6', wallS: '#D8D4CC', roof: { type: 'gd', hr: 9.0, c: '#B04E34', cs: '#963E28', e: '#7E3220' }, chimney: [ex(KPC + 25), 33, 9.8],
+    deco: w => { fillR(0, -0.6, w, 0.6, '#C9C4B8'); for (const u of [1.8, 5.6, 9.4]) { win(u, 1.0, 1.2, 1.3); win(u, 3.6, 1.2, 1.1); } } });
+  house({ x0: ex(KPC + 36), x1: ex(KPC + 50), d0: 31, d1: 39, h: 3.6, wall: '#E8E0CE', wallS: '#CFC7B5', roof: { type: 'hip', hr: 7.0, c: '#9A4A32', cs: '#823C28', inset: 3 }, deco: w => { win(2.0, 1.0, 1.3, 1.3); win(6.4, 1.0, 1.3, 1.3); win(10.6, 1.0, 1.3, 1.3); } });
+  for (const [u, d, h, sd] of [[KPC + 10, 27, 9, 11], [KPC + 33, 28, 11, 12], [KPC + 58, 29, 10, 13], [KPC + 8, 34, 12, 14]]) treeRound(ex(u), d, h, MID, 16040 + sd);
+  add(30, ex(KPC + 6), ex(KPC + 12), () => { const x = ex(KPC + 9), d = 30; for (let i = 0; i < 5; i++) { const o = i * 0.5 - 1; line3([x + o, d, 0], [x + o * 0.3, d, 6.2 + (i % 2) * 1.2], '#2E5A30', 0.5); } });   // a spruce
+  // the footpath crossing: the concrete path, the panels between the rails, steps down to Baross u.
+  {
+    const P0 = ex(KPC - 1.25), P1 = ex(KPC + 1.25);
+    ground(0.24, P0 - 6, P1 + 6, () => {
+      base();
+      face([[P0, KD.near1 - 0.2, 0.05], [P1, KD.near1 - 0.2, 0.05], [P1, KD.ball0, 0.05], [P0, KD.ball0, 0.05]], '#BDB8AC', true);
+      face([[P0, KD.ball0, 0.1], [P1, KD.ball0, 0.1], [P1, KD.ball1, 0.1], [P0, KD.ball1, 0.1]], '#A9A59B', true);
+      for (const dr of [KD.track - D.gauge / 2, KD.track + D.gauge / 2]) face([[P0, dr - 0.04, 0.12], [P1, dr - 0.04, 0.12], [P1, dr + 0.04, 0.12], [P0, dr + 0.04, 0.12]], C.railTop, true);
+      face([[P0, KD.ball1, 0.05], [P1, KD.ball1, 0.05], [P1, 22.0, 0.05], [P0, 22.0, 0.05]], '#BDB8AC', true);
+      for (let d = KD.near1; d < KD.ball0; d += 1.6) face([[P0, d, 0.052], [P1, d, 0.052], [P1, d + 0.04, 0.052], [P0, d + 0.04, 0.052]], '#A29D92', true);
+      // Eötvös u.: a sandy street coming in from the camera side
+      face([[ex(KPC - 7), 0.3, 0.02], [ex(KPC + 3), 0.3, 0.02], [ex(KPC + 3), KD.near1, 0.02], [ex(KPC - 7), KD.near1, 0.02]], '#D3C9B0', true);
+    });
+    add(KD.walk1 + 0.3, P0 - 0.2, P1 + 0.2, () => { for (const [d0, h] of [[KD.walk1 - 0.2, 0.16], [KD.walk1 + 0.2, 0.32]]) box(P0, P1, d0, d0 + 0.4, 0, h, { f: '#B4AFA3', s: '#9C978C', t: '#C9C4B8' }); });
+    // the railings: rusty yellow pipes with black bands, a staggered maze on each side of the track
+    const RY = '#C9A13A', RB = '#2E2A26';
+    const pipe = (x0, d0, x1, d1, h, w = 0.06) => { const L2 = Math.hypot(x1 - x0, d1 - d0), n = Math.max(1, Math.round(L2 / 0.55));
+      for (let i = 0; i < n; i++) { const t0 = i / n, t1 = (i + 1) / n; line3([x0 + (x1 - x0) * t0, d0 + (d1 - d0) * t0, h], [x0 + (x1 - x0) * t1, d0 + (d1 - d0) * t1, h], i % 2 ? RB : RY, w); } };
+    const rail = (x0, d0, x1, d1) => { const n = Math.max(1, Math.round(Math.hypot(x1 - x0, d1 - d0) / 1.2));
+      for (let i = 0; i <= n; i++) { const t = i / n; line3([x0 + (x1 - x0) * t, d0 + (d1 - d0) * t, 0], [x0 + (x1 - x0) * t, d0 + (d1 - d0) * t, 1.0], RY, 0.07); }
+      pipe(x0, d0, x1, d1, 1.0); pipe(x0, d0, x1, d1, 0.55, 0.05); };
+    const X = u => ex(KPC + u);
+    for (const [k, rs] of [[11.9, [[-2.4, 11.9, 0.7, 11.9], [-0.7, 13.1, 2.4, 13.1], [-2.4, 11.0, -2.4, 13.6], [2.4, 11.4, 2.4, 13.1]]],
+                           [19.1, [[-2.4, 18.9, 0.7, 18.9], [-0.7, 20.1, 2.4, 20.1], [-2.4, 18.9, -2.4, 21.4], [2.4, 18.4, 2.4, 20.1]]]])
+      add(k, X(-3), X(3), () => { for (const [a, d0, b, d1] of rs) rail(X(a), d0, X(b), d1); });
+    // the old wooden pole on its concrete stub, the A-frame concrete poles, the km stone
+    add(11.0, X(-3.6), X(-2.8), () => { const x = X(-3.2), d = 11.0; box(x - 0.17, x + 0.17, d - 0.17, d + 0.17, 0, 1.7, { f: '#A9A69C', s: '#918E85', t: '#BCB9AF' }); line3([x, d, 1.2], [x + 0.25, d, 8.4], '#5E4A38', 0.26); line3([x - 0.6, d, 7.8], [x + 0.9, d, 7.9], '#4E3E30', 0.1); });
+    for (const [u, d] of [[6.5, 22.8], [-24, 22.9]]) add(d, X(u - 1.5), X(u + 1.5), () => { const x = X(u); line3([x - 0.9, d, 0], [x - 0.08, d, 9.2], '#B4B1A8', 0.24); line3([x + 0.9, d, 0], [x + 0.08, d, 9.2], '#A6A39A', 0.24); for (const h of [2.5, 4.6, 6.6]) { const o = 0.9 * (1 - h / 9.2); line3([x - o, d, h], [x + o, d, h], '#8E8B83', 0.1); } line3([x - 0.8, d, 8.6], [x + 0.8, d, 8.6], '#6E6B64', 0.1); });
+    add(13.4, X(8.6), X(9.4), () => { const x = X(9), d = 13.4; box(x - 0.17, x + 0.17, d, d + 0.2, 0, 0.62, { f: '#E6E3DA', s: '#CDCAC1', t: '#F2F0E8' }); at(x, d); ltext('142', 0, -0.42, 0.13, '#3A3A36', 700); });
+    // the corner of Eötvös u.: a low brick wall with a green grille and brick pillars, off to the side
+    add(4.6, X(-34), X(-22), () => {
+      const d = 4.6, brick = { f: '#C9A87E', s: '#B08E66', t: '#D8BA92' };
+      box(X(-33.5), X(-23), d, d + 0.3, 0, 0.55, brick);
+      for (const u of [-33.5, -28.4, -23.4]) box(X(u), X(u + 0.4), d - 0.05, d + 0.35, 0, 1.2, brick);
+      at(X(-33.5), d); ctx.fillStyle = '#2E3A30'; for (let u = 0.1; u < 10.5; u += 0.14) ctx.fillRect(u, -1.05, 0.025, 0.5); fillR(0, -1.07, 10.5, 0.035, '#2E3A30');
+    });
+  }
   KCS.items = STATIC.splice(s0);
   KCS.ground = GROUND.splice(g0).sort((a, b) => b.k - a.k);
 })();
@@ -14497,8 +14639,16 @@ const OBJS = [
       'A sínek túloldalán homokos parlag és egy <b>búzatábla</b>, a szélén sűrű fasor. Itt már a község széle van.'],
     [108.0, 3.0, 'kwall', 'eye', 'Átnézel a túloldali házakra', 2.0, 30.0, 'Kandó Kálmán utca',
       'A sínek túloldalán, a bokrok mögött a <b>Kandó Kálmán utca</b> piros tetős házai.'],
-    [133.0, 2.0, 'kend', 'eye', 'Végignézel a Baross utcán', 1.6, KD.lane + 0.6, 'Baross utca',
-      'A <b>Baross utca</b> innen a sínek mentén megy tovább Taksony felé. Most fordulj vissza az átjáróhoz!'],
+    [322.0, 2.0, 'kend', 'eye', 'Végignézel a Baross utcán', 1.6, KD.lane + 0.6, 'Baross utca',
+      'A <b>Baross utca</b> homokos földútként fut tovább a sínek mentén Taksony felé. Most fordulj vissza az átjáróhoz!'],
+    [KPC, 2.2, 'kped', 'eye', 'Megnézed a gyalogos átkelőt', 1.6, 12.5, 'Gyalogos átkelő',
+      'Az <b>Eötvös utca</b> végén egy gyalogos átkelő vezet át a síneken: betonjárda, a sínek közt betonpanelek, mindkét oldalon <b>rozsdás sárga-fekete csőkorlát</b> labirintussal, hogy senki ne fusson át vakon a vágányon.'],
+    [KPC + 9, 1.2, 'kkm', 'eye', 'Megnézed a kilométerkövet', 0.9, 13.4, 'Kilométerkő',
+      'Fehér betonkő a sínek mellett: <b>142</b>. A szelvényszámot a pálya mentén kis kövek jelölik.'],
+    [134.0, 2.4, 'kred', 'eye', 'Átnézel a piros házra', 2.0, 28.0, 'Piros ház',
+      'A sínek túloldalán, a földút mögött egy <b>piros ház</b> áll, előtte szürke trapézlemez kerítés, az udvaron egy sötét autó.'],
+    [176.0, 3.0, 'kwhite', 'eye', 'Átnézel a hosszú fehér házra', 2.0, 28.0, 'Régi ház',
+      'Hosszú, alacsony <b>fehér ház</b> tégla- és kőlábazattal, barna cseréptetővel, előtte drótkerítés és gyümölcsfák.'],
     [4.0, 2.0, 'kendw', 'eye', 'Körülnézel', 1.6, KD.lane + 0.6, 'Sínek mentén',
       'Erre már csak a sínek és a fű. Az átjáró visszafelé van, jobbra.'],
   ].map(([u, r, id, icon, label, h, d, pts, txt]) => ({ lane: 'korosi', x: KCS.x0 + u, r, kind: 'klook', id, pts, txt, icon, label, anchor: [KCS.x0 + u, d, h] })),
