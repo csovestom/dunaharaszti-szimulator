@@ -576,7 +576,7 @@ body {
     <div class="tset off" id="tSet">
       <div class="tcol"><button type="button" data-d="60" aria-label="Egy órával később"><svg class="gl" viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 7 5 2.5 8.5 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></button><span class="tval" id="tH">12</span><button type="button" data-d="-60" aria-label="Egy órával korábban"><svg class="gl" viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 3 5 7.5 8.5 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></button></div>
       <span class="tcolon">:</span>
-      <div class="tcol"><button type="button" data-d="10" aria-label="Tíz perccel később"><svg class="gl" viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 7 5 2.5 8.5 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></button><span class="tval" id="tM">00</span><button type="button" data-d="-10" aria-label="Tíz perccel korábban"><svg class="gl" viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 3 5 7.5 8.5 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></button></div>
+      <div class="tcol"><button type="button" data-d="1" aria-label="Egy perccel később"><svg class="gl" viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 7 5 2.5 8.5 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></button><span class="tval" id="tM">00</span><button type="button" data-d="-1" aria-label="Egy perccel korábban"><svg class="gl" viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 3 5 7.5 8.5 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></button></div>
     </div>
     <div class="presets" id="tPresets"><button type="button" data-h="7">Reggel<small>7:00</small></button><button type="button" data-h="12">Dél<small>12:00</small></button><button type="button" data-h="19.5">Este<small>19:30</small></button><button type="button" data-h="23">Éjjel<small>23:00</small></button></div>
     <p class="cp-note" id="tNote">Valós idő: a játék a budapesti pontos időt követi.</p>
@@ -13448,6 +13448,117 @@ function r150Panto(x, td, up) {
   if (up) { line3([x - 1.0, td, 4.15], [x + 0.3, td, 4.9], P, 0.06); line3([x + 0.3, td, 4.9], [x - 0.6, td, 5.48], P, 0.06); line3([x - 1.2, td, 5.5], [x, td, 5.5], P, 0.08); }
   else { line3([x - 1.1, td, 4.22], [x + 1.1, td, 4.22], P, 0.07); line3([x - 0.9, td, 4.3], [x + 0.9, td, 4.3], P, 0.04); }
 }
+// V43 "Szili", side on, after Beni's two drawings (V43 1282, MÁV-START blue), proportions measured off them
+// (fractions of the length, F(f)): raked cab fronts with rounded tops, yellow nose and stripe, two light cab
+// side windows and the cab door with yellow handrails, three machine-room panels (louvre · cream window ·
+// louvre), grey frame band with lamps, grey wheels, two tanks between the bogies, the louvred fan housing,
+// brown insulators and the two big red pantographs
+function r150V43(xl, xr, td, dir, seed) {
+  const d0 = td - 1.4, d1 = td + 1.4, L = xr - xl, F = f => f * L;
+  const BL = '#3479A6', BLS = '#2B678F', BLT = '#4A86AE', GR = '#78868C', GRS = '#67747A', Y = '#F6C443', DK = '#252B30', LG = '#DCE5E9', CR = '#E4DCC4';
+  const H0 = 0.92, HS = 1.63, HV = 2.62, HT = 4.12, RK = 0.4;      // frame bottom, frame top, start of the rake, roof, rake inset
+  const c = [xl + L / 2, td, 2.5];
+  // bogies: grey frames with springs, two axles 2.7 m apart, grey wheel discs
+  at(0, d0 + 0.22);
+  for (const f of [0.173, 0.8126]) {
+    const bc = xl + F(f);
+    fillRR(bc - 1.9, -1.02, 3.8, 0.32, 0.1, '#4E5458'); fillR(bc - 0.45, -1.02, 0.9, 0.55, '#3E4347');
+    for (const o of [-1.34, 1.34]) {
+      circle(bc + o, -0.55, 0.55, '#33373A'); circle(bc + o, -0.55, 0.45, '#8C9397'); circle(bc + o, -0.55, 0.16, '#3A3E41');
+      fillRR(bc + o - 0.3, -1.0, 0.6, 0.18, 0.04, '#5E6468');
+      for (const sp of [-0.42, 0.42]) { fillR(bc + o + sp - 0.08, -0.98, 0.16, 0.3, '#2E3235'); }
+    }
+  }
+  at(xl, d0 + 0.3);
+  fillRR(F(0.371), -0.9, F(0.09), 0.45, 0.2, '#7E878B'); fillRR(F(0.472), -0.95, F(0.133), 0.5, 0.2, '#6E777B'); fillR(F(0.625), -1.0, F(0.03), 0.5, '#2E3235');
+  // the hull: a prism with raked ends (only the faces turned to the camera are drawn)
+  base();
+  for (const e of [0, 1]) {
+    const x = e ? xr : xl, xi = e ? xr - RK : xl + RK;
+    faceC([[x, d0, H0], [x, d1, H0], [x, d1, HS], [x, d0, HS]], GRS, c);
+    if (faceC([[x, d0, HS], [x, d1, HS], [x, d1, HV], [x, d0, HV]], Y, c)) {
+      faceC([[x, d0, HV], [x, d1, HV], [xi, d1, HT], [xi, d0, HT]], BL, c);
+      const q = (a, b, h0, h1, col) => { const u0 = (h0 - HV) / (HT - HV), u1 = (h1 - HV) / (HT - HV), X = t => x + (xi - x) * t;
+        face([[X(u0), a, h0], [X(u0), b, h0], [X(u1), b, h1], [X(u1), a, h1]], col, true); };
+      // the two framed windscreens (light glass, a wiper each), the round headlight above them
+      q(d0 + 0.22, td - 0.06, 2.8, 3.62, DK); q(td + 0.06, d1 - 0.22, 2.8, 3.62, DK);
+      q(d0 + 0.3, td - 0.14, 2.88, 3.54, '#8FA3AF'); q(td + 0.14, d1 - 0.3, 2.88, 3.54, '#8FA3AF');
+      q(d0 + 0.3, td - 0.14, 3.2, 3.54, '#A9BAC4'); q(td + 0.14, d1 - 0.3, 3.2, 3.54, '#A9BAC4');
+      q(td - 0.55, td - 0.5, 2.9, 3.35, DK); q(td + 0.5, td + 0.55, 2.9, 3.35, DK);
+      q(td - 0.2, td + 0.2, 3.72, 4.0, '#3A3E42'); q(td - 0.13, td + 0.13, 3.77, 3.95, '#F4F2E6');
+      // the yellow front: black number plate, H-MÁVTR; the lamp pairs on the grey frame
+      const E = (a, b, h0, h1, col) => face([[x, a, h0], [x, b, h0], [x, b, h1], [x, a, h1]], col, true);
+      E(td - 0.62, td + 0.62, 2.22, 2.5, '#1E2124'); E(td - 0.04, td + 0.04, 1.8, 1.98, '#3A3A2E');
+      for (const sd of [-1, 1]) { const dc = td + sd * 0.95; E(dc - 0.2, dc - 0.04, 1.36, 1.52, sd < 0 === !e ? '#F4F2E6' : '#C8322A'); E(dc + 0.04, dc + 0.2, 1.36, 1.52, '#F4F2E6'); E(dc - 0.25, dc + 0.25, 1.32, 1.34, '#3A3E42'); }
+      { // the number on the plate: written across the end face, squeezed to its projected width
+        const ax = sx(x, td - 0.58), bx = sx(x, td + 0.58), w = Math.abs(bx - ax);
+        if (w > 14) {
+          const t = 'V43 ' + (1000 + (seed % 380)), fs = sc(td) * 0.22;
+          ctx.setTransform(cam.dpr, 0, 0, cam.dpr, 0, 0); ctx.font = `700 ${fs}px "Barlow Condensed", "Arial Narrow", sans-serif`;
+          const tw = ctx.measureText(t).width; ctx.save(); ctx.translate((ax + bx) / 2, sy(2.36, td)); ctx.scale(Math.min(1, w * 0.88 / tw), 1);
+          ctx.fillStyle = '#F4F2E6'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(t, 0, 0); ctx.restore();
+        }
+      }
+    }
+  }
+  faceC([[xl + RK, d0, HT], [xr - RK, d0, HT], [xr - RK, d1, HT], [xl + RK, d1, HT]], '#6E8796', c);
+  // buffers (shaft + round head) and the coupler hook, out of both ends
+  for (const [x, sg] of [[xl, -1], [xr, 1]]) {
+    for (const dd of [td - 0.88, td + 0.88]) { const a = x + sg * 0.05, b = x + sg * 0.48; box(Math.min(a, b), Math.max(a, b), dd - 0.1, dd + 0.1, 1.15, 1.35, { f: '#2A2D30', s: '#222427', t: '#34383B' });
+      const h0 = x + sg * 0.48, h1 = x + sg * 0.58; box(Math.min(h0, h1), Math.max(h0, h1), dd - 0.22, dd + 0.22, 1.03, 1.47, { f: '#3A3E42', s: '#2E3235', t: '#4A4E52' }); }
+    const a = x + sg * 0.05, b = x + sg * 0.55; box(Math.min(a, b), Math.max(a, b), td - 0.08, td + 0.08, 1.12, 1.28, { f: '#26282B', s: '#1E2022', t: '#303336' });
+  }
+  // near side
+  at(xl, d0);
+  fillR(0, -HS, L, HS - H0, GR); fillR(0, -HS, L, 0.05, GRS); fillR(0, -H0 - 0.05, L, 0.05, GRS);
+  polyL([0, -HS, L, -HS, L, -HV, L - RK * 0.55, -3.7, L - RK, -HT, RK, -HT, RK * 0.55, -3.7, 0, -HV], BL);
+  fillR(RK, -HT, L - 2 * RK, 0.05, BLT);
+  for (const s of [0, 1]) {
+    const m = u => (s ? L - u : u), R = (u0, u1, h0, h1, col, r = 0) => { const a = Math.min(m(u0), m(u1)); fillRR(a, -h1, Math.abs(u1 - u0), h1 - h0, r, col); };
+    polyL([m(0.07), -2.86, m(0.3), -2.86, m(0.3), -3.55, m(0.25), -3.55], DK);                   // windscreen corner
+    R(F(0.034), F(0.051), 2.78, 3.43, DK, 0.05); R(F(0.058), F(0.084), 2.78, 3.43, DK, 0.05); R(F(0.061), F(0.081), 2.82, 3.39, LG, 0.04);   // cab side windows
+    R(0, F(0.028), HS, 2.57, Y); R(0.04, F(0.07), 2.63, 2.69, Y);                                // yellow nose and stripe
+    ctx.strokeStyle = BLS; ctx.lineWidth = 0.03; { const a = Math.min(m(F(0.098)), m(F(0.133))); ctx.strokeRect(a, -3.5, F(0.035), 3.5 - HS); }
+    R(F(0.103), F(0.128), 2.8, 3.38, DK, 0.08); R(F(0.105), F(0.126), 2.84, 3.34, LG, 0.07);   // door window
+    R(F(0.104), F(0.11), 2.38, 2.43, '#D8DCDE'); R(F(0.104), F(0.106), 2.3, 2.43, '#D8DCDE');   // handle
+    R(F(0.0935), F(0.0955), 1.66, 3.28, Y); R(F(0.1355), F(0.1375), 1.66, 3.28, Y);             // handrails
+    R(F(0.098), F(0.13), 1.15, 1.22, '#2A2D30'); R(F(0.102), F(0.104), 1.15, 1.6, '#2A2D30'); R(F(0.124), F(0.126), 1.15, 1.6, '#2A2D30');   // step
+  }
+  // panel seams and the machine room: louvre · window · louvre in each of the three panels
+  for (const f of [0.141, 0.367, 0.594, 0.858]) fillR(F(f) - 0.015, -HT, 0.03, HT - HS, BLS);
+  for (const [a, b, w0, w1, c0, c1] of [[0.1538, 0.2343, 0.2399, 0.2734, 0.2797, 0.3587], [0.3755, 0.4566, 0.465, 0.4986, 0.5042, 0.5853], [0.6035, 0.6839, 0.6902, 0.7224, 0.7273, 0.8042]]) {
+    for (const [u0, u1] of [[a, b], [c0, c1]]) { fillRR(F(u0), -3.57, F(u1 - u0), 0.77, 0.07, '#3F4447'); ctx.fillStyle = '#2E3234'; for (let u = F(u0) + 0.07; u < F(u1) - 0.04; u += 0.1) ctx.fillRect(u, -3.52, 0.03, 0.67); }
+    fillRR(F(w0), -3.57, F(w1 - w0), 0.77, 0.08, DK); fillRR(F(w0) + 0.04, -3.5, F(w1 - w0) - 0.08, 0.66, 0.06, '#9A9890'); fillRR(F(w0) + 0.08, -3.2, F(w1 - w0) - 0.16, 0.33, 0.04, CR);
+  }
+  ctx.strokeStyle = BLS; ctx.lineWidth = 0.03; rrect(F(0.2797), -2.5, F(0.072), 0.67, 0.06); ctx.stroke();
+  const num = 1000 + (seed % 380);
+  ltext('V43', F(0.479), -2.55, 0.28, '#FFFFFF', 700); ltext(String(num), F(0.479), -2.24, 0.28, '#FFFFFF', 700); ltext('MÁV-START', F(0.479), -2.0, 0.12, '#FFFFFF', 700);
+  ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 0.015; ctx.strokeRect(F(0.479) - 0.06, -1.9, 0.12, 0.13);
+  for (const f of [0.044, 0.299, 0.666, 0.951]) { circle(F(f), -1.41, 0.08, '#2A2D30'); circle(F(f), -1.41, 0.04, '#55595C'); }
+  ctx.strokeStyle = '#E6EAEC'; ctx.lineWidth = 0.012; for (const [f, w] of [[0.44, 0.024], [0.475, 0.022], [0.515, 0.022]]) ctx.strokeRect(F(f), -1.38, F(w), 0.11);
+  // roof: the louvred fan housing, brown insulators, red pipes, the pantographs (the rear one up at the wire)
+  box(xl + F(0.438), xl + F(0.508), d0 + 0.55, d1 - 0.55, HT, HT + 0.62, { f: '#454A4E', s: '#383C40', t: '#55595D' });
+  at(xl, d0 + 0.55); ctx.fillStyle = '#2E3236'; for (let u = F(0.445); u < F(0.502); u += 0.1) ctx.fillRect(u, -(HT + 0.55), 0.04, 0.45);
+  for (const f of [0.17, 0.25, 0.33, 0.36, 0.56, 0.6, 0.66, 0.73, 0.8]) for (const dd of [td - 0.55, td + 0.55]) box(xl + F(f) - 0.09, xl + F(f) + 0.09, dd - 0.09, dd + 0.09, HT, HT + 0.3, { f: '#6A3A2A', s: '#58301F', t: '#7A4836' });
+  for (const dd of [td - 0.55, td + 0.55]) line3([xl + F(0.2), dd, HT + 0.32], [xl + F(0.78), dd, HT + 0.32], '#C8322A', 0.05);
+  r150PantoV43(xl + F(dir > 0 ? 0.197 : 0.778), td, HT, true); r150PantoV43(xl + F(dir > 0 ? 0.778 : 0.197), td, HT, false);
+}
+// the V43's big red diamond (scissor) pantograph: insulators on the roof, two frames side by side, the collector
+// head on top; folded flat on the roof (down) or reaching the contact wire at 5.5 m (up)
+function r150PantoV43(x, td, h0, up) {
+  const P = '#C8322A', PS = '#9E2620', top = up ? 5.5 : h0 + 0.62, mid = up ? h0 + 0.35 + (top - h0 - 0.35) * 0.5 : h0 + 0.45, hw = up ? 0.75 : 1.6;
+  for (const dd of [td - 0.75, td + 0.75]) { box(x - 1.15, x - 0.85, dd - 0.12, dd + 0.12, h0, h0 + 0.28, { f: '#D9D6CC', s: '#BDBAB0', t: '#E6E3DA' }); box(x + 0.85, x + 1.15, dd - 0.12, dd + 0.12, h0, h0 + 0.28, { f: '#D9D6CC', s: '#BDBAB0', t: '#E6E3DA' }); }
+  for (const dd of [td + 0.55, td - 0.55]) {                            // far frame first, then the near one
+    const col = dd > td ? PS : P;
+    line3([x - 1.0, dd, h0 + 0.3], [x + 1.0, dd, h0 + 0.3], col, 0.11);                 // base frame
+    line3([x - 1.0, dd, h0 + 0.3], [x - hw, dd, mid], col, 0.1); line3([x + 1.0, dd, h0 + 0.3], [x + hw, dd, mid], col, 0.1);   // lower arms
+    line3([x - hw, dd, mid], [x, dd, top - 0.08], col, 0.08); line3([x + hw, dd, mid], [x, dd, top - 0.08], col, 0.08);           // upper arms
+    line3([x - hw, dd, mid], [x + hw, dd, mid], col, 0.03);
+  }
+  line3([x, td - 0.55, top - 0.08], [x, td + 0.55, top - 0.08], P, 0.05);
+  line3([x - 0.8, td - 0.85, top], [x - 0.8, td + 0.85, top], '#3A3D3F', 0.07); line3([x + 0.8, td - 0.85, top], [x + 0.8, td + 0.85, top], '#3A3D3F', 0.07);   // collector strips
+  line3([x - 0.8, td - 0.85, top], [x + 0.8, td - 0.85, top], P, 0.04); line3([x - 0.8, td + 0.85, top], [x + 0.8, td + 0.85, top], P, 0.04);
+}
 function r150Loco(type, xl, xr, td, dir, seed) {
   const d0 = td - 1.4, d1 = td + 1.4, L = xr - xl, P = R150C, traxx = type === '480';
   box(xl, xr, d0, d1, 1.1, 1.75, { f: '#D6D8DA', s: '#B9BCBE', t: '#D6D8DA' });                 // the light grey lower band
@@ -13477,6 +13588,86 @@ function r150Loco(type, xl, xr, td, dir, seed) {
   ltext(type === 'V43' ? '431 ' + (100 + seed % 300) : type === 'V63' ? '630 0' + (10 + seed % 50) : '480 0' + (10 + seed % 15), L / 2, -2.2, 0.2, '#E6EEF6', 700);
   // the pantographs: the rear one is up at the wire
   r150Panto(xl + (dir > 0 ? 3.6 : L - 3.6), td, true); r150Panto(xl + (dir > 0 ? L - 3.6 : 3.6), td, false);
+}
+// Bhv, side on, after Beni's drawing (MÁV-START blue, 50 55 20-07): rounded brown-grey roof, cream end doors with
+// steps, the double middle door in a lowered step well, rounded white-framed windows with a top vent, the
+// frosted toilet window, the "2" class signs, MÁV-START logo; one side or the other (the middle door off-centre)
+function r150Bhv(xl, xr, td, dir, seed, type = 'Bhv') {
+  const d0 = td - 1.4, d1 = td + 1.4, L = xr - xl, F = f => f * L, flip = (seed & 1) === 1, m = u => (flip ? L - u : u);
+  const BL = '#0B66AA', BLS = '#0A5590', RF = '#585650', CRM = '#EBE7E0', GL = '#14293A', FR = '#D3D3D0', Y = '#E8C640';
+  const HB = 1.07, HT = 3.43, HR = 4.2;
+  // bogies: dark brown frames, two axles 2.6 m apart
+  at(0, d0 + 0.25);
+  for (const f of [0.158, 0.845]) {
+    const bc = xl + F(f);
+    fillRR(bc - 1.8, -0.98, 3.6, 0.34, 0.08, '#3A3430'); fillR(bc - 0.4, -1.0, 0.8, 0.45, '#2E2925');
+    for (const o of [-1.3, 1.3]) { circle(bc + o, -0.46, 0.46, C.wheel); circle(bc + o, -0.46, 0.14, C.hub); fillRR(bc + o - 0.32, -0.9, 0.64, 0.22, 0.05, '#4A433D'); }
+  }
+  // underfloor boxes between the bogies
+  at(xl, d0 + 0.3);
+  for (const [a, b] of [[0.29, 0.33], [0.36, 0.5], [0.69, 0.73]]) fillRR(m(F(flip ? b : a)), -1.05, F(b - a), 0.55, 0.05, '#232222');
+  // body, roof, gangways
+  box(xl, xr, d0, d1, HB, HT, { f: BL, s: BLS, t: RF });
+  box(xl + 0.08, xr - 0.08, d0 + 0.12, d1 - 0.12, HT, HR - 0.18, { f: RF, s: '#4C4A45', t: RF });
+  box(xl + 0.2, xr - 0.2, d0 + 0.6, d1 - 0.6, HR - 0.18, HR, { f: '#625F59', s: '#4C4A45', t: '#66635C' });
+  // the ends (Beni's front / rear view): the blue end wall arched up to the roof, the wide black gangway portal
+  // with its canopy, the grey double door with two tall windows and a kick plate, red tail lamps on either side,
+  // yellow handrails at the edges, the buffer plates and the coupler
+  for (const [x, sg, vis] of [[xl, -1, cam.x < xl], [xr, 1, cam.x > xr]]) {
+    const o = (a2, b2) => [Math.min(x + sg * a2, x + sg * b2), Math.max(x + sg * a2, x + sg * b2)];
+    const E = (X, a2, b2, h0, h1, col) => face([[X, a2, h0], [X, b2, h0], [X, b2, h1], [X, a2, h1]], col, true);
+    const disc = (X, dc, hc, r, col) => { const P = []; for (let k = 0; k < 10; k++) { const t = k / 10 * TAU; P.push([X, dc + Math.cos(t) * r, hc + Math.sin(t) * r]); } face(P, col, true); };
+    if (vis) {   // the end wall arched up into the roof, the roof lamp, handrails, tail lamps
+      base();
+      const P = [[x, d0, HB], [x, d1, HB]]; for (let k = 0; k <= 12; k++) { const t = k / 12 * Math.PI; P.push([x, td + Math.cos(t) * 1.4, HT + Math.sin(t) * (HR - 0.12 - HT)]); } face(P, BL, true);
+      disc(x, td, HR - 0.08, 0.07, '#2A2B2C');
+      E(x, d0 + 0.06, d0 + 0.11, 1.33, 3.18, Y); E(x, d1 - 0.11, d1 - 0.06, 1.33, 3.18, Y);
+      E(x, td - 1.0, td - 0.86, 1.36, 1.54, '#1E2022'); E(x, td + 0.86, td + 1.0, 1.36, 1.54, '#1E2022');
+      disc(x, td - 0.93, 1.71, 0.11, '#D8322A'); disc(x, td + 0.93, 1.71, 0.11, '#D8322A');
+    }
+    // in front of it: the gangway portal with its canopy, the buffers, the coupler
+    const [g0, g1] = o(0, 0.3); box(g0, g1, td - 0.72, td + 0.72, 1.24, 3.85, { f: '#222324', s: '#1A1B1C', t: '#2C2D2E' });
+    const [c0, c1] = o(0, 0.38); box(c0, c1, td - 0.82, td + 0.82, 3.85, 3.99, { f: '#2A2B2C', s: '#202122', t: '#36373A' });
+    for (const dd of [td - 0.95, td + 0.95]) { const [p0, p1] = o(0.02, 0.4); box(p0, p1, dd - 0.08, dd + 0.08, 1.04, 1.18, { f: '#2A2D30', s: '#222427', t: '#34383B' });
+      const [q0, q1] = o(0.4, 0.5); box(q0, q1, dd - 0.3, dd + 0.3, 0.95, 1.26, { f: '#3A3D40', s: '#2E3134', t: '#46494C' }); }
+    { const [p0, p1] = o(0.02, 0.48); box(p0, p1, td - 0.09, td + 0.09, 1.0, 1.2, { f: '#55595C', s: '#45494C', t: '#62666A' }); }
+    if (!vis) continue;
+    const X = x + sg * 0.3;                                         // the grey double door in the portal
+    E(X, td - 0.57, td + 0.57, 1.24, 3.66, '#5E6266'); E(X, td - 0.012, td + 0.012, 1.24, 3.66, '#3E4245');
+    E(X, td - 0.5, td - 0.07, 2.4, 3.56, '#2A3640'); E(X, td + 0.07, td + 0.5, 2.4, 3.56, '#2A3640');
+    E(X, td - 0.5, td - 0.07, 3.1, 3.56, '#34424C'); E(X, td + 0.07, td + 0.5, 3.1, 3.56, '#34424C');
+    E(X, td - 0.5, td + 0.5, 1.3, 1.95, '#45484B');
+  }
+  at(xl, d0);
+  fillR(-0.55, -1.32, 0.55, 0.22, '#2A2D30'); fillR(L, -1.32, 0.55, 0.22, '#2A2D30');           // buffers
+  fillR(0, -HT - 0.02, L, 0.06, '#0A4E82');                                                     // cornice line
+  polyL([0, -HT, 0.25, -3.85, L - 0.25, -3.85, L, -HT], '#64615A');                           // the curve of the roof
+  const R = (a, b, h0, h1, col, r = 0) => { const u0 = m(F(a)), u1 = m(F(b)); fillRR(Math.min(u0, u1), -h1, Math.abs(u1 - u0), h1 - h0, r, col); };
+  // the lowered step well of the middle door
+  { const a = m(F(0.558)), b = m(F(0.574)), c2 = m(F(0.646)), d2 = m(F(0.662)); polyL([a, -HB, b, -0.52, c2, -0.52, d2, -HB], BL);
+    for (const h of [0.62, 0.86]) R(0.582, 0.638, h - 0.05, h + 0.05, '#111213'); R(0.582, 0.638, 0.54, 0.56, '#E6E6E6'); R(0.582, 0.638, 0.78, 0.8, '#E6E6E6'); }
+  // end doors with steps and handrails
+  for (const [a, b, wa, wb, ha, hb] of [[0.035, 0.075, 0.042, 0.069, 0.032, 0.078], [0.9303, 0.9678, 0.9367, 0.9614, 0.9276, 0.9705]]) {
+    R(a, b, HB, 3.39, CRM, 0.04); R(wa, wb, 2.32, 3.29, GL, 0.05); R(wa + 0.002, wb - 0.002, 2.36, 2.5, '#2A4458');
+    R(b - 0.012, b - 0.008, 2.05, 2.2, '#2A2A2A');
+    R(a, b, 0.7, HB, '#111213'); R(a, b, 0.86, 0.88, '#E6E6E6'); R(a, b, 0.72, 0.74, '#E6E6E6');
+    R(ha - 0.0015, ha + 0.0015, 1.3, 3.0, Y); R(hb - 0.0015, hb + 0.0015, 1.3, 3.0, Y);
+  }
+  // the double middle door
+  R(0.5802, 0.6391, 0.56, 3.39, '#CFC8C0', 0.03); R(0.6087, 0.6107, 0.56, 3.39, '#8E8A86');
+  for (const [a, b] of [[0.585, 0.605], [0.6145, 0.6345]]) R(a, b, 2.3, 3.26, '#2F3437', 0.05);
+  R(0.6035, 0.6055, 1.6, 2.4, Y); R(0.6139, 0.6159, 1.6, 2.4, Y); R(0.5735, 0.5755, 1.75, 2.1, Y); R(0.6445, 0.6465, 1.75, 2.1, Y);
+  // windows: white rounded frame, dark glass, the top vent; the frosted toilet window
+  const win = (a, b, frost) => { R(a, b, 2.21, 3.29, FR, 0.14); R(a + 0.003, b - 0.003, 2.27, 3.23, frost ? '#7E8686' : GL, 0.1); R(a + 0.003, b - 0.003, 2.8, 2.84, FR); if (!frost) R(a + 0.006, b - 0.006, 2.3, 2.5, '#22404F', 0.06); };
+  win(0.0895, 0.1324, true);
+  for (const [a, b] of [[0.1555, 0.2054], [0.2279, 0.2761], [0.3003, 0.3475], [0.3727, 0.4198], [0.445, 0.4922], [0.5174, 0.5641], [0.6606, 0.7067], [0.7303, 0.7764], [0.7979, 0.8434], [0.866, 0.9088]]) win(a, b);
+  // "2" class signs
+  for (const [a, b] of [[0.138, 0.152], [0.9126, 0.926]]) { R(a, b, 2.3, 3.2, '#FFFFFF', 0.03); R(a + 0.001, b - 0.001, 2.34, 3.16, BL, 0.02); ltext('2', m(F((a + b) / 2)), -2.86, 0.32, '#FFFFFF', 800); }
+  // lettering
+  ltext('≋MÁV-START', m(F(0.178)), -1.6, 0.22, '#FFFFFF', 800);
+  ltext('H-START', m(F(0.477)), -1.86, 0.13, '#FFFFFF', 700);
+  ltext('50 55 20-07 ' + (600 + seed % 300) + '-' + (seed % 9), m(F(0.477)), -1.64, 0.13, '#FFFFFF', 700);
+  ltext(type, m(F(0.477)), -1.43, 0.13, '#FFFFFF', 700);
 }
 function r150Coach(type, xl, xr, td, dir) {
   const d0 = td - 1.4, d1 = td + 1.4, L = xr - xl, P = R150C, emu = type === 'BDVmot' || type === 'Bmx' || type === 'Bmxt';
@@ -13533,6 +13724,8 @@ function r150Freight(type, xl, xr, td, seed) {
 function r150Veh(type, xl, xr, td, dir, seed) {
   const d0 = td - 1.4, d1 = td + 1.4, L = xr - xl;
   const loco = type === 'V43' || type === 'V63' || type === '480', frt = type === 'Zas' || type === 'Eaos' || type === 'Habbins' || type === 'Sgnss';
+  if (type === 'Bhv' || type === 'BDt') { r150Bhv(xl, xr, td, dir, seed, type); return; }
+  if (type === 'V43') { box(xl + 0.4, xr - 0.4, d0 + 0.3, d1 - 0.3, 0.8, 1.1, { f: R150C.under, s: '#1F2224', t: R150C.under }); r150V43(xl, xr, td, dir, seed); return; }
   r150Bogies(frt ? [xl + Math.min(2.6, L * 0.2), xr - Math.min(2.6, L * 0.2)] : loco ? [xl + L * 0.23, xr - L * 0.23] : [xl + 3.3, xr - 3.3], d0);
   box(xl + 0.4, xr - 0.4, d0 + 0.3, d1 - 0.3, 0.8, 1.1, { f: R150C.under, s: '#1F2224', t: R150C.under });
   if (loco) r150Loco(type, xl, xr, td, dir, seed);
@@ -13544,17 +13737,33 @@ function drawKorosiTrain() {
   for (const a of r150Active(gameNow())) {
     if (Math.max(a.front, a.tail) < l || Math.min(a.front, a.tail) > r) continue;
     const { tr } = a, n = tr.cars.length; let off = 0;
+    // the vehicles and the couplings between them, drawn farthest from the camera first, so that a car's end
+    // never paints over the neighbour standing in front of it
+    const parts = [];
     for (let i = 0; i < n; i++) {
       const L = R150_VEH[tr.cars[i]], e0 = a.front - tr.dir * off, e1 = e0 - tr.dir * L; off += L + 0.9;
       const xl = Math.min(e0, e1), xr = Math.max(e0, e1);
-      if (i < n - 1) { const g0 = tr.dir > 0 ? xl - 0.9 : xr, g1 = g0 + 0.9; if (g1 > l && g0 < r) box(g0, g1, td - 0.25, td + 0.25, 1.0, 1.3, { f: '#2B2E30', s: '#1F2223', t: '#3A3E40' }); }
+      if (i < n - 1) { const g0 = tr.dir > 0 ? xl - 0.9 : xr, g1 = g0 + 0.9; if (g1 > l && g0 < r) parts.push({ x0: g0, x1: g1, i: -1 }); }
       if (xr < l || xl > r) continue;
-      CUR_HOUSE = tr.i * 31 + i;                 // the windows lit at night differ car by car
-      r150Veh(tr.cars[i], xl, xr, td, tr.dir, tr.i * 7 + i);
+      parts.push({ x0: xl, x1: xr, i });
     }
-    // the head lights (three white) and the tail lights (two red), on the end that faces the camera
-    if ((cam.x - a.front) * tr.dir > 0) { for (const dd of [td - 0.85, td + 0.85]) circleX(a.front, dd, 1.55, 0.13, '#FFF6D0'); circleX(a.front, td, 3.55, 0.12, '#FFF6D0'); }
-    if ((cam.x - a.tail) * -tr.dir > 0) for (const dd of [td - 0.85, td + 0.85]) circleX(a.tail, dd, 1.55, 0.12, '#E8352A');
+    const dist = q => (cam.x < q.x0 ? q.x0 - cam.x : cam.x > q.x1 ? cam.x - q.x1 : 0);
+    parts.sort((p, q) => dist(q) - dist(p));
+    for (const q of parts) {
+      if (q.i < 0) { box(q.x0, q.x1, td - 0.25, td + 0.25, 1.0, 1.3, { f: '#2B2E30', s: '#1F2223', t: '#3A3E40' }); continue; }
+      CUR_HOUSE = tr.i * 31 + q.i;               // the windows lit at night differ car by car
+      r150Veh(tr.cars[q.i], q.x0, q.x1, td, tr.dir, tr.i * 7 + q.i);
+    }
+    // the head lights (the two lower lamps and the round one on top) and the tail lights, on the end facing the camera
+    if ((cam.x - a.front) * tr.dir > 0) { const loco = tr.cars[0] === 'V43'; for (const dd of [td - 0.83, td + 0.83]) circleX(a.front, dd, loco ? 1.44 : 1.55, loco ? 0.1 : 0.13, '#FFF6D0'); circleX(a.front - (loco ? tr.dir * 0.33 : 0), td, loco ? 3.86 : 3.55, 0.12, '#FFF6D0'); }
+    if ((cam.x - a.tail) * -tr.dir > 0) {
+      const bhv = tr.cars[n - 1] === 'BDt' || tr.cars[n - 1] === 'Bhv', o = bhv ? 0.93 : 0.85;
+      // the far lamp of a Bhv end hides behind the gangway portal (0.3 m deep, ±0.72 m wide) when seen at an angle
+      const cz = cam.z || 0, dist = Math.abs(cam.x - a.tail), dAt = cz + (td + o - cz) * (1 - 0.3 / Math.max(dist, 0.31));
+      const farHidden = bhv && dAt < td + 0.72;
+      circleX(a.tail, td - o, bhv ? 1.71 : 1.55, bhv ? 0.1 : 0.12, '#E8352A');
+      if (!farHidden) circleX(a.tail, td + o, bhv ? 1.71 : 1.55, bhv ? 0.1 : 0.12, '#E8352A');
+    }
   }
   CUR_HOUSE = 0;
 }
@@ -15179,12 +15388,36 @@ TP.seg.addEventListener('click', e => {
   else if (timeOffset === 0) { setGameTime(budaTime(gameNow()).h + budaTime(gameNow()).m / 60); toast('<b>Beállított idő:</b> a nyilakkal vagy a gyorsgombokkal állíthatod.'); }
   UI.clockSec = -1;
 });
-TP.set.addEventListener('click', e => {
+// the steppers: a tap steps one hour / one minute; held down they keep turning (faster after a while);
+// the mouse wheel / touchpad turns the hour or the minute it is over
+function tpStep(min) {
+  if (busy()) { toast('Utazás közben nem tudsz időt állítani.'); return false; }
+  timeOffset += min * 60; if (timeOffset === 0) timeOffset = 1; UI.clockSec = -1;
+  return true;
+}
+const TP_HOLD = { t: 0, n: 0 };
+function tpHoldStop() { clearTimeout(TP_HOLD.t); TP_HOLD.t = 0; }
+TP.set.addEventListener('pointerdown', e => {
   const bt = e.target.closest('button[data-d]'); if (!bt) return;
-  AU.unlock(); AU.ui();
-  if (busy()) { toast('Utazás közben nem tudsz időt állítani.'); return; }
-  timeOffset += +bt.dataset.d * 60; if (timeOffset === 0) timeOffset = 1; UI.clockSec = -1;
+  e.preventDefault(); AU.unlock(); AU.ui();
+  const d = +bt.dataset.d; tpHoldStop(); TP_HOLD.n = 0;
+  if (!tpStep(d)) return;
+  const rep = () => { TP_HOLD.n++; const k = Math.abs(d) === 1 && TP_HOLD.n > 12 ? 5 : 1; if (!tpStep(d * k)) return; TP_HOLD.t = setTimeout(rep, TP_HOLD.n > 6 ? 70 : 140); };
+  TP_HOLD.t = setTimeout(rep, 420);
 });
+for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) TP.set.addEventListener(ev, tpHoldStop);
+TP.set.addEventListener('click', e => {      // keyboard (Enter / Space on a focused button)
+  const bt = e.target.closest('button[data-d]'); if (!bt || e.detail !== 0) return;
+  AU.ui(); tpStep(+bt.dataset.d);
+});
+TP.set.addEventListener('wheel', e => {
+  const col = e.target.closest('.tcol'); if (!col) return;
+  e.preventDefault();
+  TP_HOLD.acc = (TP_HOLD.acc || 0) + e.deltaY;
+  const steps = Math.trunc(TP_HOLD.acc / 40); if (!steps) return;
+  TP_HOLD.acc -= steps * 40;
+  tpStep(-steps * (col.querySelector('#tH') ? 60 : 1));
+}, { passive: false });
 $('tPresets').addEventListener('click', e => {
   const bt = e.target.closest('button[data-h]'); if (!bt) return;
   AU.unlock(); AU.ui();
