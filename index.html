@@ -6813,11 +6813,19 @@ const AU = {
       const dx = clamp(L.x, tr.lo, tr.hi);
       if (cross(0.25)) this.hiss(dx, d, 0.3);
       if (cross(DOOR_T.open0)) { this.hiss(dx, d - 1.4, 0.32); this.thunk(dx, d - 1.4, 0.25); }
-      const dl = doorSndLen();
-      if (dl) { if (cross(Math.max(DOOR_T.open1 + 0.5, DOOR_T.close1 - dl)) && !CTRL.get(tr.id)?.doors) playDoorSound(dx, d - 1.4); }
-      else if (cross(DOOR_T.warn)) this.doorBeeps(dx, d - 1.4);
-      if (cross(DOOR_T.close0)) this.airHiss(dx, d - 1.4, DOOR_T.close1 - DOOR_T.close0, 0.3);
-      if (cross(DOOR_T.close1)) { this.thunk(dx, d - 1.4, 0.4); this.hiss(dx, d - 1.4, 0.22); }
+      // recorded alarm_and_close.mp3: its last 1.5 s is the doors closing, so it starts at close1 − length and the
+      // doors move (close0 → close1, 1.5 s) together with it; then the synthetic warning / closing sounds stay silent
+      const dl = doorSndLen(), forced = !!CTRL.get(tr.id)?.doors;
+      if (dl) {
+        if (!forced && cross(DOOR_T.close1 - dl)) {
+          const mine = ch.mode === 'aboard' && ch.ride && ch.ride.id === tr.id;
+          playDoorSound(mine ? L.x : dx, mine ? L.d : d - 1.4, mine ? 0.55 : 0.9);
+        }
+      } else {
+        if (cross(DOOR_T.warn)) this.doorBeeps(dx, d - 1.4);
+        if (cross(DOOR_T.close0)) this.airHiss(dx, d - 1.4, DOOR_T.close1 - DOOR_T.close0, 0.3);
+        if (cross(DOOR_T.close1)) { this.thunk(dx, d - 1.4, 0.4); this.hiss(dx, d - 1.4, 0.22); }
+      }
       v.rel = r1;
     }
     for (const [id, v] of this.trains) if (!seen.has(id)) { this.kill(v); this.trains.delete(id); }
@@ -8292,7 +8300,7 @@ CP.doorOpen.addEventListener('click', () => panelCmd((c, tr) => {
 CP.doorClose.addEventListener('click', () => panelCmd((c, tr) => {
   const shut = () => { c.doors = 'closed'; DOORV.set(tr.id, tr.door); };
   const dl = doorSndLen(), x = clamp(ch.x, tr.lo, tr.hi);
-  if (dl && tr.door > 0.05 && playDoorSound(x, tr.side - 1.4)) { clearTimeout(c.closeT); c.closeT = setTimeout(shut, Math.max(0, dl - (DOOR_T.close1 - DOOR_T.close0)) * 1000); }
+  if (dl && tr.door > 0.05 && playDoorSound(x, tr.side - 1.4)) { clearTimeout(c.closeT); c.closeT = setTimeout(shut, Math.max(0, dl - 1.5) * 1000); }
   else shut();
   toast('<b>Kényszerzárás:</b> szól a jelzés, aztán az összes ajtó becsukódik és reteszelődik.');
 }));
@@ -14549,16 +14557,25 @@ function pidText() {
   const next = stops[tr.stop + 1];                                                      // just left: the next stop
   return next ? 'Következő megálló: ' + STATIONS[next.st].name : 'H6 · ' + tr.dest + ' felé';
 }
+// recorded announcements on the train the ghost rides:
+//   "X megállóhelyre érkeztünk" – the train has just stopped at X, before the doors open
+//   "Y következik"              – the train has left X (doors shut), Y is the next stop
+const RIDE_ANN = { id: null, rel: null, stop: null };
+function rideAnnounce() {
+  const tr = (ch.mode === 'aboard' || ch.mode === 'board') && ch.ride ? TRAINS.find(t => t.id === ch.ride.id) : null;
+  if (!tr) { RIDE_ANN.id = null; return; }
+  if (RIDE_ANN.id !== tr.id) { RIDE_ANN.id = tr.id; RIDE_ANN.rel = tr.rel; RIDE_ANN.stop = tr.stop; return; }   // just got on: no announcement
+  const r0 = RIDE_ANN.rel, r1 = tr.rel;
+  if (RIDE_ANN.stop === tr.stop && r0 < 0.3 && r1 >= 0.3) playAnnounce(tr.st, 'arrive');
+  // departure: the timetable switches to the next stop (negative rel) once the dwell is over – the doors are shut by then
+  else if (tr.stop === RIDE_ANN.stop + 1 && r1 < 0) playAnnounce(tr.st, 'next');
+  RIDE_ANN.rel = r1; RIDE_ANN.stop = tr.stop;
+}
 function updatePid() {
+  rideAnnounce();
   // the display only pops up for an announcement (arrival / next stop), then hides again
   const ann = pidText(), el = UI.pid, tnow = performance.now() / 1000;
   if (ann !== PID.ann) {
-    // the recorded announcement goes with the display: "… következik" after departure, "… érkeztünk" on arrival
-    // (only after a run, so boarding at a stop does not announce the stop you are standing at)
-    const nx = ann.startsWith('Következő megálló: '), nm = nx ? ann.slice(19) : ann;
-    const st = Object.keys(STATIONS).find(k => STATIONS[k].name === nm);
-    if (st && nx) playAnnounce(st, 'next');
-    else if (st && PID.ann.startsWith('Következő megálló: ')) playAnnounce(st, 'arrive');
     PID.ann = ann; PID.until = ann ? tnow + 6 : 0;
   }
   const text = tnow < PID.until ? ann : '';
