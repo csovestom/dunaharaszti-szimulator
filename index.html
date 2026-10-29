@@ -6622,7 +6622,7 @@ function playAnnounce(st, type) {
   const b = SND.buf[st + '-' + type]; if (!b || !AU.ready()) return;
   try { if (SND.pa) SND.pa.stop(); } catch (e) { /* already ended */ }
   const c = AU.ctx, s = c.createBufferSource(), g = c.createGain();
-  s.buffer = b; g.gain.value = 1.0; s.connect(g).connect(AU.out); s.start(); SND.pa = s;
+  s.buffer = b; g.gain.value = 0.5; s.connect(g).connect(AU.out); s.start(); SND.pa = s;
 }
 // the door alarm at a car door, positioned like the other train sounds; returns false if not loaded
 function playDoorSound(x, d, vol = 0.9) {
@@ -14559,7 +14559,7 @@ function pidText() {
 }
 // recorded announcements on the train the ghost rides:
 //   "X megállóhelyre érkeztünk" – the train has just stopped at X, before the doors open
-//   "Y következik"              – 4.5 s after the train left X, Y is the next stop
+//   "Y következik"              – 20 s after the train left X, Y is the next stop
 const RIDE_ANN = { id: null, rel: null, stop: null, next: null };
 function rideAnnounce() {
   const tr = (ch.mode === 'aboard' || ch.mode === 'board') && ch.ride ? TRAINS.find(t => t.id === ch.ride.id) : null;
@@ -14568,8 +14568,8 @@ function rideAnnounce() {
   const r0 = RIDE_ANN.rel, r1 = tr.rel;
   if (RIDE_ANN.stop === tr.stop && r0 < 0.3 && r1 >= 0.3) { playAnnounce(tr.st, 'arrive'); RIDE_ANN.next = null; }
   // departure: the timetable switches to the next stop (negative rel) once the dwell is over; the
-  // "… következik" comes 4.5 s later, when the train is already rolling out of the stop
-  else if (tr.stop === RIDE_ANN.stop + 1 && r1 < 0) RIDE_ANN.next = { st: tr.st, stop: tr.stop, at: r1 + 4.5 };
+  // "… következik" comes 20 s later, when the train is already rolling out of the stop
+  else if (tr.stop === RIDE_ANN.stop + 1 && r1 < 0) RIDE_ANN.next = { st: tr.st, stop: tr.stop, at: r1 + 20 };
   const N = RIDE_ANN.next;
   if (N && N.stop === tr.stop && r1 >= N.at) { RIDE_ANN.next = null; if (r1 < 0) playAnnounce(N.st, 'next'); }
   RIDE_ANN.rel = r1; RIDE_ANN.stop = tr.stop;
