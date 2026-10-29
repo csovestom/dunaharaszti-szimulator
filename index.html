@@ -14559,16 +14559,19 @@ function pidText() {
 }
 // recorded announcements on the train the ghost rides:
 //   "X megállóhelyre érkeztünk" – the train has just stopped at X, before the doors open
-//   "Y következik"              – the train has left X (doors shut), Y is the next stop
-const RIDE_ANN = { id: null, rel: null, stop: null };
+//   "Y következik"              – 4.5 s after the train left X, Y is the next stop
+const RIDE_ANN = { id: null, rel: null, stop: null, next: null };
 function rideAnnounce() {
   const tr = (ch.mode === 'aboard' || ch.mode === 'board') && ch.ride ? TRAINS.find(t => t.id === ch.ride.id) : null;
-  if (!tr) { RIDE_ANN.id = null; return; }
-  if (RIDE_ANN.id !== tr.id) { RIDE_ANN.id = tr.id; RIDE_ANN.rel = tr.rel; RIDE_ANN.stop = tr.stop; return; }   // just got on: no announcement
+  if (!tr) { RIDE_ANN.id = null; RIDE_ANN.next = null; return; }
+  if (RIDE_ANN.id !== tr.id) { RIDE_ANN.id = tr.id; RIDE_ANN.next = null; RIDE_ANN.rel = tr.rel; RIDE_ANN.stop = tr.stop; return; }   // just got on: no announcement
   const r0 = RIDE_ANN.rel, r1 = tr.rel;
-  if (RIDE_ANN.stop === tr.stop && r0 < 0.3 && r1 >= 0.3) playAnnounce(tr.st, 'arrive');
-  // departure: the timetable switches to the next stop (negative rel) once the dwell is over – the doors are shut by then
-  else if (tr.stop === RIDE_ANN.stop + 1 && r1 < 0) playAnnounce(tr.st, 'next');
+  if (RIDE_ANN.stop === tr.stop && r0 < 0.3 && r1 >= 0.3) { playAnnounce(tr.st, 'arrive'); RIDE_ANN.next = null; }
+  // departure: the timetable switches to the next stop (negative rel) once the dwell is over; the
+  // "… következik" comes 4.5 s later, when the train is already rolling out of the stop
+  else if (tr.stop === RIDE_ANN.stop + 1 && r1 < 0) RIDE_ANN.next = { st: tr.st, stop: tr.stop, at: r1 + 4.5 };
+  const N = RIDE_ANN.next;
+  if (N && N.stop === tr.stop && r1 >= N.at) { RIDE_ANN.next = null; if (r1 < 0) playAnnounce(N.st, 'next'); }
   RIDE_ANN.rel = r1; RIDE_ANN.stop = tr.stop;
 }
 function updatePid() {
