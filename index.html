@@ -6278,6 +6278,7 @@ function drawSide(tr, car) {
     const dx = car.doors[ch.ride.di];
     let best = null, bd = 1e9;
     for (const [a, b] of (isM ? M_WIN : P_WIN)) {
+      if (ch.ride.front && (a !== M_WIN[0][0] || !isM)) continue;   // the first passenger window of the leading car
       if (b - a < 0.9) continue;
       const w0 = car.cab === 'R' ? car.xr - b : car.xl + a, w1 = w0 + (b - a), dd = Math.abs((w0 + w1) / 2 - dx);
       if (dd < bd) { bd = dd; best = [w0, w1]; }
@@ -8743,7 +8744,7 @@ function tpHere(sp) {
   if (sp.lane === 'street' || PLAT_LANES.includes(sp.lane)) return !anySideScene() && Math.abs(ch.x - sp.x) < 60 && ['street', ...({ kulso: ['kplat', 'kfar'], millen: ['mplat', 'mfar'], szent: ['splat', 'sfar'] }[sp.id] || ['plat', 'far'])].includes(ch.lane);
   if (sp.lane === 'back') return SCENE.back && !SCENE.padok && !SCENE.erz && !SCENE.dozsa && ch.lane === 'back' && Math.abs(ch.x - sp.x) < 60;
   if (sp.lane === 'dozsa') return SCENE.dozsa && ch.lane === 'dozsa' && Math.abs(ch.x - sp.x) < 60;
-  if (sp.lane === 'korosi') return SCENE.korosi && ch.lane === 'korosi';
+  if (sp.lane === 'korosi') return SCENE.korosi && (ch.lane === 'korosi' || ch.lane === 'knorth');
   return SCENE.erz && ch.lane === 'erz';
 }
 function tpRender() {
@@ -8753,6 +8754,17 @@ function tpRender() {
 function tpSetOpen(open) {
   TPORT.open = open; TPORT.btn.setAttribute('aria-expanded', String(open));
   if (open) { if (TC.open) tcSetOpen(false); TPORT.root.classList.remove('closing'); TPORT.root.hidden = false; tpRender(); } else smoothHide(TPORT.root);
+}
+function placeAtSpot(sp) {
+  SCENE.back = SCENE.duna = SCENE.padok = SCENE.hid = SCENE.jokai = SCENE.erz = SCENE.dozsa = SCENE.korosi = false;
+  if (sp.lane === 'korosi') SCENE.korosi = true;
+  if (sp.lane === 'back') { SCENE.back = true; SCENE.frontX = PXK.x; }
+  if (sp.lane === 'erz') { SCENE.back = true; SCENE.erz = true; SCENE.frontX = PXK.x; }
+  if (sp.lane === 'dozsa') { SCENE.back = true; SCENE.dozsa = true; SCENE.frontX = PXK.x; }
+  ch.lane = sp.lane; ch.x = sp.x; ch.facing = sp.facing;
+  ch.d = LANES[ch.lane].d; ch.g = groundAt(ch.lane, ch.x); ch.key = null;
+  cam.x = sp.lane === 'street' || PLAT_LANES.includes(sp.lane) ? clamp(ch.x + ch.facing * 2, WORLD.minX + 6, WORLD.maxX - 6) : sp.lane === 'back' ? clamp(ch.x + ch.facing * 2, BACK.x0 - 16, BACK.x1 - 6) : sp.lane === 'dozsa' ? clamp(ch.x + ch.facing * 2, DGY.x0 + 7, DGY.x1 - 7) : sp.lane === 'korosi' ? clamp(ch.x + ch.facing * 2, KCS.x0 + 7, KCS.x1 - 7) : clamp(ch.x + ch.facing * 2, ERZ.x0 + 7, ERZ.x1 - 7);
+  ch.mode = 'walk'; ch.speed = 0; ch.alpha = 1; ch.ride = null;
 }
 function teleportTo(sp) {
   if (INTR.on) intrQuit();
@@ -8767,14 +8779,7 @@ function teleportTo(sp) {
   ch.mode = 'turn'; ch.speed = 0; input.left = input.right = false;
   fadeIn(`<b>Teleport</b><br>${sp.name}`);
   setTimeout(() => {
-    SCENE.back = SCENE.duna = SCENE.padok = SCENE.hid = SCENE.jokai = SCENE.erz = SCENE.dozsa = SCENE.korosi = false;
-    if (sp.lane === 'korosi') SCENE.korosi = true;
-    if (sp.lane === 'back') { SCENE.back = true; SCENE.frontX = PXK.x; }
-    if (sp.lane === 'erz') { SCENE.back = true; SCENE.erz = true; SCENE.frontX = PXK.x; }
-    if (sp.lane === 'dozsa') { SCENE.back = true; SCENE.dozsa = true; SCENE.frontX = PXK.x; }
-    ch.lane = sp.lane; ch.x = sp.x; ch.facing = sp.facing;
-    ch.d = LANES[ch.lane].d; ch.g = groundAt(ch.lane, ch.x); ch.key = null;
-    cam.x = sp.lane === 'street' || PLAT_LANES.includes(sp.lane) ? clamp(ch.x + ch.facing * 2, WORLD.minX + 6, WORLD.maxX - 6) : sp.lane === 'back' ? clamp(ch.x + ch.facing * 2, BACK.x0 - 16, BACK.x1 - 6) : sp.lane === 'dozsa' ? clamp(ch.x + ch.facing * 2, DGY.x0 + 7, DGY.x1 - 7) : sp.lane === 'korosi' ? clamp(ch.x + ch.facing * 2, KCS.x0 + 7, KCS.x1 - 7) : clamp(ch.x + ch.facing * 2, ERZ.x0 + 7, ERZ.x1 - 7);
+    placeAtSpot(sp);
     ch.mode = 'walk';
     tpUpdate();
     setExpr('happy', 1.6);
@@ -14679,6 +14684,7 @@ const LANES = {
   dozsa: { d: DGD.lane, min: DGY.x0 - 6, max: DGY.x0 + DGY.end },   // the street ends at the Bacchus Pub
   jokai: { d: JD.lane, min: JOK.x0 - 6, max: JOK.x1 - 2 },   // the other side of the Fő út (turned around)
   korosi: { d: KD.lane, min: KCS.x0 + 2, max: KCS.x1 - 4 },   // the Baross u. by the Kőrösi Csoma crossing
+  knorth: { d: 19.8, min: KCS.x0 + 2, max: KCS.x1 - 4 },   // north of the line 150: in front of the bakterház and the plots (over the crossing)
 };
 const LANE_NAME = { plat: 'a közeli peronra', far: 'a túloldali peronra', kplat: 'a közeli peronra', kfar: 'a túloldali peronra', fside: 'az út túloldalára', mplat: 'a közeli peronra', mfar: 'a túloldali peronra', splat: 'a közeli peronra', sfar: 'a túloldali peronra' };
 function groundAt(lane, x) {
@@ -14688,7 +14694,7 @@ function groundAt(lane, x) {
   if (lane === 'padok') return 0.1;
   if (lane === 'hid') return 0.02;
   if (lane === 'jokai' || lane === 'erz' || lane === 'dozsa') return 0;
-  if (lane === 'korosi') return 0.04;
+  if (lane === 'korosi' || lane === 'knorth') return 0.04;
   for (const [x0, x1, h0, h1] of PLAT_SEGS[lane]) if (x >= x0 && x <= x1) return lerp(h0, h1, (x - x0) / (x1 - x0));
   return 0;
 }
@@ -14748,7 +14754,7 @@ function updateChar(dt) {
     const u = smooth(B.t);
     ch.alpha = ch.mode === 'board' ? 1 - u : u;
     if (B.t >= 1) {
-      if (ch.mode === 'board') { ch.mode = 'aboard'; ch.alpha = 0; }
+      if (ch.mode === 'board') { ch.mode = 'aboard'; ch.alpha = 0; B.ci = 0; B.di = 0; B.front = true; }   // the ghost always sits at the front window of the first car
       else { ch.mode = 'walk'; ch.alpha = 1; ch.ride = null; setExpr('happy', 1.4); }
     }
   } else if (ch.mode === 'aboard') {
@@ -14923,7 +14929,7 @@ const OBJS = [
   // the Kőrösi Csoma Sándor u. / Baross utca crossing
   ...[[62.5, 2.4, 'kcross', 'eye', 'Átnézel a síneken', 1.6, 16.0, 'Vasúti átjáró',
       '<b>Kőrösi Csoma Sándor utca – Határ út.</b> Itt keresztezi az utat a <b>150-es vasútvonal</b> (Budapest – Kelebia) egy vágánya: gumipanelek, fénysorompó és félsorompó mindkét oldalon. Balra Budapest, jobbra Kunszentmiklós és Kelebia. A menetrendet a Forgalom fül mutatja.'],
-    [78.0, 2.6, 'kbakter', 'eye', 'Megnézed a bakterházat', 3.0, 21.0, 'Bakterház',
+    [82.0, 2.4, 'kbakter', 'eye', 'Megnézed a bakterházat', 3.0, 21.0, 'Bakterház',
       'A régi <b>bakterház</b> a Baross utcában: kerek ablak az oromzaton, zöld ajtó, a hosszú szárnyon lepattogzott vakolat alól kilátszik a tégla. A léckerítés mögött sárga és narancs liliomok nyílnak.'],
     [67.0, 1.0, 'klight', 'eye', 'Megnézed a sorompót', 2.4, KD.nearPost, 'Fénysorompó',
       'Ha lassan villog a <b>fehér fény</b>, szabad az áthaladás. Ha HÉV jön, a két piros lámpa felváltva villog, és lemennek a félsorompó karjai.'],
@@ -14950,8 +14956,8 @@ const OBJS = [
     [4.0, 2.0, 'kendw', 'eye', 'Körülnézel', 1.6, KD.lane + 0.6, 'Sínek mentén',
       'Erre már csak a sínek és a fű. Az átjáró visszafelé van, jobbra.'],
   ].map(([u, r, id, icon, label, h, d, pts, txt]) => ({ lane: 'korosi', x: KCS.x0 + u, r, kind: 'klook', id, pts, txt, icon, label, anchor: [KCS.x0 + u, d, h] })),
-  { lane: 'street', x: -373.2, r: 2.0, kind: 'ktwin', icon: 'door', label: 'Felmész a váltóállító toronyba', anchor: [-373.2, 28, 3.4] },
-  { lane: 'korosi', x: KCS.x0 + 77.25, r: 1.3, kind: 'kbakin', icon: 'door', label: 'Bemész a bakterházba', anchor: [KCS.x0 + 77.25, 21.5, 2.5] },
+  ...['street', 'kplat', 'kfar'].map(ln => ({ lane: ln, x: -380, r: 11, kind: 'ktwin', wgt: 0.15, icon: 'door', label: 'Felmész a váltóállító toronyba', anchor: [-373.2, 28, 3.4] })),
+  ...['korosi', 'knorth'].map(ln => ({ lane: ln, x: KCS.x0 + 79, r: ln === 'knorth' ? 16 : 11, kind: 'kbakin', wgt: 0.15, icon: 'door', label: 'Bemész a bakterházba', anchor: [KCS.x0 + 77.25, 21.5, 2.5] })),
   { lane: 'korosi', x: LXMAN_K.x, r: 1.1, man: LXMAN_K, kind: 'lxbox', icon: 'hand', label: 'Kinyitod a sorompó-kezelő szekrényt', anchor: [LXMAN_K.x, LXMAN_K.d, 1.6] },
   { lane: 'erz', x: ERZ.x0 + 93.1, r: 1.6, kind: 'gyuri', icon: 'door', label: 'Bemész a Gyuri Borozóba', anchor: [ERZ.x0 + 93.1, ED.front + 6.8, 3.6] },
   ...[[75.0, 2.9], [77.2, 5.3], [81.3, 3.95], [86.1, 3.2]].map(([u, dd], i) => ({ lane: 'erz', x: ERZ.x0 + u, r: i === 4 ? 1.2 : 1.0, kind: 'gsit', front: true, icon: 'sit',
@@ -15047,6 +15053,7 @@ const OBJS = [
     ...(kind === 'smaple' ? [] : [{ lane: 'fside', x, r: r + 0.8, kind, icon: 'eye', label: label.replace('Átnézel a ', 'Megnézed a ').replace('Odalebegsz a dinnyés kocsihoz', 'Megnézed a dinnyés kocsit'), anchor: [x, d, h] }])]),
   ...HOBO_SPOTS.map((x, grp) => ({ lane: 'fside', x, r: 2.2, kind: 'hobo', grp, icon: 'eye', label: 'Odalebegsz a cigizőkhöz', anchor: [x, HOBOS.find(h => h.grp === grp).d, 2.3] })),
 ];
+for (const o of OBJS.slice()) if (o.lane === 'korosi' && (o.kind === 'klook' || o.kind === 'lxbox')) OBJS.push({ ...o, lane: 'knorth' });
 function currentAction() {
   if (INTR.on) return intrAction();
   if (ch.mode === 'sit') return ch.drink ? { kind: 'sip', icon: 'hand', label: `Iszol egy kortyot · ${ch.drink.v.id === 'bor' ? ch.drink.v.name : 'Royal ' + ch.drink.v.name}`, key: 'sip' + ch.drink.sips }
@@ -15068,8 +15075,8 @@ function currentAction() {
   let best = null, bd = 1e9;
   for (const o of OBJS) {
     if (o.lane !== ch.lane || DIR_KINDS.has(o.kind)) continue;
-    const dx = Math.abs(o.x - ch.x);
-    if (dx <= o.r && dx < bd) { best = o; bd = dx; }
+    const dx0 = Math.abs(o.x - ch.x), dx = dx0 * (o.wgt || 1);
+    if (dx0 <= o.r && dx < bd) { best = o; bd = dx; }
   }
   for (const tr of TRAINS) {
     if (tr.lane !== ch.lane || tr.door < 0.9) continue;
@@ -15096,7 +15103,7 @@ function droppedItems(list) {
     list.push({ k: db.d, draw: () => { at(db.x, db.d); ctx.translate(0, -db.g); ctx.scale(db.f, 0.32); ctx.rotate(db.rot); bikeShape(db.c); } });
   }
 }
-function sceneOf(lane) { return lane === 'back' ? 'back' : lane === 'duna' ? 'duna' : lane === 'padok' ? 'padok' : lane === 'hid' ? 'hid' : lane === 'jokai' ? 'jokai' : lane === 'erz' ? 'erz' : lane === 'dozsa' ? 'dozsa' : lane === 'korosi' ? 'korosi' : 'main'; }
+function sceneOf(lane) { return lane === 'back' ? 'back' : lane === 'duna' ? 'duna' : lane === 'padok' ? 'padok' : lane === 'hid' ? 'hid' : lane === 'jokai' ? 'jokai' : lane === 'erz' ? 'erz' : lane === 'dozsa' ? 'dozsa' : (lane === 'korosi' || lane === 'knorth') ? 'korosi' : 'main'; }
 // up / down: the ghost can float onto a platform anywhere, not only at the paths
 // the steps that go "into" or "out of" the picture (a zebra, the tracks, a side street) are up / down moves too,
 // so the up / down buttons and keys do them directly; the action button is left for the other things
@@ -15135,7 +15142,7 @@ function vertMovesBase() {
       : Math.abs(x - DGY.mouth) <= 2.4 ? [{ dir: 'up', to: 'dozsa', dozsa: true, label: 'Be a Dózsa György útra' }] : [];
     case 'erz': return [];
     case 'dozsa': return [];
-    case 'korosi': return [];
+    case 'korosi': case 'knorth': { const u = x - KCS.x0; return (u >= 53.0 && u <= 56.6) || (u >= 59.2 && u <= 65.8) ? [{ dir: ch.lane === 'korosi' ? 'up' : 'down', to: ch.lane === 'korosi' ? 'knorth' : 'korosi', kcross: true, label: ch.lane === 'korosi' ? 'Át a síneken az átjárón a bakterház felé' : 'Vissza át a síneken az átjárón' }] : []; }
     case 'duna': return [];
     case 'padok': return [];
     case 'hid': return [];
@@ -15166,6 +15173,11 @@ function doVert(want) {
   const opts = vertMoves(), v = typeof want === 'object' && want ? want : want ? opts.find(o => o.dir === want) : opts[0];
   if (!v) return;
   if (v.obj) { UI.action = v.obj; doAction(); return; }
+  if (v.kcross) {
+    AU.unlock(); AU.ui();
+    if (KCR.active || LXMAN_K.closed) { AU.nope(); setExpr('scared', 1.5); toast('<b>Vigyázz, jön a vonat!</b> Villog a lámpa, a sorompó zárva. Várd meg, amíg elhalad a 150-es vonal vonata.'); return; }
+    startTrans(v.to, clamp(ch.x, LANES[v.to].min, LANES[v.to].max), 2.8, 0.5); return;
+  }
   if (v.to === 'back') { turnAround(true); return; }
   if (v.turn) { turnAround(false); return; }
   AU.unlock(); AU.ui();
@@ -15508,12 +15520,22 @@ function doAction() {
       toast(a.kind === 'ttt' ? `<b>Faliújság.</b> Dunaharaszti külső, a következő HÉV-ek – Ráckeve felé: ${nd('R')} · Közvágóhíd felé: ${nd('K')}.`
         : a.kind === 'tphone' ? `<b>Forgalmi telefon.</b> „Haraszti külső jelentkezik. Ráckeve felé: ${nd('R')}, Közvágóhíd felé: ${nd('K')}.”` : `<b>Szolgálati napló.</b> Ma ${TRAINS.length} HÉV van a pályán, az állomáson ${twStation(t).length} áll. Minden vágány szabad, a jelzők rendben.`, 7000);
       addPoints(8, 'Váltóállító torony', 't-' + a.kind, 120); break; }
-    case 'tlever': { const i = twLeverAt(INTR.x); TW.lev[i] = TW.lev[i] ? 0 : 1; AU.thunk && AU.thunk(ch.x, ch.d, 0.45); setExpr('happy', 1.6); addPoints(10, 'Váltókar', 't-lever', 45);
-      toast(TW.lev[i] ? `<b>${i + 1}. kar áthúzva.</b> Odakint kattan a váltó, a jelző vált.` : `<b>${i + 1}. kar visszaengedve.</b> A váltó az alapállásban.`, 4200); break; }
+    case 'tlever': { const i = a.idx, why = twBlock(i);
+      if (why) { AU.nope(); setExpr('curious', 1.8); toast('<b>Zárolva.</b> ' + why, 5200); break; }
+      TW.lev[i] = TW.lev[i] ? 0 : 1; AU.thunk && AU.thunk(ch.x, ch.d, 0.45); setExpr('happy', 1.6); addPoints(10, 'Váltókar', 't-lever', 45);
+      const sig = TW_SIG.includes(i), pts = TW.levCol[i] === '#2F5FB0';
+      toast(TW.lev[i] ? (pts ? `<b>${i + 1}. váltókar áthúzva.</b> Odakint kattan a váltó, a vágánykijelzőn sárgára vált az útvonal.` : sig ? `<b>${i + 1}. jelzőkar áthúzva.</b> A jelző zöldre vált, a kijelzőn is.` : `<b>${i + 1}. reteszkar áthúzva.</b> Az útvonal zárolva.`)
+        : (pts ? `<b>${i + 1}. váltókar visszaengedve.</b> A váltó az alapállásban.` : sig ? `<b>${i + 1}. jelzőkar visszaengedve.</b> A jelző újra tilos.` : `<b>${i + 1}. reteszkar visszaengedve.</b>`), 4600); break; }
+    case 'testop': TW.estop = !TW.estop; AU.clickPair(ch.x, ch.d, 0.35); setExpr(TW.estop ? 'scared' : 'happy', 1.8);
+      if (TW.estop) { for (const j of [...TW_SIG, 5, 11]) TW.lev[j] = 0; toast('<b>Vészleállítás!</b> Minden jelzőkar visszaesett, a jelzők tilosat mutatnak. Kioldásig nem lehet jelzőt átvenni.', 5600); }
+      else toast('<b>Vészleállító kioldva.</b> A jelzőkarok újra használhatók.', 4200); break;
+    case 'tpa': { setExpr('happy', 2); AU.clickPair(ch.x, ch.d, 0.3); const dp = nextDepartures('R', 'kulso', t, 1)[0], dk = nextDepartures('K', 'kulso', t, 1)[0];
+      toast(`<b>Hangosbemondó.</b> „Tisztelt utasaink! ${dp ? 'A Ráckeve felé közlekedő HÉV ' + (dp.ts <= t ? 'most áll a peronon' : fmtClock(dp.ts) + '-kor érkezik') : 'Ráckeve felé ma már nem közlekedik HÉV'}${dk ? ', a Közvágóhíd felé induló pedig ' + (dk.ts <= t ? 'most áll a peronon' : fmtClock(dk.ts) + '-kor érkezik') : ''}. Kérjük, a peronon a sárga vonal mögött várakozzanak!”`, 9000); addPoints(10, 'Hangosbemondó', 't-pa', 90); break; }
+    case 'tlight': INTR.dark = !INTR.dark; AU.clickPair(ch.x, ch.d, 0.2); toast(INTR.dark ? 'Lekapcsoltad a villanyt. Az ablakon át jön be fény.' : 'Felkapcsoltad a villanyt, kigyulladnak a zöld függőlámpák.', 3600); break;
     case 'tboard': { setExpr('curious', 3); const st = twStation(t);
       toast(st.length ? `<b>Vágánykijelző.</b> A ${st.map(q => q.dir > 0 ? 'Ráckeve' : 'Közvágóhíd').join(' és a ')} felé induló HÉV a vágányon áll: piros a szakasz, a jelző tilos.` : '<b>Vágánykijelző.</b> Minden szakasz szabad, a jelzők zöldek, nincs jármű az állomáson.', 6500); addPoints(10, 'Vágánykijelző', 't-board', 90); break; }
     case 'tcab': setExpr('happy', 1.6); toast('Szürke iratszekrény: fiókokban menetrendek és utasítások, tetején a szolgálati sapka és egy papírtálca.', 5000); break;
-    case 'tstove': setExpr('happy', 1.6); toast('Vaskályha és a csöve a mennyezetig. Télen ez tartja melegen az egész kabint.', 4600); break;
+    case 'tstove': TW.fire = !TW.fire; setExpr('happy', 1.6); toast(TW.fire ? 'Befűtöttél: a kályhaajtón át narancsos fény dereng, melegszik a kabin.' : 'Elfojtottad a tüzet a kályhában.', 4200); break;
     case 'iexit': intrLeave(); break;
     case 'icoat': setExpr('curious', 2.4); toast('Kopott, sötétkék vasutas kabát sárgás gombokkal, mellette a sapka. Valaki még nemrég viselte – vagy már nagyon rég.', 5200); break;
     case 'ilog': { setExpr('curious', 2.4); const D0 = r150Day(t), list = R150[D0.dow].filter(q => D0.start + q.min * 60 > t - 60).slice(0, 4);
@@ -15524,10 +15546,18 @@ function doAction() {
       const f = q => q ? `${fmtClock(D0.start + q.min * 60)} (${R150_KIND[q.kind].toLowerCase()})` : 'ma már nincs';
       toast(`<b>Forgalmi telefon.</b> „Következő vonat Budapest felé: ${f(nx(-1))}, Kelebia felé: ${f(nx(1))}.”`, 6500); addPoints(8, 'Forgalmi telefon', 'i-phone', 120); break; }
     case 'itt': setExpr('curious', 2.4); toast('Megsárgult <b>menetrend</b> a falon: a 150-es vonal vonatai, kézzel pontosítva. A Forgalom fülön a mai pontos lista is megvan.', 5600); break;
-    case 'ilever': LXMAN_K.closed = !LXMAN_K.closed; AU.thunk && AU.thunk(ch.x, ch.d, 0.4); setExpr('happy', 1.6); addPoints(12, 'Bakterházi emelőkar', 'i-lever', 60);
-      toast(LXMAN_K.closed ? '<b>Meghúztad az 1-es kart.</b> Kintről hallani, ahogy a sorompó zárja az átjárót.' : '<b>Visszaengedted az 1-es kart.</b> A sorompó nyit, a forgalom mehet.', 5000); break;
+    case 'ilever': { const i = a.idx, nowS = performance.now() / 1000; AU.thunk && AU.thunk(ch.x, ch.d, 0.4); setExpr('happy', 1.6);
+      if (i === 0) { LXMAN_K.closed = !LXMAN_K.closed; addPoints(12, 'Bakterházi emelőkar', 'i-lever', 60);
+        toast(LXMAN_K.closed ? '<b>Meghúztad az 1-es kart.</b> Kintről hallani, ahogy a sorompó zárja az átjárót.' : '<b>Visszaengedted az 1-es kart.</b> A sorompó nyit, a forgalom mehet.', 5000); }
+      else if (i === 1) { INTR.bl[1] = 1; INTR.blT[1] = 0.7; AU.clickPair(ch.x, ch.d, 0.3); toast('<b>Jelzőcsengő.</b> Egy rövid csengetés megy a szomszéd bakterház felé: vonat indul.', 4200); addPoints(6, 'Jelzőcsengő', 'i-bell', 40); }
+      else if (i === 2) { INTR.bl[2] = 1; INTR.blT[2] = 0.7; INTR.test = nowS + 4; toast('<b>Lámpapróba.</b> A tabló és a kezelőpult minden lámpája kigyullad négy másodpercre.', 4200); addPoints(6, 'Lámpapróba', 'i-test', 40); }
+      else if (i === 3) { INTR.bl[3] = 1; INTR.blT[3] = 0.7; if (KCR.auto && !INTR.ack) { INTR.ack = true; toast('<b>Közeledés nyugtázva.</b> A piros figyelmeztető lámpa állandó fényre vált, amíg a vonat el nem halad.', 4800); addPoints(10, 'Közeledés nyugtázva', 'i-ack', 40); } else toast(KCR.auto ? 'A közeledést már nyugtáztad.' : 'Nincs közeledő vonat, nincs mit nyugtázni.', 3600); }
+      else { INTR.bl[4] = INTR.bl[4] ? 0 : 1; toast(INTR.bl[4] ? 'A tabló háttérvilágítása felkapcsolva: élesebben látszanak a lámpák.' : 'A tabló háttérvilágítása visszaállt az alapfényre.', 3600); }
+      break; }
+    case 'ilight': INTR.dark = !INTR.dark; AU.clickPair(ch.x, ch.d, 0.2); toast(INTR.dark ? 'Lekapcsoltad a villanyt. Csak az ablakon át jön be fény.' : 'Felkapcsoltad a villanyt, kigyulladnak a zöld lámpák.', 3600); break;
+    case 'iflt': INTR.flt = (INTR.flt + 1) % 3; AU.clickPair(ch.x, ch.d, 0.2); toast(['Tabló szűrő: minden vonat látszik.', 'Tabló szűrő: csak a személy- és gyorsvonatok.', 'Tabló szűrő: csak a tehervonatok.'][INTR.flt], 3600); addPoints(6, 'Tabló szűrő', 'i-flt', 40); break;
     case 'iboard': setExpr('curious', 3); toast(l150Summary(t), 9000); addPoints(15, 'Vonalfelügyeleti tabló', 'i-board', 90); break;
-    case 'istove': setExpr('happy', 1.6); toast('Fekete öntöttvas kályha, a csöve a mennyezetig fut. Mellette szénnel teli vödör és aprófa.', 5000); break;
+    case 'istove': INTR.fire = !INTR.fire; setExpr('happy', 1.6); toast(INTR.fire ? 'Befűtöttél: a kályhaajtón át narancsos fény táncol a falon.' : 'Elfojtottad a tüzet, a kályha lassan kihűl.', 4200); break;
     case 'ibed': setExpr('curious', 2); toast('Vaságy csíkos takaróval: itt pihent a bakter az éjszakai vonatok között.', 5000); break;
     case 'klook': setExpr('curious', 2.4); addPoints(5, a.pts, 'k-' + a.id, 300); toast(a.txt, 5600); break;
     case 'graffiti': setExpr('curious', 2.4); addPoints(10, 'Graffiti-nézelődés', 'graff-' + a.x, 300); toast(a.txt); break;
@@ -15609,9 +15639,10 @@ function finishRide() {
   // 55 m before its stop, braking from about 36 km/h), as if it had never stopped; otherwise it stands at the stop
   const target = arrivalAt(o, k, 0) - Math.sqrt(2 * 55 / SCH.b);   // the returning train is already rolling in
   timeOffset += target - t;
+  best = { ci: 0, di: 0, x: 0 };   // …and at the front window of the leading car
   const tr = buildTrain(o, k, target), x = tr.cars[best.ci].doors[best.di];
   ch.lane = S.lane; ch.x = x; ch.d = LANES[S.lane].d; ch.g = groundAt(S.lane, x); ch.facing = o.dir;
-  ch.ride = { id: tr.id, ci: best.ci, di: best.di, t: 0, doorX: x, dir: o.key, stop: 0 };
+  ch.ride = { id: tr.id, ci: best.ci, di: best.di, t: 0, doorX: x, dir: o.key, stop: 0, front: true };
   ch.mode = 'alight'; ch.alpha = 0;
   TRAINS = activeTrains(gameNow());
   // on board, the train still moving; the arrival at the stop is announced as usual. The camera is not moved here:
@@ -15631,7 +15662,7 @@ const L150 = [['Budapest-Keleti', 0], ['Ferencváros', 7], ['Soroksári út', 9]
   ['Soltszentimre', 91], ['Csengőd', 97], ['Tabdi', 101], ['Kiskőrös', 107], ['Soltvadkert', 117], ['Pirtói szőlők', 123], ['Pirtó', 126], ['Kiskunhalas', 134],
   ['Balotaszállás', 144], ['Kisszállás', 152], ['Tompa', 158], ['Kelebia', 163]];
 const L150_KM = 163, L150_KMC = 23;   // the crossing lies between Dunaharaszti and Dunaharaszti alsó
-const INTR = { on: false, x: 1.6, face: 1, cam: 0, walk: 0, W: 22.4, ready: false, kind: 'bakter', ret: null };
+const INTR = { on: false, x: 1.6, face: 1, cam: 0, walk: 0, W: 22.4, ready: false, kind: 'bakter', ret: null, bl: [0, 0, 0, 0, 0], blT: [0, 0, 0, 0, 0], dark: false, fire: false, flt: 0, test: 0, ack: false };
 // where the trains of today are on the whole line (they run from the crossing time at their average speed)
 function l150Trains(t) {
   const D0 = r150Day(t), out = [];
@@ -15661,21 +15692,25 @@ const INTR_OBJS = [
   { x: 6.4, r: 0.8, kind: 'icup', icon: 'eye', label: 'Megnézed a zöld szekrényt' },
   { x: 7.75, r: 0.55, kind: 'iphone', icon: 'hand', label: 'Felveszed a telefont' },
   { x: 8.45, r: 0.45, kind: 'itt', icon: 'eye', label: 'Elolvasod a menetrendet' },
-  { x: 10.3, r: 0.9, kind: 'ilever', icon: 'hand', label: 'Meghúzod a sorompó emelőkarját' },
+  ...['Sorompó zárása / nyitása', 'Jelzőcsengő', 'Lámpapróba', 'Közeledés nyugtázása', 'Tabló háttérvilágítása'].map((label, i) => ({ x: 9.62 + i * 0.3, r: 0.15, kind: 'ilever', idx: i, icon: 'hand', label: 'Kar: ' + label })),
+  { x: 1.9, r: 0.22, kind: 'ilight', icon: 'hand', label: () => INTR.dark ? 'Felkapcsolod a villanyt' : 'Lekapcsolod a villanyt' },
+  { x: 16.75, r: 0.9, kind: 'iflt', icon: 'hand', label: () => 'Tabló szűrő: ' + ['minden vonat', 'csak személy', 'csak tehér'][(INTR.flt + 1) % 3] },
   { x: 14.7, r: 3.1, kind: 'iboard', icon: 'eye', label: 'Leolvasod a vonalfelügyeleti tablót' },
-  { x: 18.55, r: 0.7, kind: 'istove', icon: 'eye', label: 'Megnézed a vaskályhát' },
+  { x: 18.55, r: 0.7, kind: 'istove', icon: 'hand', label: () => INTR.fire ? 'Elfojtod a tüzet a kályhában' : 'Befűtesz a kályhába' },
   { x: 20.4, r: 0.9, kind: 'ibed', icon: 'eye', label: 'Megnézed a vaságyat' },
 ];
 function intrAction() {
   let best = null, bd = 1e9;
   for (const o of (INTR.kind === 'tower' ? TW_OBJS : INTR_OBJS)) { const dx = Math.abs(o.x - INTR.x); if (dx <= o.r && dx < bd) { best = o; bd = dx; } }
-  return best ? { kind: best.kind, icon: best.icon, label: best.label, key: 'i:' + best.kind, anchor: null } : null;
+  if (!best) return null;
+  const label = typeof best.label === 'function' ? best.label() : best.label;
+  return { kind: best.kind, icon: best.icon, label, idx: best.idx, key: 'i:' + best.kind + (best.idx ?? '') + label, anchor: null };
 }
 function intrEnter(kind = 'bakter') {
   if (ch.mode !== 'walk') return;
   AU.unlock(); AU.ui();
   const tower = kind === 'tower';
-  INTR.kind = kind; INTR.ret = tower ? { lane: ch.lane, x: ch.x, facing: ch.facing } : { lane: 'korosi', x: KCS.x0 + 77.25, facing: -1 };
+  INTR.kind = kind; INTR.ret = tower ? { lane: ch.lane, x: ch.x, facing: ch.facing } : { lane: 'knorth', x: KCS.x0 + 77.25, facing: -1 };
   ch.mode = 'turn'; ch.speed = 0; input.left = input.right = false;
   fadeIn(tower ? '<b>Váltóállító torony</b><br>felmész a lépcsőn…' : '<b>Bakterház</b><br>belépsz a zöld ajtón…');
   setTimeout(() => { INTR.on = true; INTR.x = tower ? 1.7 : 1.5; INTR.face = 1; INTR.walk = 0; INTR.cam = 0; INTR.ready = false; fadeOut(); setExpr('curious', 2.6);
@@ -15689,7 +15724,7 @@ function intrLeave() {
 }
 function intrQuit() {
   INTR.on = false; ch.mode = 'walk'; ch.speed = 0; input.left = input.right = false;
-  const rt = INTR.ret || { lane: 'korosi', x: KCS.x0 + 77.25, facing: -1 };
+  const rt = INTR.ret || { lane: 'knorth', x: KCS.x0 + 77.25, facing: -1 };
   ch.lane = rt.lane; ch.x = rt.x; ch.facing = rt.facing; ch.d = LANES[rt.lane].d; ch.g = groundAt(rt.lane, ch.x); ch.key = null;
   cam.x = ch.x;
 }
@@ -15701,12 +15736,14 @@ function intrUpdate(dt) {
   INTR.walk = lerp(INTR.walk, dirIn * lerp(1.5, 4.2, boost), 1 - Math.exp(-dt * 7));
   INTR.x = clamp(INTR.x + INTR.walk * dt, 0.6, (INTR.kind === 'tower' ? TW.W : INTR.W) - 0.8);
   ch.facing = INTR.face; ch.speed = INTR.walk;
+  for (let i = 1; i < 4; i++) if (INTR.blT[i] > 0) { INTR.blT[i] -= dt; INTR.bl[i] = INTR.blT[i] > 0 ? 1 : 0; }
+  if (!KCR.auto) INTR.ack = false;
   ch.idleT = Math.abs(INTR.walk) > 0.25 ? 0 : ch.idleT + dt;
 }
-const INTR_C = { wall: '#D6C6A6', wallL: '#E2D5B9', wallD: '#C6B38F', dado: '#B3AA92', dadoL: '#C2BAA2', crack: '#9A886A', ceil: '#6E5237', ceilL: '#7E6044', floor: '#8C6238', floorL: '#9A6F40', floorD: '#5E4126',
+const INTR_C = { wall: '#DDD3BB', wallL: '#E6DDC8', wallD: '#CFC3A6', dado: '#B9B6A0', dadoL: '#C9C6B2', crack: '#9A886A', ceil: '#6E5237', ceilL: '#7E6044', floor: '#8C6238', floorL: '#9A6F40', floorD: '#5E4126',
   green: '#6F8A66', greenL: '#8FA783', greenD: '#4F6849', peel: '#B5BD97', cab: '#243329', cabL: '#2F4236', dark: '#1B1F1C', brass: '#C09A48', red: '#B8322A', ivory: '#E9E1C8', wood: '#7A5232', woodL: '#9A6C42', woodD: '#4F3320' };
 function renderBakter(time) {
-  const W = cam.W, H = cam.H, C = INTR_C, night = LIGHT.night || 0;
+  const W = cam.W, H = cam.H, C = INTR_C, night = Math.min(1, (LIGHT.night || 0) + (INTR.dark ? 0.35 : 0));
   base();
   const S = Math.min(0.26 * H, W / 3.4), roomTop = (H - 3.7 * S) / 2, floorY = roomTop + 2.8 * S;
   const visW = W / S;
@@ -15727,18 +15764,7 @@ function renderBakter(time) {
   ctx.fillStyle = C.ceil; ctx.fillRect(0, 0, W, roomTop + 0.1 * S);
   for (let y = 0.05; y < 1; y += 0.28) { ctx.fillStyle = C.ceilL; ctx.fillRect(0, roomTop * y, W, 2); }
   ctx.fillStyle = C.wall; ctx.fillRect(0, roomTop + 0.1 * S, W, floorY - roomTop - 0.1 * S);
-  const c0 = Math.floor(camL / 0.6) - 1, c1 = Math.ceil(camR / 0.6) + 1;
-  for (let c = c0; c <= c1; c++) {
-    const hx = hash01(c, 3, 7), hy = hash01(c, 9, 1), xm = c * 0.6 + hx * 0.5, wm = 0.35 + hy * 0.6, hh = 0.5 + hash01(c, 5, 5) * 1.3;
-    ctx.save(); ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.ellipse(X(xm), Yb(hh), wm * S * 0.6, 0.3 * S * (0.5 + hy), 0, 0, TAU); ctx.fillStyle = hx > 0.5 ? C.wallL : C.wallD; ctx.fill(); ctx.restore();
-    if (hash01(c, 2, 2) > 0.55) {   // a ragged patch where the plaster fell off
-      const px = c * 0.6 + hx * 0.4, ph = 1.0 + hy * 1.2;
-      poly([[px, ph], [px + 0.18, ph + 0.08], [px + 0.3, ph - 0.02], [px + 0.26, ph - 0.2], [px + 0.08, ph - 0.24], [px - 0.03, ph - 0.1]], C.wallD);
-    }
-    if (hash01(c, 8, 4) > 0.62) { const px = c * 0.6 + hx * 0.4, ph = 1.2 + hy; line(px, ph, px + 0.1, ph + 0.25, C.crack, 0.012); line(px + 0.1, ph + 0.25, px - 0.02, ph + 0.5, C.crack, 0.01); line(px + 0.1, ph + 0.25, px + 0.22, ph + 0.4, C.crack, 0.008); }
-  }
   R(camL - 1, camR + 1, 0, 0.95, C.dado); R(camL - 1, camR + 1, 0.93, 0.97, C.dadoL);
-  for (let c = c0; c <= c1; c++) if (hash01(c, 4, 4) > 0.6) { const px = c * 0.6 + hash01(c, 6, 1) * 0.5; poly([[px, 0.95], [px + 0.2, 0.9], [px + 0.34, 0.95], [px + 0.2, 0.74], [px + 0.05, 0.8]], C.wallD); }
   // floor: boards in rows, a shade darker towards the viewer
   const fh = H - floorY;
   ctx.fillStyle = C.floor; ctx.fillRect(0, floorY, W, fh + 2);
@@ -15748,10 +15774,10 @@ function renderBakter(time) {
     const j0 = Math.floor(camL / plank) - 1, j1 = Math.ceil(camR / plank) + 1;
     for (let j = j0; j <= j1; j++) {
       const hv = hash01(j, r, 11), xo = (j + (r % 2) * 0.5) * plank;
-      ctx.fillStyle = hv < 0.33 ? C.floor : hv < 0.66 ? C.floorL : '#855C34'; ctx.fillRect(X(xo), y0, plank * S, y1 - y0);
-      ctx.fillStyle = C.floorD; ctx.fillRect(X(xo), y0, 1.5, y1 - y0);
+      ctx.fillStyle = C.floor; ctx.fillRect(X(xo), y0, plank * S, y1 - y0);
+      ctx.fillStyle = 'rgba(70,44,22,0.35)'; ctx.fillRect(X(xo), y0, 1.5, y1 - y0);
     }
-    ctx.fillStyle = C.floorD; ctx.fillRect(0, y0, W, 1.5);
+    ctx.fillStyle = 'rgba(70,44,22,0.35)'; ctx.fillRect(0, y0, W, 1.5);
   }
   const g = ctx.createLinearGradient(0, floorY, 0, floorY + 0.5 * S); g.addColorStop(0, 'rgba(30,18,8,0.35)'); g.addColorStop(1, 'rgba(30,18,8,0)'); ctx.fillStyle = g; ctx.fillRect(0, floorY, W, 0.5 * S);
   // the rugs: flat striped trapezoids on the boards
@@ -15767,10 +15793,8 @@ function renderBakter(time) {
   // pendant lamps
   for (const lx of [4.4, 14.6]) if (vis(lx - 1, lx + 1)) {
     line(lx, 2.8, lx, 2.25, C.dark, 0.012); poly([[lx - 0.1, 2.25], [lx + 0.1, 2.25], [lx + 0.3, 2.07], [lx - 0.3, 2.07]], '#2F5B3A'); R(lx - 0.3, lx + 0.3, 2.05, 2.07, '#1F3E28');
-    disc(lx, 2.0, 0.07, '#FFF3C4');
+    disc(lx, 2.0, 0.07, INTR.dark ? '#8A8470' : '#FFF3C4');
   }
-  // corner cobwebs
-  for (const cx of [0.55, INTR.W - 0.55]) if (vis(cx - 0.5, cx + 0.5)) for (let i = 1; i <= 3; i++) { const sgn = cx < 5 ? 1 : -1; line(cx, 2.8 - 0.1 * i, cx + sgn * 0.12 * i * 1.2, 2.8, 'rgba(240,240,236,0.5)', 0.006); line(cx, 2.8 - 0.1 * i, cx + sgn * 0.12 * i * 1.2, 2.8 - 0.1 * i, 'rgba(240,240,236,0.4)', 0.005); }
   // the door (exit)
   if (vis(0.6, 1.9)) {
     R(0.65, 1.75, 0, 2.15, '#E9E3D2'); R(0.72, 1.68, 0, 2.05, C.green); R(0.72, 1.68, 1.78, 2.05, C.greenD);
@@ -15779,6 +15803,7 @@ function renderBakter(time) {
     disc(1.5, 1.0, 0.04, C.brass); R(0.7, 0.72, 0, 2.05, 'rgba(0,0,0,0.2)');
     R(0.55, 1.85, 0, 0.03, '#8A8678');
   }
+  R(1.88, 1.98, 1.18, 1.36, '#EFEAD8'); R(1.915, 1.945, INTR.dark ? 1.21 : 1.27, INTR.dark ? 1.27 : 1.33, '#6E6A5C');
   // coat rack with the railwayman's coat and cap
   if (vis(2.0, 2.9)) {
     R(2.0, 2.9, 1.78, 1.86, C.wood); for (const hx of [2.25, 2.55, 2.8]) disc(hx, 1.72, 0.025, C.dark);
@@ -15836,7 +15861,6 @@ function renderBakter(time) {
     R(5.6, 7.2, 0, 0.95, C.green, 0.05); R(5.6, 7.2, 0.95, 1.0, C.greenD, 0.05); R(5.55, 7.25, 0.92, 0.98, C.greenL, 0.05);
     R(5.65, 6.35, 0.08, 0.88, C.greenL, 0.05); R(6.45, 7.15, 0.08, 0.88, C.greenL, 0.05); R(5.68, 6.32, 0.1, 0.86, C.green, 0.05); R(6.48, 7.12, 0.1, 0.86, C.green, 0.05);
     for (const dx of [6.0, 6.8]) { disc(dx, 0.6, 0.025, '#3A3D30', 0.05); R(dx - 0.05, dx + 0.05, 0.3, 0.31, '#3A3D30', 0.05); }
-    for (let i = 0; i < 6; i++) { const px = 5.7 + hash01(i, 3, 9) * 1.4; R(px, px + 0.05, 0.3, 0.45, C.peel, 0.05); }
     R(5.7, 7.1, 1.0, 1.08, C.greenD, 0.05);
     // the upper part with glass doors and the jars
     R(5.7, 7.1, 1.08, 2.05, C.green, 0.05); R(5.78, 6.35, 1.2, 1.95, '#2E3A34', 0.05); R(6.45, 7.02, 1.2, 1.95, '#2E3A34', 0.05);
@@ -15865,7 +15889,6 @@ function renderBakter(time) {
     R(3.3, 4.7, 0.7, 0.76, '#7E8A6C', gy); R(3.3, 4.7, 0.76, 0.83, '#98A47E', gy);   // table top: peeling green paint over wood
     R(3.3, 4.7, 0.62, 0.7, C.greenD, gy);
     for (const lx of [3.38, 4.58]) R(lx, lx + 0.07, 0, 0.62, C.green, gy);
-    for (let i = 0; i < 9; i++) { const px = 3.35 + hash01(i, 1, 4) * 1.25; R(px, px + 0.08, 0.76, 0.83, C.woodL, gy); }
     // ledger
     poly([[3.6, 0.83], [3.98, 0.83], [4.0, 0.88], [3.62, 0.88]], '#EFE8D0', gy); poly([[3.98, 0.83], [4.38, 0.83], [4.36, 0.88], [4.0, 0.88]], '#E6DEC4', gy); line(3.62, 0.86, 3.98, 0.86, '#8E856E', 0.004, gy);
     line(4.2, 0.9, 4.4, 0.85, '#C9A23A', 0.012, gy);
@@ -15884,22 +15907,21 @@ function renderBakter(time) {
     // the small block display: two rows of beads
     for (let i = 0; i < 2; i++) { R(9.55, 11.05, 1.54 + i * 0.03 - 0.0, 1.545 + i * 0.03, '#E4D8A8'); for (let k = 0; k < 7; k++) R(9.6 + k * 0.2, 9.62 + k * 0.2, 1.52 + i * 0.03, 1.57 + i * 0.03, '#E4D8A8'); }
     for (const dx of [10.05, 10.4]) { disc(dx, 1.34, 0.065, '#D8CFAE'); disc(dx, 1.34, 0.05, '#F0ECDC'); line(dx, 1.34, dx + 0.03, 1.38, '#2A2622', 0.007); }
-    R(10.6, 10.75, 1.28, 1.4, '#6E5A32'); disc(10.68, 1.34, 0.025, C.red);
+    R(10.6, 10.75, 1.28, 1.4, '#6E5A32'); { const bk = (KCR.auto && !INTR.ack && Math.floor(KCR.blink * 2) % 2 === 0) || INTR.test > performance.now() / 1000; disc(10.68, 1.34, 0.032, bk ? '#FF4A38' : '#5A2A24'); if (bk) { ctx.save(); ctx.globalAlpha = 0.3; disc(10.68, 1.34, 0.08, '#FF4A38'); ctx.restore(); } }
     // the case and the levers
     R(9.35, 11.25, 0, 0.7, C.cabL, 0.06); R(9.35, 11.25, 0.62, 0.7, C.cab, 0.06); R(9.3, 11.3, 0.7, 0.74, '#3A4A40', 0.06);
-    for (let i = 0; i < 40; i++) { const px = 9.4 + hash01(i, 7, 2) * 1.8; R(px, px + 0.05, 0.1 + hash01(i, 2, 5) * 0.5, 0.14 + hash01(i, 2, 5) * 0.5, '#7C5A3A', 0.06); }
     const closed = LXMAN_K.closed;
     [[9.62, C.red, 1], [9.92, C.red, 2], [10.22, C.ivory, 3], [10.52, C.ivory, 4], [10.82, C.red, 5]].forEach(([lx, col, n], i) => {
-      const pulled = (i === 0 && closed) ? 0.2 : 0, tip = 1.5 - pulled * 1.0;
+      const pl = i === 0 ? closed : !!INTR.bl[i], pulled = pl ? 0.2 : 0;
       R(lx - 0.1, lx + 0.1, 0.66, 0.86, '#17191A', 0.06);
-      ctx.save(); ctx.translate(X(lx), Yb(0.8, 0.06)); ctx.rotate((i === 0 && closed ? 0.42 : 0) * (1)); ctx.fillStyle = col; ctx.fillRect(-0.03 * S, -0.7 * S, 0.06 * S, 0.7 * S); ctx.fillStyle = 'rgba(0,0,0,0.15)'; ctx.fillRect(0.0, -0.7 * S, 0.03 * S, 0.7 * S); ctx.restore();
-      if (i < 4) { const nx = lx + (i === 0 && closed ? 0.2 : 0), nh = 0.5; disc(nx, nh, 0.055, '#F0ECDC', 0.06); txt(String(n), nx, nh, 0.07, '#2A2622', 800, 'center', 0, 0.06); }
+      ctx.save(); ctx.translate(X(lx), Yb(0.8, 0.06)); ctx.rotate(pl ? 0.42 : 0); ctx.fillStyle = col; ctx.fillRect(-0.03 * S, -0.7 * S, 0.06 * S, 0.7 * S); ctx.fillStyle = 'rgba(0,0,0,0.15)'; ctx.fillRect(0.0, -0.7 * S, 0.03 * S, 0.7 * S); ctx.restore();
+      { const nx = lx + (pl ? 0.2 : 0), nh = 0.5; disc(nx, nh, 0.055, '#F0ECDC', 0.06); txt(String(n), nx, nh, 0.07, '#2A2622', 800, 'center', 0, 0.06); }
     });
   }
   // ---- the supervisory board of line 150 ----
   if (vis(11.6, 17.9)) {
     const bx0 = 11.9, bx1 = 17.6, bh0 = 1.0, bh1 = 2.62;
-    R(bx0 - 0.08, bx1 + 0.08, bh0 - 0.08, bh1 + 0.08, '#101714'); R(bx0 - 0.05, bx1 + 0.05, bh0 - 0.05, bh1 + 0.05, '#2C4034'); R(bx0, bx1, bh0, bh1, '#16211B');
+    R(bx0 - 0.08, bx1 + 0.08, bh0 - 0.08, bh1 + 0.08, '#101714'); R(bx0 - 0.05, bx1 + 0.05, bh0 - 0.05, bh1 + 0.05, '#2C4034'); R(bx0, bx1, bh0, bh1, INTR.bl[4] ? '#22392E' : '#16211B');
     for (const [sx, sh] of [[bx0 - 0.02, bh0 - 0.02], [bx1 + 0.02, bh0 - 0.02], [bx0 - 0.02, bh1 + 0.02], [bx1 + 0.02, bh1 + 0.02]]) disc(sx, sh, 0.016, C.brass);
     // cables from the ceiling
     for (const cx of [12.3, 14.7, 17.0]) { R(cx - 0.025, cx + 0.025, bh1 + 0.08, 2.8, '#1C201E'); R(cx + 0.01, cx + 0.02, bh1 + 0.08, 2.8, '#33403A'); }
@@ -15907,9 +15929,9 @@ function renderBakter(time) {
     R(13.0, 16.5, 2.4, 2.56, '#0B100D'); R(13.02, 16.48, 2.42, 2.54, '#1E2B24');
     txt('150  BUDAPEST – KELEBIA  ·  VONALFELÜGYELETI TABLÓ', 14.75, 2.48, 0.085, '#E8DFC4', 800);
     // the line: pad .35 m, one lamp line, section lamps above it, station lamps on it
-    const lx0 = bx0 + 0.32, lx1 = bx1 - 0.32, kmX = km => lx0 + km / L150_KM * (lx1 - lx0), LH = 1.98, now = gameNow(), trs = l150Trains(now);
+    const lx0 = bx0 + 0.32, lx1 = bx1 - 0.32, kmX = km => lx0 + km / L150_KM * (lx1 - lx0), LH = 1.98, now = gameNow(), trs = l150Trains(now).filter(q => INTR.flt === 0 || (INTR.flt === 1) === (q.tr.kind !== 'T'));
     const inSec = i => trs.some(q => q.km > L150[i][1] - 0.35 && q.km < L150[i + 1][1] + 0.35);
-    const lamp = (x, h, r, on, col) => { disc(x, h, r + 0.012, '#0A0E0C'); disc(x, h, r, on ? col : '#2B332E'); if (on) { ctx.save(); ctx.globalAlpha = 0.28; disc(x, h, r * 2.2, col); ctx.restore(); disc(x - r * 0.3, h + r * 0.3, r * 0.3, 'rgba(255,255,255,0.55)'); } };
+    const LT = INTR.test > performance.now() / 1000, lamp = (x, h, r, on0, col) => { const on = on0 || LT; disc(x, h, r + 0.012, '#0A0E0C'); disc(x, h, r, on ? col : '#2B332E'); if (on) { ctx.save(); ctx.globalAlpha = 0.28; disc(x, h, r * 2.2, col); ctx.restore(); disc(x - r * 0.3, h + r * 0.3, r * 0.3, 'rgba(255,255,255,0.55)'); } };
     for (let i = 0; i < L150.length - 1; i++) {
       const a = kmX(L150[i][1]), b = kmX(L150[i + 1][1]), occ = inSec(i);
       line(a, LH, b, LH, occ ? '#E0402E' : '#CFC8AC', occ ? 0.03 : 0.018);
@@ -15936,15 +15958,15 @@ function renderBakter(time) {
     lamp(bx0 + 0.3, bh0 + 0.19, 0.022, false, '#FF4A38'); txt('foglalt szakasz', bx0 + 0.36, bh0 + 0.19, 0.055, '#CFC8AC', 600, 'left');
     lamp(bx0 + 1.2, bh0 + 0.19, 0.022, true, '#58D17A'); txt('szabad szakasz', bx0 + 1.26, bh0 + 0.19, 0.055, '#CFC8AC', 600, 'left');
     poly([[bx0 + 2.15, bh0 + 0.19], [bx0 + 2.2, bh0 + 0.23], [bx0 + 2.25, bh0 + 0.19], [bx0 + 2.2, bh0 + 0.15]], '#FFC24A'); txt('vonat', bx0 + 2.3, bh0 + 0.19, 0.055, '#CFC8AC', 600, 'left');
-    txt(`vonatok a vonalon: ${trs.length}`, bx0 + 3.3, bh0 + 0.19, 0.06, '#FFD66A', 800, 'left');
-    txt(`${R150_DOW[r150Day(now).dow].toUpperCase()}`, bx1 - 0.2, bh0 + 0.19, 0.06, '#CFC8AC', 800, 'right');
+    txt(`vonatok a vonalon: ${trs.length}`, bx0 + 2.55, bh0 + 0.19, 0.06, '#FFD66A', 800, 'left');
+    ['MIND', 'SZEM.', 'TEHER'].forEach((nm, i) => { const bx = 16.35 + i * 0.5, on = INTR.flt === i; R(bx - 0.2, bx + 0.2, bh0 + 0.12, bh0 + 0.27, on ? '#E6DFC4' : '#3A4A40'); R(bx - 0.2, bx + 0.2, bh0 + 0.12, bh0 + 0.135, 'rgba(0,0,0,0.3)'); txt(nm, bx, bh0 + 0.195, 0.05, on ? '#1C2924' : '#CFC8AC', 800); });
     for (let i = 0; i < 9; i++) { const sx = bx0 + 0.35 + i * 0.28; R(sx - 0.04, sx + 0.04, bh0 + 0.4, bh0 + 0.5, '#0B100D'); const on = (i + Math.floor(now / 6)) % 4 === 0; R(sx - 0.015, sx + 0.015, bh0 + 0.4 + (on ? 0.06 : 0), bh0 + 0.46 + (on ? 0.04 : 0), '#B7B09A'); }
     for (let i = 0; i < 5; i++) lamp(bx1 - 0.4 - i * 0.2, bh0 + 0.46, 0.02, (i === 0 && KCR.active) || (i === 3 && trs.length > 0) || (i === 4), i === 0 ? '#FF4A38' : i === 3 ? '#FFC24A' : '#58D17A');
   }
   // the black stove with its pipe, the coal bucket, wood
   if (vis(17.9, 19.5)) {
     R(18.58, 18.72, 0.95, 2.8, '#1E1C1A'); R(18.58, 18.62, 0.95, 2.8, '#33302C');
-    R(18.2, 18.95, 0.12, 1.0, '#26231F', 0.04); R(18.16, 18.99, 1.0, 1.06, '#33302C', 0.04); R(18.25, 18.9, 0.12, 0.5, '#171513', 0.04); R(18.62, 18.84, 0.4, 0.74, '#1A1816', 0.04);
+    R(18.2, 18.95, 0.12, 1.0, '#26231F', 0.04); R(18.16, 18.99, 1.0, 1.06, '#33302C', 0.04); R(18.25, 18.9, 0.12, 0.5, '#171513', 0.04); R(18.62, 18.84, 0.4, 0.74, INTR.fire ? '#D8631F' : '#1A1816', 0.04); if (INTR.fire) { R(18.66, 18.8, 0.42, 0.56 + Math.sin(time * 9) * 0.04, '#FFD066', 0.04); R(18.7, 18.77, 0.42, 0.5 + Math.sin(time * 13) * 0.03, '#FFF2B0', 0.04); }
     disc(18.73, 0.57, 0.02, '#8C7A5A', 0.04); R(18.2, 18.95, 0.1, 0.14, '#1A1816', 0.04);
     for (const lx of [18.24, 18.86]) R(lx, lx + 0.06, 0, 0.12, '#1A1816', 0.04);
     R(19.2, 19.52, 0.0, 0.34, '#6E7378', 0.14); R(19.17, 19.55, 0.34, 0.38, '#8A8F94', 0.14); for (let i = 0; i < 9; i++) disc(19.26 + (i % 5) * 0.05, 0.4 + (i > 4 ? 0.04 : 0), 0.03, '#17181A', 0.14);
@@ -15976,11 +15998,10 @@ function renderBakter(time) {
   base();
   if (night > 0.05) { ctx.fillStyle = `rgba(14,16,34,${(night * 0.5).toFixed(3)})`; ctx.fillRect(0, 0, W, H); }
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
-  for (const lx of [4.4, 14.6]) { const gr = ctx.createRadialGradient(X(lx), Yb(2.0), 0, X(lx), Yb(2.0), 2.4 * S); gr.addColorStop(0, `rgba(255,214,140,${(0.22 + night * 0.22).toFixed(3)})`); gr.addColorStop(1, 'rgba(255,214,140,0)'); ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H); }
+  for (const lx of (INTR.dark ? [] : [4.4, 14.6])) { const gr = ctx.createRadialGradient(X(lx), Yb(2.0), 0, X(lx), Yb(2.0), 2.4 * S); gr.addColorStop(0, `rgba(255,214,140,${(0.22 + night * 0.22).toFixed(3)})`); gr.addColorStop(1, 'rgba(255,214,140,0)'); ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H); }
+  if (INTR.fire) { const gr = ctx.createRadialGradient(X(18.73), Yb(0.55, 0.04), 0, X(18.73), Yb(0.55, 0.04), 1.8 * S); gr.addColorStop(0, `rgba(255,140,60,${(0.28 + Math.sin(time * 7) * 0.03).toFixed(3)})`); gr.addColorStop(1, 'rgba(255,140,60,0)'); ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H); }
   if (night < 0.7) { const gr = ctx.createLinearGradient(X(3.4), Yb(2.1), X(5.4), Yb(0)); gr.addColorStop(0, `rgba(255,240,200,${(0.16 * (1 - night)).toFixed(3)})`); gr.addColorStop(1, 'rgba(255,240,200,0)'); ctx.fillStyle = gr; ctx.beginPath(); ctx.moveTo(X(3.35), Yb(2.2)); ctx.lineTo(X(4.75), Yb(2.2)); ctx.lineTo(X(6.6), Yb(0, 0.7)); ctx.lineTo(X(4.2), Yb(0, 0.7)); ctx.closePath(); ctx.fill(); }
   ctx.restore();
-  // vignette
-  { const gr = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.75); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(20,10,0,0.35)'); ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H); }
   tcRender();
 }
 
@@ -15990,23 +16011,42 @@ function renderBakter(time) {
 // of the window onto the tracks, the track diagram "HARASZTI KÜLSŐ" hanging from the ceiling, a desk with the ledger
 // and the phone, grey filing cabinets, the stove. The window shows the real station: the HÉV trains roll past in it.
 // =====================================================================
-const TW = { W: 14.4, lev: Array(12).fill(0), levCol: ['#2F5FB0', '#2F5FB0', '#2F5FB0', '#2F5FB0', '#C8372D', '#1F2224', '#2F5FB0', '#C8372D', '#2F5FB0', '#C8372D', '#C8372D', '#1F2224'], x0: 5.0, x1: 10.4 };
-const TW_OBJS = [
-  { x: 1.1, r: 0.9, kind: 'texit', icon: 'door', label: 'Lemész a toronyból' },
-  { x: 2.0, r: 0.6, kind: 'ttt', icon: 'eye', label: 'Megnézed a faliújságot' },
-  { x: 3.05, r: 0.5, kind: 'tphone', icon: 'hand', label: 'Felveszed a telefont' },
-  { x: 3.9, r: 0.7, kind: 'tlog', icon: 'hand', label: 'Belelapozol a szolgálati naplóba' },
-  { x: 7.65, r: 0.55, kind: 'tboard', icon: 'eye', label: 'Leolvasod a kijelzőt' },
-  { x: 7.7, r: 3.2, kind: 'tlever', icon: 'hand', label: 'Meghúzol egy váltókart' },
-  { x: 11.5, r: 0.8, kind: 'tcab', icon: 'eye', label: 'Megnézed az iratszekrényt' },
-  { x: 12.9, r: 0.8, kind: 'tstove', icon: 'eye', label: 'Megnézed a kályhát' },
-];
+const TW = { W: 14.4, lev: Array(12).fill(0), levCol: ['#2F5FB0', '#2F5FB0', '#2F5FB0', '#2F5FB0', '#C8372D', '#1F2224', '#2F5FB0', '#C8372D', '#2F5FB0', '#C8372D', '#C8372D', '#1F2224'], x0: 5.0, x1: 10.4, estop: false, fire: false };
+// interlocking: a signal / lock lever needs its points lever pulled first (0-based indices); points levers are held while their signals are pulled
+const TW_REQ = { 4: 3, 5: 3, 7: 6, 9: 8, 10: 8, 11: 8 }, TW_SIG = [4, 7, 9, 10], TW_HOLD = { 3: [4, 5], 6: [7], 8: [9, 10, 11] };
+function twBlock(i) {
+  const pulled = TW.lev[i];
+  if (!pulled) {
+    if (TW.estop && TW_SIG.includes(i)) return 'Vészleállítás aktív: előbb oldd a piros gombot.';
+    if (TW_REQ[i] !== undefined && !TW.lev[TW_REQ[i]]) return `Előbb a ${TW_REQ[i] + 1}. váltókart kell áthúzni (biztosítási összefüggés).`;
+    if ((i === 9 && TW.lev[10]) || (i === 10 && TW.lev[9])) return 'A 10. és a 11. jelzőkar egymást zárolja (ellenjárat).';
+  } else if (TW_HOLD[i]) { const h = TW_HOLD[i].find(j => TW.lev[j]); if (h !== undefined) return `A ${h + 1}. kar áthúzva tartja: előbb azt engedd vissza.`; }
+  return '';
+}
+const TW_OBJS = (() => {
+  const o = [
+    { x: 1.1, r: 0.8, kind: 'texit', icon: 'door', label: 'Lemész a toronyból' },
+    { x: 1.85, r: 0.22, kind: 'tlight', icon: 'hand', label: () => INTR.dark ? 'Felkapcsolod a villanyt' : 'Lekapcsolod a villanyt' },
+    { x: 2.35, r: 0.4, kind: 'ttt', icon: 'eye', label: 'Megnézed a faliújságot' },
+    { x: 3.05, r: 0.4, kind: 'tphone', icon: 'hand', label: 'Felveszed a fali telefont' },
+    { x: 3.7, r: 0.4, kind: 'tlog', icon: 'hand', label: 'Belelapozol a szolgálati naplóba' },
+    { x: 4.48, r: 0.15, kind: 'tphone', icon: 'hand', label: 'Felveszed az asztali telefont' },
+    { x: 4.78, r: 0.15, kind: 'tpa', icon: 'hand', label: 'Hangosbemondó: közlemény' },
+    { x: 4.95, r: 0.2, kind: 'testop', icon: 'hand', label: () => TW.estop ? 'Kioldod a vészleállító gombot' : 'Megnyomod a vészleállító gombot' },
+    { x: 10.8, r: 0.45, kind: 'tboard', icon: 'eye', label: 'Leolvasod a vágánykijelzőt' },
+    { x: 11.6, r: 0.55, kind: 'tcab', icon: 'eye', label: 'Megnézed az iratszekrényt' },
+    { x: 12.65, r: 0.5, kind: 'tstove', icon: 'hand', label: () => TW.fire ? 'Elfojtod a tüzet a kályhában' : 'Befűtesz a kályhába' },
+  ];
+  const role = i => TW.levCol[i] === '#2F5FB0' ? 'váltókar' : TW.levCol[i] === '#C8372D' ? 'jelzőkar' : 'reteszkar';
+  for (let i = 0; i < 12; i++) o.push({ x: TW.x0 + 0.25 + i * ((TW.x1 - TW.x0 - 0.5) / 11), r: 0.24, kind: 'tlever', idx: i, icon: 'hand', label: () => `${i + 1}. ${role(i)}: ${TW.lev[i] ? 'visszaengedés' : 'áthúzás'}${twBlock(i) ? ' (zárolva)' : ''}` });
+  return o;
+})();
 function twLeverAt(x) { return clamp(Math.round((x - (TW.x0 + 0.25)) / ((TW.x1 - TW.x0 - 0.5) / 11)), 0, 11); }
 function twStation(t) {   // which HÉV trains stand at / near Dunaharaszti külső
   return TRAINS.filter(q => q.st === 'kulso' && (q.atStop || (q.rel >= 0 && q.rel <= SCH.dwell)) || Math.abs(((q.lo + q.hi) / 2) - STATIONS.kulso.mid) < 60);
 }
 function renderTorony(time) {
-  const W = cam.W, H = cam.H, night = LIGHT.night || 0;
+  const W = cam.W, H = cam.H, night = Math.min(1, (LIGHT.night || 0) + (INTR.dark ? 0.35 : 0));
   base();
   const S = Math.min(0.26 * H, W / 3.4), roomTop = (H - 3.7 * S) / 2, floorY = roomTop + 2.8 * S;
   const visW = W / S;
@@ -16028,13 +16068,12 @@ function renderTorony(time) {
   ctx.fillStyle = '#B7C4B2'; ctx.fillRect(0, 0, W, roomTop + 0.12 * S);
   ctx.fillStyle = '#A5B3A0'; ctx.fillRect(0, roomTop + 0.04 * S, W, 0.08 * S);
   ctx.fillStyle = WALL; ctx.fillRect(0, roomTop + 0.12 * S, W, floorY - roomTop - 0.12 * S);
-  for (let c = Math.floor(camL / 0.9) - 1; c <= Math.ceil(camR / 0.9) + 1; c++) { ctx.save(); ctx.globalAlpha = 0.35; ctx.beginPath(); ctx.ellipse(X(c * 0.9 + hash01(c, 1, 2) * 0.6), Yb(0.5 + hash01(c, 3, 4) * 1.8), 0.5 * S, 0.3 * S, 0, 0, TAU); ctx.fillStyle = hash01(c, 7, 7) > 0.5 ? WALLL : WALLD; ctx.fill(); ctx.restore(); }
   R(camL - 1, camR + 1, 0, 0.14, '#6F8C6A');   // skirting
   const fh = H - floorY; ctx.fillStyle = '#7E573A'; ctx.fillRect(0, floorY, W, fh + 2);
   for (let r = 0; r < 7; r++) {
     const y0 = floorY + fh * Math.pow(r / 7, 1.4), y1 = floorY + fh * Math.pow((r + 1) / 7, 1.4), plank = 1.4 + r * 0.4;
-    for (let j = Math.floor(camL / plank) - 1; j <= Math.ceil(camR / plank) + 1; j++) { const hv = hash01(j, r, 21); ctx.fillStyle = hv < 0.4 ? '#7E573A' : hv < 0.75 ? '#86603F' : '#775134'; ctx.fillRect(X((j + (r % 2) * 0.5) * plank), y0, plank * S, y1 - y0); ctx.fillStyle = '#4E3322'; ctx.fillRect(X((j + (r % 2) * 0.5) * plank), y0, 1.5, y1 - y0); }
-    ctx.fillStyle = '#4E3322'; ctx.fillRect(0, y0, W, 1.5);
+    for (let j = Math.floor(camL / plank) - 1; j <= Math.ceil(camR / plank) + 1; j++) { ctx.fillStyle = '#7E573A'; ctx.fillRect(X((j + (r % 2) * 0.5) * plank), y0, plank * S, y1 - y0); ctx.fillStyle = 'rgba(60,38,22,0.35)'; ctx.fillRect(X((j + (r % 2) * 0.5) * plank), y0, 1.5, y1 - y0); }
+    ctx.fillStyle = 'rgba(60,38,22,0.35)'; ctx.fillRect(0, y0, W, 1.5);
   }
   // sunlight patches from the windows on the floor
   ctx.save(); ctx.globalAlpha = 0.16 * (1 - night); ctx.fillStyle = '#FFF2C8';
@@ -16045,17 +16084,23 @@ function renderTorony(time) {
   line(camL - 1, 2.68, camR + 1, 2.68, '#6F7B73', 0.03); line(camL - 1, 2.6, camR + 1, 2.6, '#8A958D', 0.012);
   for (const cx of [0.7, 3.4, 12.6]) if (vis(cx - 0.2, cx + 0.2)) { line(cx, 2.68, cx, 0.5, '#6F7B73', 0.03); }
   // pendant lamps
-  for (const lx of [6.0, 9.3]) if (vis(lx - 1, lx + 1)) { line(lx, 2.8, lx, 2.56, '#1F2A24', 0.012); poly([[lx - 0.08, 2.56], [lx + 0.08, 2.56], [lx + 0.34, 2.36], [lx - 0.34, 2.36]], '#2E6A44'); R(lx - 0.34, lx + 0.34, 2.33, 2.36, '#1E4A30'); disc(lx, 2.3, 0.09, '#FFF3C4'); }
+  for (const lx of [6.0, 9.3]) if (vis(lx - 1, lx + 1)) { line(lx, 2.8, lx, 2.56, '#1F2A24', 0.012); poly([[lx - 0.08, 2.56], [lx + 0.08, 2.56], [lx + 0.34, 2.36], [lx - 0.34, 2.36]], '#2E6A44'); R(lx - 0.34, lx + 0.34, 2.33, 2.36, '#1E4A30'); disc(lx, 2.3, 0.09, INTR.dark ? '#8AA088' : '#FFF3C4'); }
+  // ---- wood-panelled wall behind the frame ----
+  { const wa = 3.95, wb = 11.75; if (vis(wa, wb)) {
+    const gw = ctx.createLinearGradient(0, Yb(2.7), 0, Yb(0.14)); gw.addColorStop(0, '#8B6039'); gw.addColorStop(0.55, '#B58553'); gw.addColorStop(1, '#9A6C42'); ctx.fillStyle = gw; ctx.fillRect(X(wa), Yb(2.7), (wb - wa) * S, 2.56 * S);
+    for (let j = 0; j * 0.2 < wb - wa; j++) { const bx = wa + j * 0.2; if (j % 2) { ctx.fillStyle = 'rgba(255,235,200,0.07)'; ctx.fillRect(X(bx), Yb(2.7), 0.2 * S, 2.56 * S); } R(bx, bx + 0.01, 0.14, 2.7, 'rgba(60,36,18,0.35)'); }
+    R(wa, wb, 2.6, 2.7, '#7A5232'); R(wa, wb, 2.6, 2.612, 'rgba(255,255,255,0.15)'); R(wa, wb, 0.14, 0.2, '#7A5232'); R(wa - 0.05, wa, 0.14, 2.7, '#6E4A2C'); R(wb, wb + 0.05, 0.14, 2.7, '#6E4A2C'); } }
   // ---- the door (exit) ----
   if (vis(0.4, 1.9)) { R(0.55, 1.75, 0, 2.15, '#E3EEDF'); R(0.62, 1.68, 0, 2.08, '#7F9F7A'); R(0.8, 1.5, 0.15, 1.0, '#92B08C'); R(0.8, 1.5, 1.12, 1.8, '#92B08C'); disc(1.5, 1.0, 0.04, '#C09A48'); }
   // ---- the bulletin board, the clock, the wall phone ----
   if (vis(1.4, 3.3)) {
-    disc(1.15, 2.3, 0.0, '#000');
+    R(1.8, 1.9, 0.86, 1.04, '#EEF2E8'); R(1.835, 1.865, INTR.dark ? 0.89 : 0.95, INTR.dark ? 0.95 : 1.01, '#5E6A60');
     R(1.45, 2.65, 1.05, 2.0, '#B88E5C'); R(1.5, 2.6, 1.1, 1.95, '#C9B089'); R(1.45, 2.65, 1.98, 2.0, '#7A5232'); R(1.45, 2.65, 1.05, 1.07, '#7A5232');
     R(1.6, 2.3, 1.25, 1.88, '#F1ECDE'); txt('HARASZTI KÜLSŐ', 1.95, 1.8, 0.075, '#3B4A42', 800);
     for (let i = 0; i < 8; i++) R(1.64, 2.26, 1.7 - i * 0.055, 1.715 - i * 0.055, '#8B927E'); for (let i = 0; i < 3; i++) R(2.36, 2.58, 1.62 - i * 0.2, 1.88 - i * 0.2, '#E8E3D2');
     disc(1.15, 2.3, 0.22, '#3F4540'); disc(1.15, 2.3, 0.19, '#F0ECDC');
     for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; line(1.15 + Math.sin(a) * 0.15, 2.3 + Math.cos(a) * 0.15, 1.15 + Math.sin(a) * 0.17, 2.3 + Math.cos(a) * 0.17, '#2A2622', 0.008); }
+    txt('MÁV', 1.15, 2.39, 0.04, '#6A5A3A', 800);
     const b = budaTime(gameNow()), ha = ((b.h % 12) + b.m / 60) / 12 * TAU, ma = (b.m + b.ss / 60) / 60 * TAU;
     line(1.15, 2.3, 1.15 + Math.sin(ha) * 0.1, 2.3 + Math.cos(ha) * 0.1, '#1F1C19', 0.015); line(1.15, 2.3, 1.15 + Math.sin(ma) * 0.15, 2.3 + Math.cos(ma) * 0.15, '#1F1C19', 0.01);
     R(2.85, 3.25, 1.2, 1.9, '#6E4A2C'); R(2.9, 3.2, 1.25, 1.85, '#7E5836'); R(2.98, 3.12, 1.55, 1.7, '#2A2622'); R(2.9, 3.2, 1.2, 1.28, '#4A3220');
@@ -16083,47 +16128,97 @@ function renderTorony(time) {
       R(a, b, ry, ry + 0.34, '#E4E7E9'); R(a, b, ry + 0.2, ry + 0.27, '#3B4650'); R(a, b, ry + 0.08, ry + 0.11, '#3F8F57'); R(a, b, ry - 0.03, ry + 0.01, '#4A4E52');
       for (let u = Math.ceil(a / 0.3) * 0.3; u < b; u += 0.3) R(u, u + 0.01, ry + 0.04, ry + 0.3, 'rgba(0,0,0,0.18)');
     }
+    R(wx0, wx1, wh0 + 0.1, wh0 + 0.14, '#8A8478');   // ballast
+    { const occ2 = twStation(gameNow()).length > 0, sg2 = TW.lev[4] && !TW.estop && !occ2;
+      line(5.0, wh0 + 0.1, 5.0, wh0 + 0.5, '#4A4E52', 0.02); R(4.95, 5.05, wh0 + 0.48, wh0 + 0.66, '#1F2224'); disc(5.0, wh0 + 0.61, 0.018, sg2 ? '#3A2A28' : '#FF4A38'); disc(5.0, wh0 + 0.54, 0.018, sg2 ? '#58D17A' : '#2C3A2C'); }
     // the signal and the A sign
-    const occ = twStation(gameNow()).length > 0;
-    line(9.35, wh0 + 0.1, 9.35, wh0 + 0.62, '#4A4E52', 0.02); R(9.3, 9.4, wh0 + 0.6, wh0 + 0.78, '#1F2224'); disc(9.35, wh0 + 0.73, 0.018, occ ? '#FF4A38' : '#3A2A28'); disc(9.35, wh0 + 0.66, 0.018, occ ? '#2C3A2C' : '#58D17A');
+    const occ = twStation(gameNow()).length > 0, sg = TW.lev[7] && !TW.estop && !occ;
+    line(9.35, wh0 + 0.1, 9.35, wh0 + 0.62, '#4A4E52', 0.02); R(9.3, 9.4, wh0 + 0.6, wh0 + 0.78, '#1F2224'); disc(9.35, wh0 + 0.73, 0.018, sg ? '#3A2A28' : '#FF4A38'); disc(9.35, wh0 + 0.66, 0.018, sg ? '#58D17A' : '#2C3A2C');
     R(10.35, 10.55, wh0 + 0.28, wh0 + 0.5, '#1C1F20'); txt('A', 10.45, wh0 + 0.39, 0.15, '#F2F0EA', 800); line(10.45, wh0 + 0.1, 10.45, wh0 + 0.28, '#6C7073', 0.015);
     ctx.restore();
     // frames: mullions, rails
     for (const mx of [wx0, 5.9, 7.6, 9.3, wx1 - 0.08]) R(mx - 0.04, mx + 0.1, wh0, wh1, FR);
     R(wx0, wx1, wh1 - 0.05, wh1, FR); R(wx0, wx1, wh0, wh0 + 0.05, FR);
     ctx.fillStyle = night > 0.2 ? `rgba(14,22,46,${(night * 0.55).toFixed(3)})` : 'rgba(0,0,0,0)'; ctx.fillRect(X(wx0), Yb(wh1), (wx1 - wx0) * S, (wh1 - wh0) * S);
+    ctx.save(); ctx.beginPath(); ctx.rect(X(wx0), Yb(wh1), (wx1 - wx0) * S, (wh1 - wh0) * S); ctx.clip(); ctx.fillStyle = 'rgba(255,255,255,0.10)'; for (const gx2 of [wx0 + 1.0, wx0 + 3.3]) { ctx.beginPath(); ctx.moveTo(X(gx2), Yb(wh1)); ctx.lineTo(X(gx2 + 0.5), Yb(wh1)); ctx.lineTo(X(gx2 - 0.3), Yb(wh0)); ctx.lineTo(X(gx2 - 0.8), Yb(wh0)); ctx.closePath(); ctx.fill(); } ctx.restore();
     R(wx0 - 0.15, wx1 + 0.15, wh0 - 0.16, wh0 - 0.1, '#C58E58');   // wooden sill
   }
-  // ---- the track diagram hanging from the ceiling ----
-  { const bx0 = 5.6, bx1 = 9.7, bh0 = 2.18, bh1 = 2.72;
+  // ---- the track diagram + indicator panel hanging from the ceiling ----
+  { const bx0 = 5.3, bx1 = 10.0, bh0 = 1.84, bh1 = 2.72, dh0 = 2.18;
     for (const hx of [bx0 + 0.3, bx1 - 0.3]) { R(hx - 0.02, hx + 0.02, bh1, 2.8, '#1F2A24'); }
-    R(bx0 - 0.04, bx1 + 0.04, bh0 - 0.04, bh1 + 0.04, '#1C2A22'); R(bx0, bx1, bh0, bh1, '#2F4A3E'); R(bx0, bx1, bh0, bh1, '#27403A');
-    R(7.0, 8.3, bh1 - 0.17, bh1 - 0.03, '#E2E0D6'); txt('HARASZTI KÜLSŐ', 7.65, bh1 - 0.1, 0.08, '#2C3832', 800);
-    const ys = [2.57, 2.46, 2.35, 2.24], xl = bx0 + 0.55, xr = bx1 - 0.55, occ = twStation(gameNow());
-    const trk = (i, x0, x1, hot) => line(x0, ys[i], x1, ys[i], hot ? '#FF4A38' : '#CFD6D2', hot ? 0.026 : 0.018);
-    for (let i = 0; i < 4; i++) trk(i, xl, xr, false);
+    R(bx0 - 0.06, bx1 + 0.06, bh0 - 0.06, bh1 + 0.06, '#5E3F26'); R(bx0 - 0.06, bx1 + 0.06, bh1 + 0.04, bh1 + 0.06, 'rgba(255,255,255,0.14)'); R(bx0, bx1, bh0, bh1, '#2B2F33'); R(bx0, bx1, dh0, bh1, '#3A4046');
+    R(bx0, bx1, dh0 - 0.012, dh0 + 0.012, '#16211B');
+    R(6.85, 8.45, bh1 - 0.17, bh1 - 0.03, '#E2E0D6'); txt(TW.estop ? 'VÉSZLEÁLLÍTÁS' : 'HARASZTI KÜLSŐ', 7.65, bh1 - 0.1, 0.08, TW.estop ? '#C8372D' : '#2C3832', 800);
+    const ys = [2.57, 2.46, 2.35, 2.26], xl = bx0 + 0.55, xr = bx1 - 0.55, occ = twStation(gameNow());
     const hot = k => occ.some(q => (q.dir > 0) === (k === 2));
+    const trk = (i, x0, x1) => line(x0, ys[i], x1, ys[i], '#CFD6D2', 0.018);
+    for (let i = 0; i < 4; i++) trk(i, xl, xr);
     for (const k of [1, 2]) if (hot(k)) line(6.9, ys[k], 8.4, ys[k], '#FF4A38', 0.028);
-    line(6.3, ys[0], 6.9, ys[1], '#CFD6D2', 0.018); line(8.4, ys[1], 8.9, ys[2], '#CFD6D2', 0.018); line(6.3, ys[2], 6.9, ys[3], '#CFD6D2', 0.018); line(8.4, ys[3], 8.9, ys[2], '#CFD6D2', 0.018);
+    const dg = (a, b, c2, d2, on) => line(a, b, c2, d2, on ? '#FFD66A' : '#CFD6D2', on ? 0.026 : 0.018);
+    dg(6.3, ys[0], 6.9, ys[1], TW.lev[3]); dg(8.4, ys[1], 8.9, ys[2], TW.lev[6]); dg(6.3, ys[2], 6.9, ys[3], TW.lev[8]); dg(8.4, ys[3], 8.9, ys[2], TW.lev[8]);
     for (let i = 0; i < 4; i++) { R(bx0 + 0.18, bx0 + 0.34, ys[i] - 0.04, ys[i] + 0.04, '#0B100D'); txt(String(i + 1), bx0 + 0.26, ys[i], 0.06, '#F2F0EA', 800); R(bx1 - 0.34, bx1 - 0.18, ys[i] - 0.04, ys[i] + 0.04, '#0B100D'); txt(String(i + 1), bx1 - 0.26, ys[i], 0.06, '#F2F0EA', 800); }
-    for (const [lx, li, c1] of [[bx0 + 0.75, 0, '#FF4A38'], [bx0 + 0.75, 1, '#58D17A'], [bx1 - 0.75, 2, '#FF4A38'], [bx1 - 0.75, 3, '#58D17A']]) { disc(lx, ys[li], 0.026, '#0A0E0C'); disc(lx, ys[li], 0.018, (li === 1 ? hot(1) : li === 2 ? hot(2) : false) ? '#FF4A38' : c1); disc(lx + 0.07, ys[li], 0.018, '#2A322E'); }
+    for (const [lx, li, lv] of [[bx0 + 0.75, 0, 4], [bx0 + 0.75, 1, 7], [bx1 - 0.75, 2, 9], [bx1 - 0.75, 3, 10]]) { const gr = TW.lev[lv] && !TW.estop && !((li === 1 && hot(1)) || (li === 2 && hot(2))); disc(lx, ys[li], 0.026, '#0A0E0C'); disc(lx, ys[li], 0.018, gr ? '#58D17A' : '#FF4A38'); disc(lx + 0.07, ys[li], 0.018, '#2A322E'); }
     txt('A', bx0 + 0.1, 2.4, 0.07, '#F2F0EA', 800); txt('B', bx1 - 0.1, 2.4, 0.07, '#F2F0EA', 800);
-  }
-  // ---- the lever frame in front of the window ----
-  { const x0 = TW.x0 - 0.4, x1 = TW.x1 + 0.4;
-    R(x0, x1, 0.02, 0.62, STEELD); R(x0, x1, 0.56, 0.7, STEEL); R(x0, x1, 0.66, 0.7, STEELL);
-    for (let i = 0; i < 4; i++) { const px = x0 + 0.1 + i * ((x1 - x0 - 0.45) / 3); R(px, px + 0.25, 0, 0.82, STEEL); R(px + 0.03, px + 0.06, 0, 0.82, STEELL); R(px - 0.1, px + 0.35, 0, 0.06, STEELD); }
-    // the interlocking drums
-    for (let i = 0; i < 12; i++) { const lx = TW.x0 + 0.25 + i * ((TW.x1 - TW.x0 - 0.5) / 11); for (let k = 0; k < 3; k++) { disc(lx - 0.06 + k * 0.06, 0.82, 0.095, '#262B29'); disc(lx - 0.06 + k * 0.06, 0.82, 0.06, '#464E4B'); } }
-    for (let i = 0; i < 12; i++) { const lx = TW.x0 + 0.25 + i * ((TW.x1 - TW.x0 - 0.5) / 11), pulled = TW.lev[i];
-      ctx.save(); ctx.translate(X(lx), Yb(0.9)); ctx.rotate(pulled * -0.5);
-      ctx.fillStyle = TW.levCol[i]; ctx.fillRect(-0.035 * S, -0.58 * S, 0.07 * S, 0.58 * S); ctx.fillStyle = 'rgba(255,255,255,0.15)'; ctx.fillRect(-0.035 * S, -0.58 * S, 0.02 * S, 0.58 * S);
-      ctx.fillStyle = '#17191A'; ctx.fillRect(-0.04 * S, -0.8 * S, 0.08 * S, 0.24 * S); ctx.restore();
-      const px = lx - 0.1 * 0 + pulled * -0.27, ph = 1.52;
-      R(lx - 0.1, lx + 0.1, 1.28, 1.5, '#F4F2EA'); R(lx - 0.1, lx + 0.1, 1.28, 1.3, '#BDBAAE'); txt(String(i + 1), lx, 1.4, 0.13, '#1F2224', 800);
+    // the indicator groups
+    const err = TW.estop || TW.fire, anyOcc = occ.length > 0;
+    const groups = [
+      ['VÁGÚT', ['1', '2', '3', '4'].map((n, i) => [n, i === 1 || i === 2 ? (hot(i) ? 'r' : 'o') : 'o'])],
+      ['BEJÁRAT', [['A', TW.lev[7] && !TW.estop ? 'g' : 'o'], ['B', TW.lev[9] && !TW.estop ? 'g' : 'o']]],
+      ['KIJÁRAT', [['A', TW.lev[4] && !TW.estop ? 'g' : 'o'], ['B', TW.lev[10] && !TW.estop ? 'g' : 'o']]],
+      ['VÁLTÓK', [['3', TW.lev[3] ? 'y' : 'o'], ['6', TW.lev[6] ? 'y' : 'o'], ['8', TW.lev[8] ? 'y' : 'o']]],
+      ['FOGLALT', [['', anyOcc ? 'r' : 'o']]],
+      ['SZABAD', [['', !anyOcc && !err ? 'g' : 'o']]],
+      ['HIBA', [['', err && (Math.floor(time * 2) % 2 === 0 || TW.fire) ? 'r' : (err ? 'd' : 'o')]]],
+    ];
+    const gw = (bx1 - bx0 - 0.3) / groups.length; let gx = bx0 + 0.15;
+    const CL = { o: '#2B3A33', g: '#58D17A', r: '#FF4A38', y: '#FFD66A', d: '#7A2A22' };
+    for (const [nm, ls] of groups) {
+      R(gx + 0.02, gx + gw - 0.04, bh0 + 0.07, dh0 - 0.06, '#202428'); txt(nm, gx + gw / 2 - 0.01, dh0 - 0.07, 0.048, '#C9D6CD', 700);
+      const n = ls.length, step = (gw - 0.12) / n;
+      ls.forEach(([lab, st], i) => { const cx = gx + 0.04 + step * (i + 0.5) + 0.02; disc(cx, bh0 + 0.17, 0.042, '#D9D7CD'); disc(cx, bh0 + 0.17, 0.034, '#0A0E0C'); disc(cx, bh0 + 0.17, 0.028, CL[st]); if (st !== 'o' && st !== 'd') { ctx.save(); ctx.globalAlpha = 0.25; disc(cx, bh0 + 0.17, 0.058, CL[st]); ctx.restore(); } if (lab) txt(lab, cx, bh0+ 0.08, 0.042, '#C9D6CD', 700); });
+      gx += gw;
     }
-    for (let i = 0; i < 12; i++) { const lx = TW.x0 + 0.25 + i * ((TW.x1 - TW.x0 - 0.5) / 11); void lx; }
-    for (let i = 0; i < 5; i++) { const px = TW.x0 - 0.2 + i * 1.4; disc(px, 0.45, 0.04, STEELL); }
+  }
+  // ---- the cast-iron lever frame: green frame, wire drums, brass plates ----
+  { const x0 = TW.x0 - 0.4, x1 = TW.x1 + 0.4, BRS = '#C9A24A', BRSD = '#7E5F22';
+    const LX = i => TW.x0 + 0.25 + i * ((TW.x1 - TW.x0 - 0.5) / 11);
+    const gR = (xa, xb, h0, h1, c0, c1, gy = 0) => { const g = ctx.createLinearGradient(0, Yb(h1, gy), 0, Yb(h0, gy)); g.addColorStop(0, c0); g.addColorStop(1, c1); ctx.fillStyle = g; ctx.fillRect(X(xa), Yb(h1, gy), (xb - xa) * S, (h1 - h0) * S); };
+    const rg = (x, h, r, c0, c1, ox = -0.3, oy = -0.3) => { const g = ctx.createRadialGradient(X(x) + ox * r * S, Yb(h) + oy * r * S, r * S * 0.1, X(x), Yb(h), r * S); g.addColorStop(0, c0); g.addColorStop(1, c1); ctx.beginPath(); ctx.arc(X(x), Yb(h), r * S, 0, TAU); ctx.fillStyle = g; ctx.fill(); };
+    const DR = { '#2F5FB0': ['#F6D878', '#B98A1E'], '#C8372D': ['#E4685A', '#8A2820'], '#1F2224': ['#6A7174', '#1A1D1E'] };
+    // soft shadow on the wall and floor
+    const sh = ctx.createLinearGradient(0, Yb(0), 0, Yb(0) + 0.35 * S); sh.addColorStop(0, 'rgba(15,10,5,0.45)'); sh.addColorStop(1, 'rgba(15,10,5,0)'); ctx.fillStyle = sh; ctx.fillRect(X(x0 + 0.1), Yb(0), (x1 - x0 - 0.2) * S, 0.3 * S);
+    // legs with curved feet
+    for (const px of [x0 + 0.05, (x0 + x1) / 2 - 0.1, x1 - 0.3]) { gR(px, px + 0.25, 0, 0.64, '#2A5A40', '#173A28'); R(px + 0.03, px + 0.06, 0, 0.64, 'rgba(255,255,255,0.14)'); poly([[px - 0.12, 0], [px + 0.37, 0], [px + 0.3, 0.07], [px + 0.18, 0.1], [px + 0.07, 0.1], [px - 0.05, 0.07]], '#173A28'); }
+    R(x0 + 0.05, x1 - 0.05, 0.62, 0.8, '#101D15');
+    // table top and front panel
+    gR(x0 - 0.04, x1 + 0.04, 0.6, 0.76, '#4E8F68', '#2A5A40'); R(x0 - 0.04, x1 + 0.04, 0.745, 0.76, 'rgba(255,255,255,0.28)'); R(x0 - 0.04, x1 + 0.04, 0.6, 0.62, 'rgba(0,0,0,0.3)');
+    gR(x0 + 0.02, x1 - 0.02, 0.08, 0.6, '#2F6347', '#1D4430');
+    // white strip with dividers + the lock lamps
+    gR(x0 + 0.12, x1 - 0.12, 0.44, 0.55, '#F3F0E4', '#D9D5C4'); for (let i = 0; i <= 12; i++) { const dx = LX(0) - 0.222 + i * 0.445; if (dx > x0 + 0.12 && dx < x1 - 0.12) R(dx - 0.005, dx + 0.005, 0.44, 0.55, 'rgba(60,56,44,0.55)'); }
+    for (let i = 0; i < 12; i++) { const lx = LX(i), blocked = twBlock(i), lc = blocked ? '#FF5A48' : (TW.lev[i] ? '#F6E6A8' : '#5FDB84');
+      rg(lx, 0.31, 0.05, '#F2F0E6', '#8E8B7E'); disc(lx, 0.31, 0.037, '#0B0F0D'); rg(lx, 0.31, 0.03, lc, blocked ? '#B02A1E' : TW.lev[i] ? '#C9B26A' : '#2E9C55', -0.2, -0.3);
+      if (!blocked) { ctx.save(); ctx.globalAlpha = 0.22; disc(lx, 0.31, 0.075, lc); ctx.restore(); }
+      txt(String(i + 1), lx, 0.495, 0.075, '#2A2622', 800); }
+    // brass plates
+    [['HOZZÁJÁRULÁS', 0, 2], ['BEJÁRATI JELZŐ', 3, 5], ['KIJÁRATI JELZŐ', 6, 8], ['VÁLTÓ · VÁGÁNYÚT', 9, 11]].forEach(([nm, a0, a1]) => { const cx = (LX(a0) + LX(a1)) / 2, hw = (LX(a1) - LX(a0)) / 2 + 0.17; R(cx - hw, cx + hw, 0.12, 0.26, BRSD); gR(cx - hw + 0.014, cx + hw - 0.014, 0.134, 0.246, '#E6C86C', '#B58E36'); txt(nm, cx, 0.19, 0.072, '#3A2A10', 800); for (const sx of [-1, 1]) disc(cx + sx * (hw - 0.045), 0.19, 0.012, BRSD); });
+    // levers with wire drums
+    for (let i = 0; i < 12; i++) { const lx = LX(i), pulled = TW.lev[i], dc = DR[TW.levCol[i]] || DR['#1F2224'], ph = 0.99, rr = 0.175;
+      R(lx - 0.09, lx + 0.09, 0.78, 0.84, '#183A29');
+      ctx.save(); ctx.globalAlpha = 0.3; ctx.fillStyle = '#000'; ctx.beginPath(); ctx.ellipse(X(lx + 0.03), Yb(ph - 0.03), (rr + 0.01) * S, (rr + 0.01) * S, 0, 0, TAU); ctx.fill(); ctx.restore();
+      disc(lx, ph, rr + 0.012, '#121415'); rg(lx, ph, rr, dc[0], dc[1]);
+      ctx.beginPath(); ctx.arc(X(lx), Yb(ph), rr * 0.7 * S, 0, TAU); ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = Math.max(1, 0.012 * S); ctx.stroke();
+      ctx.beginPath(); ctx.arc(X(lx), Yb(ph), rr * 0.9 * S, Math.PI * 1.05, Math.PI * 1.42); ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = Math.max(1, 0.015 * S); ctx.stroke();
+      ctx.save(); ctx.translate(X(lx), Yb(ph)); ctx.rotate(pulled * -1.4); ctx.strokeStyle = 'rgba(0,0,0,0.28)'; ctx.lineWidth = Math.max(1, 0.01 * S); for (let k = 0; k < 5; k++) { const an = k / 5 * TAU; ctx.beginPath(); ctx.moveTo(Math.cos(an) * 0.06 * S, Math.sin(an) * 0.06 * S); ctx.lineTo(Math.cos(an) * 0.115 * S, Math.sin(an) * 0.115 * S); ctx.stroke(); } ctx.restore();
+      rg(lx, ph, 0.05, '#E4C56A', '#6E5418');
+      ctx.save(); ctx.translate(X(lx), Yb(ph)); ctx.rotate(pulled * -0.5);
+      let g = ctx.createLinearGradient(-0.03 * S, 0, 0.03 * S, 0); g.addColorStop(0, '#E9EDEB'); g.addColorStop(1, '#8E9693'); ctx.fillStyle = g; ctx.fillRect(-0.028 * S, -0.62 * S, 0.056 * S, 0.62 * S);
+      g = ctx.createLinearGradient(-0.05 * S, 0, 0.05 * S, 0); g.addColorStop(0, '#6A4A32'); g.addColorStop(0.5, '#4A3220'); g.addColorStop(1, '#2E2016'); ctx.fillStyle = g; ctx.fillRect(-0.05 * S, -0.62 * S, 0.1 * S, 0.2 * S);
+      ctx.fillStyle = dc[0]; ctx.fillRect(-0.05 * S, -0.44 * S, 0.1 * S, 0.03 * S); ctx.fillStyle = '#CFC8B4'; ctx.fillRect(-0.06 * S, -0.3 * S, 0.12 * S, 0.022 * S);
+      ctx.fillStyle = BRSD; ctx.fillRect(-0.105 * S, -0.84 * S, 0.21 * S, 0.2 * S); g = ctx.createLinearGradient(0, -0.825 * S, 0, -0.655 * S); g.addColorStop(0, '#F8EFD0'); g.addColorStop(1, '#E2D6AA'); ctx.fillStyle = g; ctx.fillRect(-0.09 * S, -0.825 * S, 0.18 * S, 0.17 * S);
+      ctx.fillStyle = '#1F2224'; ctx.font = `800 ${Math.max(8, 0.13 * S)}px "Barlow Condensed", "Arial Narrow", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(i + 1), 0, -0.74 * S);
+      ctx.restore();
+    }
+    R(4.82, 5.08, 0.84, 1.08, '#D9AE35'); rg(4.95, 0.97, 0.075, '#F2655A', TW.estop ? '#6A1812' : '#A9201A');   // emergency stop
   }
   // ---- the desk with ledger, phone, lamp and mug; the chair; shelves with folders ----
   if (vis(0, 5.0)) {
@@ -16143,17 +16238,24 @@ function renderTorony(time) {
     R(4.35, 4.62, 0.79, 0.88, '#15181A', gy); disc(4.48, 0.9, 0.07, '#15181A', gy); disc(4.48, 0.9, 0.04, '#CFCABB', gy); R(4.33, 4.4, 0.88, 0.93, '#101213', gy); R(4.55, 4.62, 0.88, 0.93, '#101213', gy);
     // the green lamp
     line(3.2, 0.79, 3.3, 1.1, '#2E6A44', 0.02, gy); line(3.3, 1.1, 3.5, 1.2, '#2E6A44', 0.02, gy); poly([[3.42, 1.22], [3.7, 1.22], [3.78, 1.1], [3.38, 1.15]], '#2E6A44', gy); disc(3.55, 1.14, 0.03, '#FFF3C4', gy); R(3.12, 3.28, 0.79, 0.82, '#1F4A30', gy);
-    R(4.7, 4.82, 0.79, 0.9, '#F4F2EA', gy); R(4.7, 4.82, 0.82, 0.86, '#2F5FB0', gy);
+    R(3.78, 3.88, 0.79, 0.88, '#B8B2A0', gy); for (const [px2, pc] of [[3.8, '#C8372D'], [3.83, '#2F5FB0'], [3.86, '#E0B93A']]) line(px2, 0.88, px2 + 0.02, 0.96, pc, 0.008, gy);
+    R(4.17, 4.29, 0.84, 0.95, '#F1ECDC', gy); R(4.17, 4.29, 0.88, 0.91, '#C8372D', gy); line(4.29, 0.92, 4.33, 0.89, '#F1ECDC', 0.012, gy); line(4.33, 0.89, 4.29, 0.86, '#F1ECDC', 0.012, gy);
+    if (!INTR.dark) { ctx.save(); ctx.globalAlpha = 0.35; line(4.21, 0.97, 4.23, 1.05, '#FFFFFF', 0.008, gy); line(4.25, 0.97, 4.23, 1.04, '#FFFFFF', 0.008, gy); ctx.restore(); }
+    R(4.74, 4.82, 0.79, 0.97, '#26292B', gy); disc(4.78, 1.0, 0.045, '#15181A', gy); disc(4.78, 1.0, 0.025, '#3A4044', gy);   // the PA microphone
     // the chair
     R(2.65, 3.2, 0.42, 0.47, '#8A5A34', 0.6); R(2.7, 2.75, 0, 0.42, '#555B5E', 0.6); R(3.1, 3.15, 0, 0.42, '#555B5E', 0.6); R(2.65, 2.72, 0.47, 1.0, '#6E4A2C', 0.6); R(2.65, 2.75, 0.6, 0.95, '#555B5E', 0.6);
   }
   // ---- the cabinets, the stove, the sketch on the wall ----
-  if (vis(11.3, 14.4)) {
+  if (vis(11.3, 14.4)) { const BRS2 = '#C9A24A';
     R(11.3, 12.3, 0, 1.45, '#6F8576', 0.05); for (let i = 0; i < 4; i++) { R(11.34, 12.26, 0.04 + i * 0.35, 0.36 + i * 0.35, '#7C9482', 0.05); R(11.65, 11.95, 0.2 + i * 0.35, 0.24 + i * 0.35, '#2A322E', 0.05); }
+    R(11.3, 12.3, 2.02, 2.07, '#7A5232'); for (const bx of [11.42, 11.78, 12.14]) { R(bx - 0.14, bx + 0.14, 2.07, 2.4, '#1A1D1B'); R(bx - 0.12, bx + 0.12, 2.3, 2.37, '#F1ECDC'); txt('CSENGŐ', bx, 2.335, 0.04, '#2A2622', 800); disc(bx, 2.17, 0.055, BRS2); disc(bx, 2.17, 0.04, '#E4C56A'); disc(bx - 0.02, 2.19, 0.012, '#FFF0B0'); }
+    // the red pennant
+    poly([[13.45, 2.62], [13.85, 2.62], [13.85, 2.22], [13.65, 2.09], [13.45, 2.22]], '#B8322A'); poly([[13.48, 2.59], [13.82, 2.59], [13.82, 2.24], [13.65, 2.13], [13.48, 2.24]], 'rgba(255,255,255,0)'); R(13.48, 13.82, 2.55, 2.57, '#D8B24A'); txt('MÁV', 13.65, 2.4, 0.07, '#D8B24A', 800);
     R(11.28, 12.32, 1.45, 1.5, '#4F6458', 0.05);
     R(11.45, 12.15, 1.5, 1.56, '#C09A58', 0.05); R(11.5, 12.1, 1.56, 1.66, '#F1ECDC', 0.05);   // paper tray
     poly([[11.55, 1.66], [12.0, 1.66], [11.98, 1.8], [11.6, 1.8]], '#1B2133', 0.05); R(11.6, 11.95, 1.74, 1.76, '#C09A48', 0.05);   // cap
-    R(12.3, 13.0, 0, 1.0, '#6B8272', 0.18); R(12.34, 12.96, 0.05, 0.95, '#7A9280', 0.18); R(12.6, 12.7, 0.4, 0.5, '#2A322E', 0.18);
+    R(12.3, 13.0, 0, 1.0, '#6B8272', 0.18); R(12.34, 12.96, 0.05, 0.95, '#7A9280', 0.18); R(12.6, 12.7, 0.4, 0.5, '#2A322E', 0.18); R(12.45, 12.85, 0.55, 0.8, TW.fire ? '#D8631F' : '#2A322E', 0.18); if (TW.fire) R(12.52, 12.78, 0.57, 0.68 + Math.sin(time * 9) * 0.04, '#FFD066', 0.18);
+    R(12.6, 12.72, 1.0, 2.6, '#33383A', 0.18); R(12.6, 12.63, 1.0, 2.6, '#4A5054', 0.18); for (const jh of [1.4, 1.9, 2.4]) R(12.57, 12.75, jh, jh + 0.05, '#232628', 0.18);
     R(12.95, 13.2, 1.2, 1.9, '#1C1E1D'); R(12.95, 12.99, 1.2, 1.9, '#33383A');
     R(13.05, 13.12, 0.3, 2.7, '#2A2D30'); R(13.05, 13.07, 0.3, 2.7, '#4A4F52');
     R(13.3, 14.1, 0.0, 1.0, '#2A2D30', 0.25); R(13.34, 14.06, 0.05, 0.95, '#3A3E42', 0.25); for (let i = 0; i < 6; i++) R(13.45, 13.95, 0.2 + i * 0.1, 0.24 + i * 0.1, '#1B1D1F', 0.25);
@@ -16171,11 +16273,12 @@ function renderTorony(time) {
   // ---- light ----
   base();
   if (night > 0.05) { ctx.fillStyle = `rgba(14,16,34,${(night * 0.5).toFixed(3)})`; ctx.fillRect(0, 0, W, H); }
+  { const vg = ctx.createRadialGradient(W / 2, H * 0.48, Math.min(W, H) * 0.35, W / 2, H * 0.48, Math.max(W, H) * 0.75); vg.addColorStop(0, 'rgba(18,10,4,0)'); vg.addColorStop(1, 'rgba(18,10,4,0.38)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H); }
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
-  for (const lx of [6.0, 9.3]) { const gr = ctx.createRadialGradient(X(lx), Yb(2.3), 0, X(lx), Yb(2.3), 2.2 * S); gr.addColorStop(0, `rgba(255,224,160,${(0.2 + night * 0.25).toFixed(3)})`); gr.addColorStop(1, 'rgba(255,224,160,0)'); ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H); }
+  if (TW.fire) { const gr = ctx.createRadialGradient(X(12.65), Yb(0.65, 0.18), 0, X(12.65), Yb(0.65, 0.18), 1.8 * S); gr.addColorStop(0, `rgba(255,140,60,${(0.26 + Math.sin(time * 7) * 0.03).toFixed(3)})`); gr.addColorStop(1, 'rgba(255,140,60,0)'); ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H); }
+  for (const lx of (INTR.dark ? [] : [6.0, 9.3])) { const gr = ctx.createRadialGradient(X(lx), Yb(2.3), 0, X(lx), Yb(2.3), 2.2 * S); gr.addColorStop(0, `rgba(255,224,160,${(0.2 + night * 0.25).toFixed(3)})`); gr.addColorStop(1, 'rgba(255,224,160,0)'); ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H); }
   if (vis(3.2, 3.9)) { const gr = ctx.createRadialGradient(X(3.55), Yb(1.15, 0.34), 0, X(3.55), Yb(1.15, 0.34), 1.1 * S); gr.addColorStop(0, `rgba(255,230,170,${(0.18 + night * 0.2).toFixed(3)})`); gr.addColorStop(1, 'rgba(255,230,170,0)'); ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H); }
   ctx.restore();
-  { const gr = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.75); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(10,20,10,0.3)'); ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H); }
   tcRender();
 }
 
@@ -16200,6 +16303,7 @@ function toast(html, ms = 4600) {
 }
 function vertShort(o) {
   if (o.obj) return o.obj.kind === 'cross' ? 'Sínek' : o.obj.kind === 'duna' ? 'Duna u.' : o.obj.kind === 'dunaOut' ? 'Soroksári út' : o.obj.kind === 'padok' ? 'Padok' : o.dir === 'up' ? 'Fel' : 'Le';
+  if (o.kcross) return 'Átjáró';
   if (o.jokai) return 'Jókai u.';
   if (o.erz) return 'Erzsébet u.';
   if (o.zebra) return o.to === 'fside' ? 'Zebra' : o.to === 'street' ? 'Vissza az utcára' : 'Vissza a zebrán';
@@ -16632,7 +16736,7 @@ function start(saved) {
     if (saved.lane === 'jokai') SCENE.jokai = true;
     if (saved.lane === 'erz') { SCENE.erz = true; SCENE.back = true; }
     if (saved.lane === 'dozsa') { SCENE.dozsa = true; SCENE.back = true; }
-    if (saved.lane === 'korosi') SCENE.korosi = true;
+    if (saved.lane === 'korosi' || saved.lane === 'knorth') SCENE.korosi = true;
     if (saved.lane === 'hid') { SCENE.hid = true; SCENE.padok = true; SCENE.back = true; }
     ch.facing = saved.facing || 1; timeOffset = saved.timeOffset || 0; ch.trash = saved.trash || 0;
   }
@@ -16705,13 +16809,26 @@ const WL_VINE = (() => {
   for (const [x, y, r, sc] of [[8, 70, -70, 1], [9, 58, -130, 0.9], [13, 44, -60, 1.1], [20, 32, -140, 0.9], [27, 24, -40, 1.1], [40, 16, -120, 0.9], [52, 12, -20, 1], [66, 10, -80, 0.8]]) s += leaf(x, y, r, sc);
   return s + '</svg>';
 })();
+const SPAWN_NAMES = { felso: 'Felső HÉV', kulso: 'Külső HÉV', millen: 'Millenniumtelep', szent: 'Szent István u.', dohi: 'Dohánybolt', erz: 'Gyuri Borozó', dozsa: 'Dózsa György út', ckp: 'Checkpoint', korosi: 'Határ út · átjáró' };
+// a thumbnail of a start spot: the real scene is drawn once for it, then the game's own state is put back
+function spotThumb(sp, canvas) {
+  const sv = { scene: { ...SCENE }, x: ch.x, lane: ch.lane, d: ch.d, g: ch.g, facing: ch.facing, key: ch.key, mode: ch.mode, camx: cam.x, camz: cam.z };
+  try {
+    placeAtSpot(sp); cam.z = 0; cam.lift = riseH(cam.x); cam.h = cam.hBase + cam.lift;
+    render(performance.now() / 1000);
+    const c2 = canvas.getContext('2d'); c2.drawImage(cv, 0, 0, cv.width, cv.height, 0, 0, canvas.width, canvas.height);
+  } catch (e) { /* the preview stays empty */ }
+  for (const k of Object.keys(SCENE)) delete SCENE[k]; Object.assign(SCENE, sv.scene);
+  Object.assign(ch, { x: sv.x, lane: sv.lane, d: sv.d, g: sv.g, facing: sv.facing, key: sv.key, mode: sv.mode }); cam.x = sv.camx; cam.z = sv.camz; cam.lift = riseH(cam.x); cam.h = cam.hBase + cam.lift;
+}
+function spawnSaved() { try { return localStorage.getItem('dhsim.spawn') || 'felso'; } catch (e) { return 'felso'; } }
 function showWelcome(onGo) {
   let skip = false; try { skip = localStorage.getItem('dhsim.welcome.skip') === '1'; } catch (e) { /* storage blocked */ }
   // a page saved from the browser ("Save as") keeps a dead, handler-less copy of this overlay: drop it
   // (it sits after the script, so sweep again once the whole page is parsed)
   const sweep = () => document.querySelectorAll('.wl:not([data-live])').forEach(n => n.remove());
   sweep(); if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sweep, { once: true });
-  if (skip) { onGo(); return; }
+  if (skip) { const sp0 = TPORT.spots.find(q => q.id === spawnSaved()); if (sp0 && sp0.id !== 'felso') placeAtSpot(sp0); onGo(); return; }
   const st = document.createElement('style');
   st.textContent = `
 .wl { --wg: #145E43; --wg2: #1E7F5C; --wc: #F7F2E3; --wc2: #EFE7D3; --wt: #1C2924; --wm: #6B746E;
@@ -16766,6 +16883,13 @@ function showWelcome(onGo) {
 .wl-skip input { width: 18px; height: 18px; accent-color: var(--wg2); margin: 0; }
 .wl-inst { width: 100%; color: var(--wm); font: 600 13px/1.4 "Barlow", system-ui, sans-serif; }
 .wl-inst b { color: var(--wt); font-weight: 700; }
+.wl-sp { width: 100%; border-radius: 18px; background: var(--wc2); padding: 10px 10px 9px; }
+.wl-spl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+.wl-t { border: 2.5px solid transparent; border-radius: 12px; padding: 0; background: #fff; overflow: hidden; cursor: pointer; text-align: center; touch-action: manipulation; font: inherit; color: var(--wt); box-shadow: 0 2px 0 rgba(20,94,67,.18); }
+.wl-t canvas { display: block; width: 100%; aspect-ratio: 16 / 10; background: #cfe3d6; }
+.wl-t span { display: block; font: 700 12px/1.1 var(--display); padding: 4px 3px 5px; }
+.wl-t[aria-pressed=true] { border-color: var(--wg2); box-shadow: 0 0 0 2px rgba(30,127,92,.25); }
+.wl-t[aria-pressed=true] span { background: var(--wg2); color: var(--wc); }
 .wl-inst svg { width: 15px; height: 15px; vertical-align: -3px; color: var(--wg2); }
 .wl-ib { width: 100%; border: 2px solid var(--wg2); border-radius: 14px; padding: 10px; background: transparent; color: var(--wg); font: 800 14px/1 var(--display); letter-spacing: .06em; cursor: pointer; display: flex; gap: 8px; align-items: center; justify-content: center; }
 .wl-ib svg { width: 17px; height: 17px; vertical-align: 0; }
@@ -16803,6 +16927,8 @@ function showWelcome(onGo) {
     ${ic('<path d="M12 9v13" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="12" cy="5.5" r="3.3" fill="currentColor"/><circle cx="12" cy="12.5" r="3.3" fill="currentColor"/>', 'Sorompók, lámpák')}
     ${ic('<path d="M3 15c3-3 6 3 9 0s6 3 9 0M3 20c3-3 6 3 9 0s6 3 9 0" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M8 12V5M12 12V3M16 12V6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>', 'Le a Dunához')}
   </div>
+  <div class="wl-sp"><div class="wl-ph"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 10-14 0c0 5.8 7 12 7 12z" fill="currentColor"/><circle cx="12" cy="10" r="2.6" fill="#EFE7D3"/></svg>Honnan indulsz?</div>
+    <div class="wl-spl" id="wlSp">${TPORT.spots.map(q => `<button type="button" class="wl-t" data-id="${q.id}" aria-pressed="false" aria-label="${SPAWN_NAMES[q.id] || q.name}"><canvas width="240" height="150"></canvas><span>${SPAWN_NAMES[q.id] || q.name}</span></button>`).join('')}</div></div>
   <div class="wl-pts">
     <div class="wl-ph"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10a7 7 0 0114 0v10l-2.3-1.6L14.4 20 12 18.4 9.6 20l-2.3-1.6z" fill="currentColor"/><circle cx="9.5" cy="10.5" r="1.4" fill="#EFE7D3"/><circle cx="14.5" cy="10.5" r="1.4" fill="#EFE7D3"/></svg>Így jár a szellempont</div>
     <div class="wl-pl">
@@ -16823,6 +16949,12 @@ function showWelcome(onGo) {
 </div>`;
 
   document.body.appendChild(el);
+  let sel = spawnSaved(); if (!TPORT.spots.some(q => q.id === sel)) sel = 'felso';
+  const tiles = [...el.querySelectorAll('.wl-t')];
+  const mark = () => tiles.forEach(t => t.setAttribute('aria-pressed', String(t.dataset.id === sel)));
+  mark();
+  tiles.forEach(t => t.addEventListener('click', e => { e.stopPropagation(); sel = t.dataset.id; mark(); try { AU.unlock(); AU.ui(); } catch (e2) { /* sound optional */ } }));
+  requestAnimationFrame(() => { for (const t of tiles) spotThumb(TPORT.spots.find(q => q.id === t.dataset.id), t.querySelector('canvas')); });
   // "add to home screen": a real install button where the browser offers one (Android, desktop Chrome/Edge),
   // a short how-to on iPhone/iPad (Safari has no install prompt), nothing when already running as an app
   const inst = el.querySelector('#wlInst');
@@ -16844,6 +16976,8 @@ function showWelcome(onGo) {
   const go = () => {
     if (done) return; done = true; PWA.onChange = null;
     try { if (el.querySelector('#wlSkip').checked) localStorage.setItem('dhsim.welcome.skip', '1'); } catch (e) { /* storage blocked */ }
+    try { localStorage.setItem('dhsim.spawn', sel); } catch (e) { /* storage blocked */ }
+    if (sel !== 'felso' || ch.x !== 34) { const sp0 = TPORT.spots.find(q => q.id === sel); if (sp0) placeAtSpot(sp0); }
     AU.unlock(); el.classList.add('closing'); setTimeout(() => el.remove(), 280);
     window.removeEventListener('keydown', key, true); onGo();
   };
